@@ -1,0 +1,60 @@
+/* From reactbits.dev — adapted for Uchaan's light palette and a caption overlay. */
+
+.masonry-list {
+  position: relative;
+  width: 100%;
+}
+
+.masonry-item-wrapper {
+  position: absolute;
+  will-change: transform, width, height, opacity;
+  padding: 8px;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+}
+
+.masonry-item-wrapper > .masonry-item-img {
+  position: relative;
+  background-size: cover;
+  background-position: center center;
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px -12px rgba(0, 0, 0, 0.18);
+  transition: box-shadow 0.3s ease;
+}
+
+.masonry-item-wrapper:hover > .masonry-item-img {
+  box-shadow: 0 18px 50px -12px rgba(235, 0, 0, 0.28);
+}
+
+.color-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(45deg, rgba(235, 0, 0, 0.35), rgba(23, 23, 23, 0.35));
+  opacity: 0;
+  pointer-events: none;
+  border-radius: 10px;
+}
+
+.masonry-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 14px 16px 16px;
+  color: #fff;
+  background: linear-gradient(to top, rgba(18, 18, 18, 0.88) 0%, rgba(18, 18, 18, 0.55) 60%, transparent 100%);
+  border-radius: 0 0 10px 10px;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+
+.masonry-item-wrapper:hover .masonry-caption {
+  opacity: 1;
+  transform: translateY(0);
+}

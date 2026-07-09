@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #121212;
+  --color-muted: #5f5f5f;
+  --color-faint: #b9b9b9;
+  --color-signal: #eb0000; /* Uchaan red, from the mockup */
+  --color-signal-dark: #b30000;
+  --color-paper: #ffffff;
+  --color-wash: #f7f6f4;
+  --color-line: #e7e4df;
+
+  --font-display: var(--font-playfair), "Playfair Display", Georgia, serif;
+  --font-body: var(--font-poppins), "Poppins", system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  overflow-x: clip;
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display);
+}
+
+
+/* The soft red aura blobs from the mockup */
+.aura {
+  position: absolute;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle,
+    rgba(235, 0, 0, 0.55) 0%,
+    rgba(235, 0, 0, 0.18) 45%,
+    rgba(235, 0, 0, 0) 70%
+  );
+  filter: blur(48px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Vertical social rail labels */
+.rail-label {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  letter-spacing: 0.22em;
+}
+
+/* Reveal-on-scroll default state (GSAP animates it in).
+   If JS fails, content is still visible thanks to no-js fallback below. */
+.gsap-reveal {
+  opacity: 0;
+  transform: translateY(28px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gsap-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Focus visibility */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--color-signal);
+  outline-offset: 3px;
+}
+
+/* Thin elegant scrollbar for the cart drawer */
+.drawer-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.drawer-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-line);
+}
