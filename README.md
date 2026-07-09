@@ -3,6 +3,7 @@
 A modern rebuild of [uchaanarts.com](https://www.uchaanarts.com), designed after
 the Figma references (Playfair serif, heavy-caps "Artwork Exhibition" hero,
 Uchaan red `#EB0000`).
+Live at https://uchaanarts.vercel.app/
 
 ## Stack
 
