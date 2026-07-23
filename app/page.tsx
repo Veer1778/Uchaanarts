@@ -4,23 +4,9 @@ import Hero from "@/components/Hero";
 import Reveal from "@/components/Reveal";
 import SectionHeading from "@/components/SectionHeading";
 import FeaturedCollection from "@/components/FeaturedCollection";
+import CategoriesGallery from "@/components/CategoriesGallery";
 import { getFeaturedArtworks, getExhibitions, getPosts } from "@/lib/cms";
-import { categories, priceBands } from "@/lib/data";
-
-const categoryImages: Record<string, string> = {
-  Painting:
-    "https://www.uchaanarts.com/uploaded_files/slider/1762953059_untitled_design_2.jpg",
-  Sculpture:
-    "https://www.uchaanarts.com/uploaded_files/itempic/thumbmain/1726310195_agomoni_17x19x5_bronze_140000.jpg",
-  Serigraph:
-    "https://www.uchaanarts.com/uploaded_files/slider/1728130444_ganesha_series_36x54_oil_on_linen_canvas_300000_-_copy.jpg",
-  Photography:
-    "https://www.uchaanarts.com/uploaded_files/slider/1724252030_neeraj.jpg",
-  "Digital Art":
-    "https://www.uchaanarts.com/uploaded_files/slider/1764488212_untitled_design_2.png",
-  "Folk Art":
-    "https://www.uchaanarts.com/uploaded_files/slider/1724254173_wash_copy.jpg",
-};
+import { priceBands } from "@/lib/data";
 
 export default async function HomePage() {
   const [featured, exhibitions, posts] = await Promise.all([
@@ -35,6 +21,9 @@ export default async function HomePage() {
   return (
     <>
       <Hero />
+
+      {/* Categories — curved gallery, directly below the hero */}
+      <CategoriesGallery />
 
       {/* Featured collection */}
       <section className="relative mx-auto max-w-6xl px-5 pt-24" aria-labelledby="featured">
@@ -57,35 +46,6 @@ export default async function HomePage() {
         </Reveal>
       </section>
 
-      {/* By category */}
-      <section className="mx-auto max-w-6xl px-5 pt-24" aria-labelledby="categories">
-        <Reveal>
-          <SectionHeading kicker="Explore our diverse range of art" title="By category" />
-        </Reveal>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-          {categories.map((c, i) => (
-            <Reveal key={c} delay={i * 0.05}>
-              <Link
-                href={`/art-gallery?category=${encodeURIComponent(c)}`}
-                className="group relative block aspect-[3/4] overflow-hidden rounded-lg"
-              >
-                <Image
-                  src={categoryImages[c]}
-                  alt={c}
-                  fill
-                  sizes="(max-width: 640px) 50vw, 16vw"
-                  className="object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                <span className="absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/10 to-transparent" />
-                <span className="absolute bottom-4 left-4 font-display text-lg text-white">
-                  {c}
-                </span>
-              </Link>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
       {/* By price */}
       <section className="mx-auto max-w-6xl px-5 pt-24" aria-labelledby="price">
         <Reveal>
@@ -98,7 +58,7 @@ export default async function HomePage() {
                 href={`/art-gallery?price=${i}`}
                 className="group flex h-full flex-col justify-between border border-line p-5 transition-colors hover:border-signal"
               >
-                <span className="font-body text-lg leading-snug">{band.label}</span>
+                <span className="font-display text-lg leading-snug">{band.label}</span>
                 <span
                   aria-hidden
                   className="mt-6 text-signal opacity-0 transition-opacity group-hover:opacity-100"
