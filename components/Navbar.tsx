@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Heart, ShoppingBag, UserRound } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthOptional } from "@/context/AuthContext";
 
 const links = [
   { href: "/", label: "Home" },
@@ -23,7 +23,10 @@ export default function Navbar() {
   const pathname = usePathname();
   const { count, open } = useCart();
   const { count: wishCount } = useWishlist();
-  const { user } = useAuth();
+  // Optional: the Navbar renders on /_not-found too, which prerenders
+  // without AuthProvider around it.
+  const auth = useAuthOptional();
+  const user = auth?.user ?? null;
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
