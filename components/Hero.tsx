@@ -28,6 +28,8 @@ type Piece = {
   pos: string;
   /** parallax travel in px at full cursor deflection */
   depth: number;
+  /** placeholder repeat — shown in the desktop collage, skipped on mobile */
+  placeholder?: boolean;
 };
 
 /* ArteFACT spacing: pieces fill the whole field — corners, rails, and a few
@@ -44,6 +46,14 @@ const pieces: Piece[] = [
   { src: `${U}/itempic/thumbmain/1780502416_vijay_nandi_2.jpeg`, slug: "divine-harmony", title: "Divine Harmony", pos: "right-[7%] top-[44%] w-44", depth: 36 },
   { src: `${U}/slider/1724254173_wash_copy.jpg`, slug: "monsoon-wash", title: "Monsoon Wash", pos: "left-[7%] top-[62%] w-44", depth: 42 },
   { src: `${U}/itempic/thumbmain/1763810405_whatsapp_image_2025-11-22_at_160530.jpeg`, slug: "posing-on-a-boat", title: "Posing on a Boat", pos: "left-[27%] top-[64%] w-48", depth: 22 },
+
+  /* -- Placeholder repeats to fill remaining gaps (desktop collage only). --
+     Swap these for real artworks whenever; `placeholder: true` keeps them out
+     of the mobile masonry so nothing shows twice there. */
+  { src: `${U}/slider/1762953059_untitled_design_2.jpg`, slug: "posing-on-a-boat", title: "Banaras", pos: "right-[2%] top-[64%] w-52", depth: 26, placeholder: true },
+  { src: `${U}/itempic/thumbmain/1744531634_whatsapp_image_2025-04-12_at_190101_5eb25f3e.jpg`, slug: "market-hustle", title: "Market Hustle", pos: "right-[19%] top-[68%] w-40", depth: 38, placeholder: true },
+  { src: `${U}/itempic/thumbmain/1741109721_su.jpg`, slug: "maya", title: "Maya", pos: "left-[48%] top-[74%] w-40", depth: 30, placeholder: true },
+  { src: `${U}/itempic/thumbmain/1726310195_agomoni_17x19x5_bronze_140000.jpg`, slug: "agomoni", title: "Agomoni", pos: "right-[26%] top-[52%] w-36", depth: 44, placeholder: true },
 ];
 
 type Rect = { l: number; t: number; r: number; b: number };
@@ -225,7 +235,7 @@ export default function Hero() {
       <div ref={canvasRef} className="relative mx-auto hidden h-[880px] max-w-7xl px-5 lg:block">
         {pieces.map((p, i) => (
           <div
-            key={p.slug}
+            key={`${p.slug}-${i}`}
             ref={(el) => {
               pieceRefs.current[i] = el;
             }}
@@ -290,7 +300,7 @@ export default function Hero() {
           across India and beyond to show at its Delhi and Gurgaon spaces.
         </p>
         <div className="mt-8 columns-2 gap-3 sm:columns-3 [column-fill:_balance]">
-          {pieces.map((p) => (
+          {pieces.filter((p) => !p.placeholder).map((p) => (
             <Link
               key={p.slug}
               href={`/art/${p.slug}`}
