@@ -5,19 +5,20 @@ import Link from "next/link";
 import gsap from "gsap";
 
 /**
- * Hero — scattered collage with mouse-move depth parallax (ArteFACT style).
+ * Hero — scattered collage with mouse-move depth parallax and a text SHIELD.
  *
- * Cursor deflection drives each artwork opposite to the mouse, scaled by a
- * per-piece `depth`, via lazy gsap.quickTo setters (eased, floaty trail).
- * The headline, subtitle and Explore button stay fixed.
- *
- * The effect is gated by an IntersectionObserver with thresholds: it runs only
- * while at least a quarter of the hero is visible. Scroll below that and the
- * parallax stops and every image eases back to rest — no work is done on
- * mousemove for the remainder of the page.
+ * The shield is geometric, not CSS: the headline block's rectangle is measured
+ * (plus padding), and every artwork's rectangle is kept fully outside it —
+ * at rest, on resize, and on every parallax frame. If a piece's target
+ * position would intersect the shield, it is pushed out along the axis of
+ * least penetration before the eased setter receives it. Images can drift
+ * around the text but can never cover it or slide beneath it.
  */
 
 const U = "https://www.uchaanarts.com/uploaded_files";
+
+/** Padding around the measured text block, in px. */
+const SHIELD_PAD = 28;
 
 type Piece = {
   src: string;
@@ -30,7 +31,7 @@ type Piece = {
 };
 
 /* ArteFACT spacing: pieces fill the whole field — corners, rails, and a few
-   sitting right beside the text — at moderate sizes, instead of hugging edges. */
+   sitting beside the text — at moderate sizes. */
 const pieces: Piece[] = [
   { src: `${U}/slider/1728130444_ganesha_series_36x54_oil_on_linen_canvas_300000_-_copy.jpg`, slug: "ganesha-series", title: "Ganesha Series", pos: "left-[9%] top-[2%] w-40", depth: 18 },
   { src: `${U}/itempic/thumbmain/1741109721_su.jpg`, slug: "maya", title: "Maya", pos: "left-[28%] -top-[2%] w-48", depth: 34 },
@@ -45,8 +46,30 @@ const pieces: Piece[] = [
   { src: `${U}/itempic/thumbmain/1763810405_whatsapp_image_2025-11-22_at_160530.jpeg`, slug: "posing-on-a-boat", title: "Posing on a Boat", pos: "left-[27%] top-[64%] w-48", depth: 22 },
 ];
 
+type Rect = { l: number; t: number; r: number; b: number };
+
+/** Minimal (dx, dy) that moves `rect` fully outside `shield`; 0,0 if clear. */
+function pushOut(rect: Rect, shield: Rect): { dx: number; dy: number } {
+  const overlapX = Math.min(rect.r, shield.r) - Math.max(rect.l, shield.l);
+  const overlapY = Math.min(rect.b, shield.b) - Math.max(rect.t, shield.t);
+  if (overlapX <= 0 || overlapY <= 0) return { dx: 0, dy: 0 };
+
+  // Push along the axis of least penetration, toward the nearer side.
+  const rectCx = (rect.l + rect.r) / 2;
+  const rectCy = (rect.t + rect.b) / 2;
+  const shieldCx = (shield.l + shield.r) / 2;
+  const shieldCy = (shield.t + shield.b) / 2;
+
+  if (overlapX < overlapY) {
+    return { dx: rectCx < shieldCx ? -overlapX : overlapX, dy: 0 };
+  }
+  return { dx: 0, dy: rectCy < shieldCy ? -overlapY : overlapY };
+}
+
 export default function Hero() {
   const root = useRef<HTMLElement>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const shieldRef = useRef<HTMLDivElement>(null);
   const pieceRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
@@ -66,33 +89,69 @@ export default function Hero() {
       gsap.from(".hero-sub", { opacity: 0, y: 16, duration: 0.7, delay: 0.9, ease: "power3.out" });
     }, root);
 
-    // ---- Mouse-move depth parallax (desktop pointers only) ----
+    // ---- Parallax + shield (desktop pointers only) ----
     const fine = window.matchMedia("(pointer: fine)").matches;
     let onMove: ((e: MouseEvent) => void) | null = null;
+    let onResize: (() => void) | null = null;
+    let onLoad: (() => void) | null = null;
     let io: IntersectionObserver | null = null;
+    let timeoutId: number | null = null;
 
     if (fine) {
-      // One eased setter pair per image; lazy so they retarget mid-tween.
-      const setters = pieceRefs.current
-        .filter((el): el is HTMLDivElement => Boolean(el))
-        .map((el, i) => ({
-          x: gsap.quickTo(el, "x", { duration: 1.1, ease: "power3.out" }),
-          y: gsap.quickTo(el, "y", { duration: 1.1, ease: "power3.out" }),
-          depth: pieces[i]?.depth ?? 24,
-        }));
+      const els = pieceRefs.current.filter((el): el is HTMLDivElement => Boolean(el));
 
-      // Active only while ≥25% of the hero is visible. Scrolling below the
-      // hero drops the ratio under the threshold -> parallax stops and all
-      // pieces ease back to rest.
+      const setters = els.map((el, i) => ({
+        el,
+        x: gsap.quickTo(el, "x", { duration: 1.1, ease: "power3.out" }),
+        y: gsap.quickTo(el, "y", { duration: 1.1, ease: "power3.out" }),
+        depth: pieces[i]?.depth ?? 24,
+      }));
+
+      /** Measure the padded shield rect in canvas coordinates. */
+      const shieldRect = (): Rect | null => {
+        const s = shieldRef.current;
+        if (!s) return null;
+        return {
+          l: s.offsetLeft - SHIELD_PAD,
+          t: s.offsetTop - SHIELD_PAD,
+          r: s.offsetLeft + s.offsetWidth + SHIELD_PAD,
+          b: s.offsetTop + s.offsetHeight + SHIELD_PAD,
+        };
+      };
+
+      let last = { nx: 0, ny: 0 };
+
+      /** Apply parallax for the current cursor, clamped outside the shield. */
+      const apply = () => {
+        const shield = shieldRect();
+        setters.forEach((s) => {
+          let tx = -last.nx * s.depth;
+          let ty = -last.ny * s.depth;
+          if (shield) {
+            const { el } = s;
+            const rect: Rect = {
+              l: el.offsetLeft + tx,
+              t: el.offsetTop + ty,
+              r: el.offsetLeft + el.offsetWidth + tx,
+              b: el.offsetTop + el.offsetHeight + ty,
+            };
+            const { dx, dy } = pushOut(rect, shield);
+            tx += dx;
+            ty += dy;
+          }
+          s.x(tx);
+          s.y(ty);
+        });
+      };
+
+      // Active only while ≥25% of the hero is visible; ease home otherwise.
       let active = false;
       io = new IntersectionObserver(
         ([entry]) => {
           const nowActive = entry.isIntersecting && entry.intersectionRatio >= 0.25;
           if (active && !nowActive) {
-            setters.forEach((s) => {
-              s.x(0);
-              s.y(0);
-            });
+            last = { nx: 0, ny: 0 };
+            apply(); // returns to rest, still shield-corrected
           }
           active = nowActive;
         },
@@ -102,21 +161,31 @@ export default function Hero() {
 
       onMove = (e: MouseEvent) => {
         if (!active) return;
-        // Cursor deflection from viewport centre, in [-1, 1].
-        const nx = (e.clientX / window.innerWidth) * 2 - 1;
-        const ny = (e.clientY / window.innerHeight) * 2 - 1;
-        setters.forEach((s) => {
-          // Drift opposite the cursor, scaled by the piece's depth.
-          s.x(-nx * s.depth);
-          s.y(-ny * s.depth);
-        });
+        last = {
+          nx: (e.clientX / window.innerWidth) * 2 - 1,
+          ny: (e.clientY / window.innerHeight) * 2 - 1,
+        };
+        apply();
       };
       window.addEventListener("mousemove", onMove, { passive: true });
+
+      // Rest-state correction: once images have loaded (heights known) and on
+      // resize, push any piece that intersects the shield out of it.
+      onLoad = () => apply();
+      onResize = () => apply();
+      if (document.readyState === "complete") apply();
+      else window.addEventListener("load", onLoad);
+      window.addEventListener("resize", onResize);
+      // Also run shortly after mount for cached images.
+      timeoutId = window.setTimeout(apply, 300);
     }
 
     return () => {
+      if (timeoutId) window.clearTimeout(timeoutId);
       if (onMove) window.removeEventListener("mousemove", onMove);
-      io?.disconnect();
+      if (onLoad) window.removeEventListener("load", onLoad);
+      if (onResize) window.removeEventListener("resize", onResize);
+      if (io) io.disconnect();
       ctx.revert();
     };
   }, []);
@@ -126,7 +195,7 @@ export default function Hero() {
       <div className="aura left-1/2 top-10 h-72 w-72 -translate-x-1/2 opacity-60" />
 
       {/* Desktop: scattered collage with parallax */}
-      <div className="relative mx-auto hidden h-[880px] max-w-7xl px-5 lg:block">
+      <div ref={canvasRef} className="relative mx-auto hidden h-[880px] max-w-7xl px-5 lg:block">
         {pieces.map((p, i) => (
           <div
             key={p.slug}
@@ -152,8 +221,11 @@ export default function Hero() {
           </div>
         ))}
 
-        {/* Centered text column — fixed, does not parallax */}
-        <div className="pointer-events-none absolute inset-x-0 top-[32%] mx-auto max-w-xl text-center">
+        {/* Centered text column — the shield rect is measured from this div */}
+        <div
+          ref={shieldRef}
+          className="pointer-events-none absolute inset-x-0 top-[32%] z-10 mx-auto max-w-xl text-center"
+        >
           <h1 className="font-display leading-[0.95] text-ink">
             <span className="block overflow-hidden">
               <span className="hero-word block text-[5rem] xl:text-[6.5rem]">
