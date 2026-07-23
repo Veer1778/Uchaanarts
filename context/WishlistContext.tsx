@@ -10,7 +10,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { useAuth } from "./AuthContext";
+import { useAuthOptional } from "./AuthContext";
 import { artworks as allArtworks, artists as allArtists } from "@/lib/data";
 
 export type WishItem = {
@@ -48,7 +48,11 @@ const STORAGE_KEY = "uchaan-wishlist";
  * overrides local. Signing out keeps the local copy.
  */
 export function WishlistProvider({ children }: { children: ReactNode }) {
-  const { user, loading } = useAuth();
+  // Optional: this provider is mounted on every page including 404s that
+  // aren't wrapped in AuthProvider during prerender.
+  const auth = useAuthOptional();
+  const user = auth?.user ?? null;
+  const loading = auth?.loading ?? false;
   const [items, setItems] = useState<WishItem[]>([]);
   const hydrated = useRef(false);
   const syncing = useRef(false);
