@@ -114,7 +114,9 @@ export default function CategoriesGallery() {
       drag.current.startX = e.clientX;
       drag.current.startScroll = scroll.current.target;
       drag.current.moved = 0;
-      viewport.setPointerCapture(e.pointerId);
+      // No setPointerCapture: capturing retargets the eventual `click` to the
+      // container, which is exactly what made the card links unclickable.
+      // Move/up are tracked on window instead so drags survive leaving the strip.
     };
 
     const onMove = (e: PointerEvent) => {
@@ -124,13 +126,8 @@ export default function CategoriesGallery() {
       scroll.current.target = drag.current.startScroll - dx;
     };
 
-    const onUp = (e: PointerEvent) => {
+    const onUp = () => {
       drag.current.active = false;
-      try {
-        viewport.releasePointerCapture(e.pointerId);
-      } catch {
-        /* already released */
-      }
     };
 
     // Suppress the click if the pointer was dragged, so dragging never
@@ -156,9 +153,9 @@ export default function CategoriesGallery() {
     if (!reduce) {
       viewport.addEventListener("wheel", onWheel, { passive: false });
       viewport.addEventListener("pointerdown", onDown);
-      viewport.addEventListener("pointermove", onMove);
-      viewport.addEventListener("pointerup", onUp);
-      viewport.addEventListener("pointercancel", onUp);
+      window.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerup", onUp);
+      window.addEventListener("pointercancel", onUp);
       viewport.addEventListener("click", onClickCapture, true);
     }
     viewport.addEventListener("keydown", onKey);
@@ -167,9 +164,9 @@ export default function CategoriesGallery() {
       cancelAnimationFrame(raf.current);
       viewport.removeEventListener("wheel", onWheel);
       viewport.removeEventListener("pointerdown", onDown);
-      viewport.removeEventListener("pointermove", onMove);
-      viewport.removeEventListener("pointerup", onUp);
-      viewport.removeEventListener("pointercancel", onUp);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
       viewport.removeEventListener("click", onClickCapture, true);
       viewport.removeEventListener("keydown", onKey);
     };
