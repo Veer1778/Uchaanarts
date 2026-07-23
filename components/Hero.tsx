@@ -29,18 +29,20 @@ type Piece = {
   depth: number;
 };
 
-/* Positions hug the edges; the centre band stays clear of the text. */
+/* ArteFACT spacing: pieces fill the whole field — corners, rails, and a few
+   sitting right beside the text — at moderate sizes, instead of hugging edges. */
 const pieces: Piece[] = [
-  { src: `${U}/itempic/thumbmain/1741109721_su.jpg`, slug: "maya", title: "Maya", pos: "left-[1%] top-[2%] w-64", depth: 34 },
-  { src: `${U}/slider/1728130444_ganesha_series_36x54_oil_on_linen_canvas_300000_-_copy.jpg`, slug: "ganesha-series", title: "Ganesha Series", pos: "right-[1%] top-[3%] w-56", depth: 18 },
-  { src: `${U}/itempic/thumbmain/1726310195_agomoni_17x19x5_bronze_140000.jpg`, slug: "agomoni", title: "Agomoni", pos: "left-[21%] top-[1%] w-52", depth: 44 },
-  { src: `${U}/itempic/thumbmain/1732105315_raghu_neware_search_of_eternity-1203__36x36_oil_on_canvas_180000.jpg`, slug: "search-of-eternity", title: "Search of Eternity", pos: "right-[20%] top-[2%] w-48", depth: 28 },
-  { src: `${U}/itempic/thumbmain/1744531634_whatsapp_image_2025-04-12_at_190101_5eb25f3e.jpg`, slug: "market-hustle", title: "Market Hustle", pos: "-left-[2%] top-[40%] w-72", depth: 26 },
-  { src: `${U}/itempic/thumbmain/1740229981_pankaj_bawadekar.jpg`, slug: "procession", title: "Procession", pos: "-right-[2%] top-[38%] w-72", depth: 30 },
-  { src: `${U}/slider/1724254173_wash_copy.jpg`, slug: "monsoon-wash", title: "Monsoon Wash", pos: "left-[3%] top-[76%] w-64", depth: 42 },
-  { src: `${U}/itempic/thumbmain/1747563640_horse_resonance_1.JPG`, slug: "horse-resonance-1", title: "Horse, Resonance", pos: "right-[3%] top-[74%] w-56", depth: 48 },
-  { src: `${U}/itempic/thumbmain/1763810405_whatsapp_image_2025-11-22_at_160530.jpeg`, slug: "posing-on-a-boat", title: "Posing on a Boat", pos: "left-[30%] top-[82%] w-64", depth: 22 },
-  { src: `${U}/itempic/thumbmain/1780502416_vijay_nandi_2.jpeg`, slug: "divine-harmony", title: "Divine Harmony", pos: "right-[26%] top-[84%] w-52", depth: 36 },
+  { src: `${U}/slider/1728130444_ganesha_series_36x54_oil_on_linen_canvas_300000_-_copy.jpg`, slug: "ganesha-series", title: "Ganesha Series", pos: "left-[9%] top-[2%] w-40", depth: 18 },
+  { src: `${U}/itempic/thumbmain/1741109721_su.jpg`, slug: "maya", title: "Maya", pos: "left-[28%] -top-[2%] w-48", depth: 34 },
+  { src: `${U}/itempic/thumbmain/1732105315_raghu_neware_search_of_eternity-1203__36x36_oil_on_canvas_180000.jpg`, slug: "search-of-eternity", title: "Search of Eternity", pos: "left-[49%] top-[9%] w-40", depth: 28 },
+  { src: `${U}/itempic/thumbmain/1747563640_horse_resonance_1.JPG`, slug: "horse-resonance-1", title: "Horse, Resonance", pos: "right-[23%] top-[2%] w-44", depth: 48 },
+  { src: `${U}/itempic/thumbmain/1740229981_pankaj_bawadekar.jpg`, slug: "procession", title: "Procession", pos: "right-[3%] top-[7%] w-48", depth: 30 },
+  { src: `${U}/itempic/thumbmain/1744531634_whatsapp_image_2025-04-12_at_190101_5eb25f3e.jpg`, slug: "market-hustle", title: "Market Hustle", pos: "left-[2%] top-[28%] w-44", depth: 26 },
+  { src: `${U}/itempic/thumbmain/1726310195_agomoni_17x19x5_bronze_140000.jpg`, slug: "agomoni", title: "Agomoni", pos: "left-[22%] top-[32%] w-40", depth: 44 },
+  { src: `${U}/slider/1764488212_untitled_design_2.png`, slug: "cosmos-within", title: "Cosmos Within", pos: "right-[26%] top-[30%] w-36", depth: 24 },
+  { src: `${U}/itempic/thumbmain/1780502416_vijay_nandi_2.jpeg`, slug: "divine-harmony", title: "Divine Harmony", pos: "right-[7%] top-[44%] w-44", depth: 36 },
+  { src: `${U}/slider/1724254173_wash_copy.jpg`, slug: "monsoon-wash", title: "Monsoon Wash", pos: "left-[7%] top-[62%] w-44", depth: 42 },
+  { src: `${U}/itempic/thumbmain/1763810405_whatsapp_image_2025-11-22_at_160530.jpeg`, slug: "posing-on-a-boat", title: "Posing on a Boat", pos: "left-[27%] top-[64%] w-48", depth: 22 },
 ];
 
 export default function Hero() {
@@ -124,7 +126,7 @@ export default function Hero() {
       <div className="aura left-1/2 top-10 h-72 w-72 -translate-x-1/2 opacity-60" />
 
       {/* Desktop: scattered collage with parallax */}
-      <div className="relative mx-auto hidden h-[1020px] max-w-7xl px-5 lg:block">
+      <div className="relative mx-auto hidden h-[880px] max-w-7xl px-5 lg:block">
         {pieces.map((p, i) => (
           <div
             key={p.slug}
@@ -151,7 +153,7 @@ export default function Hero() {
         ))}
 
         {/* Centered text column — fixed, does not parallax */}
-        <div className="pointer-events-none absolute inset-x-0 top-[24%] mx-auto max-w-xl text-center">
+        <div className="pointer-events-none absolute inset-x-0 top-[32%] mx-auto max-w-xl text-center">
           <h1 className="font-display leading-[0.95] text-ink">
             <span className="block overflow-hidden">
               <span className="hero-word block text-[5rem] xl:text-[6.5rem]">
