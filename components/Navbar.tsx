@@ -55,7 +55,9 @@ export default function Navbar() {
                   {l.label}
                   {active && (
                     <motion.span
-                      layoutId="nav-underline"
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, ease: "easeOut" }}
                       className="absolute -bottom-1.5 left-0 h-px w-full bg-signal"
                     />
                   )}
