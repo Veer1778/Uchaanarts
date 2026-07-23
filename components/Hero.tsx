@@ -7,19 +7,14 @@ import gsap from "gsap";
 /**
  * Hero — scattered collage with mouse-move depth parallax (ArteFACT style).
  *
- * As the cursor moves, every artwork drifts opposite to it, each by its own
- * `depth` factor, so near images travel further than far ones and the collage
- * reads as a 3D plane. The headline, subtitle and Explore button stay fixed.
+ * Cursor deflection drives each artwork opposite to the mouse, scaled by a
+ * per-piece `depth`, via lazy gsap.quickTo setters (eased, floaty trail).
+ * The headline, subtitle and Explore button stay fixed.
  *
- * Implementation notes:
- *  • gsap.quickTo per image (x and y) — updates are lazy and eased
- *    (power3, 1.1s), which produces the floaty trail in the reference rather
- *    than a rigid 1:1 track.
- *  • The entrance animation animates `opacity`/`scale` only, so it never
- *    fights the parallax's `x`/`y` on the same elements.
- *  • Parallax listens on window mousemove but only when the hero is on
- *    screen, is desktop-only (the mobile grid has no cursor), and respects
- *    prefers-reduced-motion.
+ * The effect is gated by an IntersectionObserver with thresholds: it runs only
+ * while at least a quarter of the hero is visible. Scroll below that and the
+ * parallax stops and every image eases back to rest — no work is done on
+ * mousemove for the remainder of the page.
  */
 
 const U = "https://www.uchaanarts.com/uploaded_files";
@@ -30,18 +25,22 @@ type Piece = {
   title: string;
   /** desktop absolute position + WIDTH only (height is natural, uncropped) */
   pos: string;
-  /** parallax travel in px at full cursor deflection; sign = direction */
+  /** parallax travel in px at full cursor deflection */
   depth: number;
 };
 
+/* Positions keep the centre band (~x 30–70%, y 15–70%) clear for the text. */
 const pieces: Piece[] = [
-  { src: `${U}/itempic/thumbmain/1741109721_su.jpg`, slug: "maya", title: "Maya", pos: "left-[4%] top-[5%] w-56", depth: 34 },
-  { src: `${U}/slider/1728130444_ganesha_series_36x54_oil_on_linen_canvas_300000_-_copy.jpg`, slug: "ganesha-series", title: "Ganesha Series", pos: "right-[4%] top-[6%] w-44", depth: 18 },
-  { src: `${U}/itempic/thumbmain/1744531634_whatsapp_image_2025-04-12_at_190101_5eb25f3e.jpg`, slug: "market-hustle", title: "Market Hustle", pos: "left-[0%] top-[40%] w-60", depth: 26 },
-  { src: `${U}/slider/1724254173_wash_copy.jpg`, slug: "monsoon-wash", title: "Monsoon Wash", pos: "left-[7%] top-[74%] w-56", depth: 42 },
-  { src: `${U}/itempic/thumbmain/1740229981_pankaj_bawadekar.jpg`, slug: "procession", title: "Procession", pos: "right-[2%] top-[42%] w-60", depth: 30 },
-  { src: `${U}/itempic/thumbmain/1747563640_horse_resonance_1.JPG`, slug: "horse-resonance-1", title: "Horse, Resonance", pos: "right-[8%] top-[74%] w-40", depth: 48 },
-  { src: `${U}/slider/1762953059_untitled_design_2.jpg`, slug: "posing-on-a-boat", title: "Banaras", pos: "left-[40%] top-[80%] w-60", depth: 22 },
+  { src: `${U}/itempic/thumbmain/1741109721_su.jpg`, slug: "maya", title: "Maya", pos: "left-[4%] top-[3%] w-48", depth: 34 },
+  { src: `${U}/slider/1728130444_ganesha_series_36x54_oil_on_linen_canvas_300000_-_copy.jpg`, slug: "ganesha-series", title: "Ganesha Series", pos: "right-[5%] top-[4%] w-40", depth: 18 },
+  { src: `${U}/itempic/thumbmain/1726310195_agomoni_17x19x5_bronze_140000.jpg`, slug: "agomoni", title: "Agomoni", pos: "left-[24%] top-[10%] w-40", depth: 44 },
+  { src: `${U}/itempic/thumbmain/1732105315_raghu_neware_search_of_eternity-1203__36x36_oil_on_canvas_180000.jpg`, slug: "search-of-eternity", title: "Search of Eternity", pos: "right-[22%] top-[12%] w-36", depth: 28 },
+  { src: `${U}/itempic/thumbmain/1744531634_whatsapp_image_2025-04-12_at_190101_5eb25f3e.jpg`, slug: "market-hustle", title: "Market Hustle", pos: "left-[0%] top-[38%] w-56", depth: 26 },
+  { src: `${U}/itempic/thumbmain/1740229981_pankaj_bawadekar.jpg`, slug: "procession", title: "Procession", pos: "right-[1%] top-[40%] w-56", depth: 30 },
+  { src: `${U}/slider/1724254173_wash_copy.jpg`, slug: "monsoon-wash", title: "Monsoon Wash", pos: "left-[6%] top-[72%] w-52", depth: 42 },
+  { src: `${U}/itempic/thumbmain/1747563640_horse_resonance_1.JPG`, slug: "horse-resonance-1", title: "Horse, Resonance", pos: "right-[7%] top-[72%] w-40", depth: 48 },
+  { src: `${U}/itempic/thumbmain/1763810405_whatsapp_image_2025-11-22_at_160530.jpeg`, slug: "posing-on-a-boat", title: "Posing on a Boat", pos: "left-[38%] top-[78%] w-52", depth: 22 },
+  { src: `${U}/itempic/thumbmain/1780502416_vijay_nandi_2.jpeg`, slug: "divine-harmony", title: "Divine Harmony", pos: "right-[26%] top-[80%] w-40", depth: 36 },
 ];
 
 export default function Hero() {
@@ -58,7 +57,7 @@ export default function Hero() {
         opacity: 0,
         scale: 0.85,
         duration: 0.7,
-        stagger: 0.08,
+        stagger: 0.06,
         ease: "back.out(1.6)",
         delay: 0.5,
       });
@@ -80,11 +79,23 @@ export default function Hero() {
           depth: pieces[i]?.depth ?? 24,
         }));
 
+      // Active only while ≥25% of the hero is visible. Scrolling below the
+      // hero drops the ratio under the threshold -> parallax stops and all
+      // pieces ease back to rest.
       let active = false;
-      io = new IntersectionObserver(([entry]) => {
-        active = entry.isIntersecting;
-        if (!active) setters.forEach((s) => { s.x(0); s.y(0); });
-      });
+      io = new IntersectionObserver(
+        ([entry]) => {
+          const nowActive = entry.isIntersecting && entry.intersectionRatio >= 0.25;
+          if (active && !nowActive) {
+            setters.forEach((s) => {
+              s.x(0);
+              s.y(0);
+            });
+          }
+          active = nowActive;
+        },
+        { threshold: [0, 0.25, 0.5] }
+      );
       if (root.current) io.observe(root.current);
 
       onMove = (e: MouseEvent) => {
@@ -113,7 +124,7 @@ export default function Hero() {
       <div className="aura left-1/2 top-10 h-72 w-72 -translate-x-1/2 opacity-60" />
 
       {/* Desktop: scattered collage with parallax */}
-      <div className="relative mx-auto hidden h-[900px] max-w-6xl px-5 lg:block">
+      <div className="relative mx-auto hidden h-[940px] max-w-6xl px-5 lg:block">
         {pieces.map((p, i) => (
           <div
             key={p.slug}
@@ -133,14 +144,14 @@ export default function Hero() {
                 src={p.src}
                 alt={p.title}
                 className="block h-auto w-full"
-                loading={i < 4 ? "eager" : "lazy"}
+                loading={i < 5 ? "eager" : "lazy"}
               />
             </Link>
           </div>
         ))}
 
         {/* Centered text column — fixed, does not parallax */}
-        <div className="pointer-events-none absolute inset-x-0 top-[18%] mx-auto max-w-xl text-center">
+        <div className="pointer-events-none absolute inset-x-0 top-[20%] mx-auto max-w-xl text-center">
           <h1 className="font-display leading-[0.95] text-ink">
             <span className="block overflow-hidden">
               <span className="hero-word block text-[5rem] xl:text-[6.5rem]">
