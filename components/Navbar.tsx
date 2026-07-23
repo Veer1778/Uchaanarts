@@ -5,9 +5,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Heart, ShoppingBag } from "lucide-react";
+import { Heart, ShoppingBag, UserRound } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
+import { useAuth } from "@/context/AuthContext";
 
 const links = [
   { href: "/", label: "Home" },
@@ -22,6 +23,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const { count, open } = useCart();
   const { count: wishCount } = useWishlist();
+  const { user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -68,6 +70,20 @@ export default function Navbar() {
         </nav>
 
         <div className="flex items-center gap-4">
+          <Link
+            href={user ? "/account" : "/login"}
+            aria-label={user ? "Your account" : "Sign in"}
+            className="relative text-ink"
+          >
+            <UserRound size={19} />
+            {user && (
+              <span
+                aria-hidden
+                className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full border border-paper bg-signal"
+              />
+            )}
+          </Link>
+
           <Link
             href="/wishlist"
             className="relative text-ink"
