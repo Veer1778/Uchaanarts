@@ -39,8 +39,8 @@ const pieces: Piece[] = [
   { src: `${U}/itempic/thumbmain/1747563640_horse_resonance_1.JPG`, slug: "horse-resonance-1", title: "Horse, Resonance", pos: "right-[23%] top-[2%] w-44", depth: 48 },
   { src: `${U}/itempic/thumbmain/1740229981_pankaj_bawadekar.jpg`, slug: "procession", title: "Procession", pos: "right-[3%] top-[7%] w-48", depth: 30 },
   { src: `${U}/itempic/thumbmain/1744531634_whatsapp_image_2025-04-12_at_190101_5eb25f3e.jpg`, slug: "market-hustle", title: "Market Hustle", pos: "left-[2%] top-[28%] w-44", depth: 26 },
-  { src: `${U}/itempic/thumbmain/1726310195_agomoni_17x19x5_bronze_140000.jpg`, slug: "agomoni", title: "Agomoni", pos: "left-[22%] top-[32%] w-40", depth: 44 },
-  { src: `${U}/slider/1764488212_untitled_design_2.png`, slug: "cosmos-within", title: "Cosmos Within", pos: "right-[26%] top-[30%] w-36", depth: 24 },
+  { src: `${U}/itempic/thumbmain/1726310195_agomoni_17x19x5_bronze_140000.jpg`, slug: "agomoni", title: "Agomoni", pos: "left-[14%] top-[32%] w-40", depth: 44 },
+  { src: `${U}/slider/1764488212_untitled_design_2.png`, slug: "cosmos-within", title: "Cosmos Within", pos: "right-[17%] top-[30%] w-36", depth: 24 },
   { src: `${U}/itempic/thumbmain/1780502416_vijay_nandi_2.jpeg`, slug: "divine-harmony", title: "Divine Harmony", pos: "right-[7%] top-[44%] w-44", depth: 36 },
   { src: `${U}/slider/1724254173_wash_copy.jpg`, slug: "monsoon-wash", title: "Monsoon Wash", pos: "left-[7%] top-[62%] w-44", depth: 42 },
   { src: `${U}/itempic/thumbmain/1763810405_whatsapp_image_2025-11-22_at_160530.jpeg`, slug: "posing-on-a-boat", title: "Posing on a Boat", pos: "left-[27%] top-[64%] w-48", depth: 22 },
@@ -121,12 +121,33 @@ export default function Hero() {
 
       let last = { nx: 0, ny: 0 };
 
-      /** Apply parallax for the current cursor, clamped outside the shield. */
+      // Stable per-piece base offset that resolves any REST overlap with the
+      // shield. Computed once per layout (load/resize), never per frame — a
+      // per-frame min-axis resolution flips direction as the piece moves,
+      // which teleported one image between two spots.
+      const bases = setters.map(() => ({ dx: 0, dy: 0 }));
+
+      const measureBases = () => {
+        const shield = shieldRect();
+        if (!shield) return;
+        setters.forEach((s, i) => {
+          const { el } = s;
+          const rect: Rect = {
+            l: el.offsetLeft,
+            t: el.offsetTop,
+            r: el.offsetLeft + el.offsetWidth,
+            b: el.offsetTop + el.offsetHeight,
+          };
+          bases[i] = pushOut(rect, shield);
+        });
+      };
+
+      /** Apply parallax on top of the stable base, clamped outside the shield. */
       const apply = () => {
         const shield = shieldRect();
-        setters.forEach((s) => {
-          let tx = -last.nx * s.depth;
-          let ty = -last.ny * s.depth;
+        setters.forEach((s, i) => {
+          let tx = bases[i].dx - last.nx * s.depth;
+          let ty = bases[i].dy - last.ny * s.depth;
           if (shield) {
             const { el } = s;
             const rect: Rect = {
@@ -135,6 +156,8 @@ export default function Hero() {
               r: el.offsetLeft + el.offsetWidth + tx,
               b: el.offsetTop + el.offsetHeight + ty,
             };
+            // Residual graze only (bounded by depth), so the axis is stable
+            // and the piece slides along the shield edge instead of jumping.
             const { dx, dy } = pushOut(rect, shield);
             tx += dx;
             ty += dy;
@@ -171,13 +194,17 @@ export default function Hero() {
 
       // Rest-state correction: once images have loaded (heights known) and on
       // resize, push any piece that intersects the shield out of it.
-      onLoad = () => apply();
-      onResize = () => apply();
-      if (document.readyState === "complete") apply();
+      const remeasure = () => {
+        measureBases();
+        apply();
+      };
+      onLoad = remeasure;
+      onResize = remeasure;
+      if (document.readyState === "complete") remeasure();
       else window.addEventListener("load", onLoad);
       window.addEventListener("resize", onResize);
       // Also run shortly after mount for cached images.
-      timeoutId = window.setTimeout(apply, 300);
+      timeoutId = window.setTimeout(remeasure, 300);
     }
 
     return () => {
