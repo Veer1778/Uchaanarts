@@ -14,8 +14,15 @@
   --font-body: var(--font-poppins), "Poppins", system-ui, sans-serif;
 }
 
+/* Decorative .aura blobs are positioned with negative offsets (e.g. -right-40),
+   which widens the document past the viewport on phones — Chrome then shrinks
+   the whole page to fit and lets you zoom out. Clipping at the root stops that.
+   `clip` rather than `hidden`: hidden would create a scroll container and break
+   the sticky navbar. */
 html {
   scroll-behavior: smooth;
+  overflow-x: clip;
+  max-width: 100%;
 }
 
 body {
@@ -23,6 +30,9 @@ body {
   color: var(--color-ink);
   font-family: var(--font-body);
   overflow-x: clip;
+  max-width: 100%;
+  /* Belt and braces for browsers without `overflow: clip` support. */
+  position: relative;
 }
 
 h1,
