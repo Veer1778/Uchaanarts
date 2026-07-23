@@ -1,5 +1,8 @@
 "use client";
 
+/* Auth-gated: skip prerender so `useAuth()` never runs without a provider. */
+export const dynamic = "force-dynamic";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
