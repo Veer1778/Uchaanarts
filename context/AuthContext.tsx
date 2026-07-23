@@ -161,6 +161,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+/** Like useAuth, but returns null instead of throwing when the provider
+ * isn't in the tree (used by leaf components rendered on the not-found
+ * page and other prerender-only routes). */
+export function useAuthOptional() {
+  return useContext(AuthContext);
+}
+
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
