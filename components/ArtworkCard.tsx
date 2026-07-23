@@ -49,8 +49,8 @@ export default function ArtworkCard({
         />
       </div>
 
-      <div className="flex flex-1 flex-col p-4">
-        <h3 className="font-display text-lg font-medium leading-snug text-ink group-hover:text-signal">
+      <div className="flex flex-1 flex-col p-3 sm:p-4">
+        <h3 className="font-display text-base font-medium leading-snug text-ink group-hover:text-signal sm:text-lg">
           {artwork.title}
         </h3>
         <Link
@@ -61,19 +61,19 @@ export default function ArtworkCard({
           By {name}
         </Link>
 
-        <div className="mt-4 space-y-0.5 text-xs text-muted">
+        <div className="mt-3 space-y-0.5 text-[11px] text-muted sm:mt-4 sm:text-xs">
           <p className="text-ink">{artwork.category}</p>
           <p>{artwork.medium}</p>
         </div>
 
         <div className="mt-2 flex items-end justify-between gap-2">
-          <p className="text-xs text-muted">{artwork.size}</p>
-          <p className="whitespace-nowrap text-sm font-semibold text-signal">
+          <p className="text-[11px] text-muted sm:text-xs">{artwork.size}</p>
+          <p className="whitespace-nowrap text-xs font-semibold text-signal sm:text-sm">
             {formatINR(artwork.price)}
           </p>
         </div>
 
-        <div className="mt-4 flex gap-2">
+        <div className="mt-3 flex gap-2 sm:mt-4">
           <button
             onClick={stop(() =>
               toggle({
@@ -90,7 +90,7 @@ export default function ArtworkCard({
             )}
             aria-pressed={wished}
             aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
-            className={`flex flex-1 items-center justify-center border py-2.5 transition-colors ${
+            className={`flex flex-1 items-center justify-center border py-2 transition-colors sm:py-2.5 ${
               wished
                 ? "border-signal bg-signal/5 text-signal"
                 : "border-line text-muted hover:border-signal hover:text-signal"
