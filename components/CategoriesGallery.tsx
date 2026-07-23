@@ -5,17 +5,16 @@ import Link from "next/link";
 import { categories } from "@/lib/data";
 
 /**
- * "By category" — a curved, draggable gallery.
+ * "By category".
  *
- * The curvature reuses the arc math from the React Bits CircularGallery
- * (R = (H² + B²) / 2B, arc = R − √(R² − x²), rotation = asin(x/R)), but it is
- * applied to DOM nodes instead of WebGL planes. That matters here because:
- *   • each card must be a real link (canvas text can't be clicked or crawled)
- *   • WebGL textures need `crossOrigin="anonymous"`, and uchaanarts.com sends
- *     no CORS headers, so the canvas version renders blank
+ * Desktop (lg+): a curved, draggable strip. The curvature reuses the arc math
+ * from React Bits' CircularGallery (R = (H² + B²) / 2B, arc = R − √(R² − x²),
+ * rotation = asin(x/R)) applied to DOM nodes, so each card stays a real link
+ * and the images load without the CORS constraint WebGL textures impose.
  *
- * Drag, horizontal wheel and arrow keys scroll it; motion is eased with a lerp
- * on rAF and loops infinitely. Respects prefers-reduced-motion.
+ * Mobile: a plain two-column grid. The arc radius is derived from viewport
+ * width, so on a ~390px screen the rotation becomes extreme and cards overlap —
+ * a normal section is simply the right answer at that size.
  */
 
 const U = "https://www.uchaanarts.com/uploaded_files";
@@ -49,15 +48,24 @@ export default function CategoriesGallery() {
   const scroll = useRef({ current: 0, target: 0 });
   const drag = useRef({ active: false, startX: 0, startScroll: 0, moved: 0 });
   const raf = useRef(0);
+  const seeded = useRef(false);
 
   const render = useCallback(() => {
     const viewport = viewportRef.current;
     const cards = cardRefs.current.filter(Boolean) as HTMLAnchorElement[];
+    const W = viewport?.clientWidth ?? 0;
 
-    if (viewport && cards.length) {
-      const W = viewport.clientWidth;
+    // W is 0 while the strip is display:none (mobile) — skip until visible.
+    if (viewport && cards.length && W > 0) {
+      const cardW = cards[0].offsetWidth;
+      const step = cardW + GAP;
+
+      if (!seeded.current && cardW > 0) {
+        scroll.current.current = scroll.current.target = -step * 1.5;
+        seeded.current = true;
+      }
+
       const H = W / 2;
-      const step = cards[0].offsetWidth + GAP;
       const total = step * cards.length;
       const R = (H * H + BEND * BEND) / (2 * BEND);
 
@@ -91,13 +99,6 @@ export default function CategoriesGallery() {
     if (!viewport) return;
 
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    // Start with the strip centred on the first card.
-    const first = cardRefs.current[0];
-    if (first) {
-      const step = first.offsetWidth + GAP;
-      scroll.current.current = scroll.current.target = -step * 1.5;
-    }
 
     raf.current = requestAnimationFrame(render);
 
@@ -174,6 +175,23 @@ export default function CategoriesGallery() {
     };
   }, [render]);
 
+  const cardFace = (c: string) => (
+    <>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={categoryImages[c]}
+        alt={c}
+        draggable={false}
+        loading="lazy"
+        className="h-full w-full select-none object-cover transition-transform duration-700 group-hover:scale-105"
+      />
+      <span className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/15 to-transparent" />
+      <span className="absolute bottom-3 left-3 font-display text-base text-white sm:bottom-4 sm:left-4 sm:text-lg">
+        {c}
+      </span>
+    </>
+  );
+
   return (
     <>
       {/* Clear divide between the hero and this section */}
@@ -181,7 +199,7 @@ export default function CategoriesGallery() {
         <hr className="border-t border-line" />
       </div>
 
-      <section className="pt-16" aria-labelledby="categories">
+      <section className="pt-12 sm:pt-16" aria-labelledby="categories">
         <div className="mx-auto max-w-6xl px-5">
           <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-signal">
             Explore our diverse range of art
@@ -191,13 +209,27 @@ export default function CategoriesGallery() {
           </h2>
         </div>
 
-        {/* Curved, draggable strip */}
+        {/* MOBILE / TABLET — plain grid */}
+        <div className="mx-auto mt-8 grid max-w-6xl grid-cols-2 gap-4 px-5 sm:grid-cols-3 lg:hidden">
+          {shown.map((c) => (
+            <Link
+              key={c}
+              href={`/art-gallery?category=${encodeURIComponent(c)}`}
+              aria-label={`Browse ${c}`}
+              className="group relative block aspect-[3/4] overflow-hidden rounded-[10px] shadow-[0_10px_30px_-12px_rgba(0,0,0,0.35)]"
+            >
+              {cardFace(c)}
+            </Link>
+          ))}
+        </div>
+
+        {/* DESKTOP — curved, draggable strip */}
         <div
           ref={viewportRef}
           tabIndex={0}
           role="group"
           aria-label="Browse categories — drag or use arrow keys"
-          className="relative mt-10 h-[440px] w-full cursor-grab touch-pan-y overflow-hidden active:cursor-grabbing"
+          className="relative mt-10 hidden h-[440px] w-full cursor-grab touch-pan-y overflow-hidden active:cursor-grabbing lg:block"
         >
           {loop.map((c, i) => (
             <Link
@@ -210,27 +242,14 @@ export default function CategoriesGallery() {
               aria-hidden={i >= shown.length}
               tabIndex={i >= shown.length ? -1 : 0}
               draggable={false}
-              className="group absolute left-1/2 top-1/2 block h-[340px] w-[240px] overflow-hidden rounded-[10px] shadow-[0_16px_40px_-16px_rgba(0,0,0,0.4)] will-change-transform"
+              className="group absolute left-1/2 top-1/2 block h-[340px] w-[240px] overflow-hidden rounded-[10px] opacity-0 shadow-[0_16px_40px_-16px_rgba(0,0,0,0.4)] will-change-transform"
             >
-              {/* Plain img: no CORS constraint, and the node is transformed
-                  every frame, so next/image's wrapper buys nothing here. */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={categoryImages[c]}
-                alt={c}
-                draggable={false}
-                loading={i < shown.length ? "eager" : "lazy"}
-                className="h-full w-full select-none object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-              <span className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/15 to-transparent" />
-              <span className="absolute bottom-4 left-4 font-display text-lg text-white">
-                {c}
-              </span>
+              {cardFace(c)}
             </Link>
           ))}
         </div>
 
-        <p className="mt-6 text-center text-[11px] uppercase tracking-[0.2em] text-faint">
+        <p className="mt-6 hidden text-center text-[11px] uppercase tracking-[0.2em] text-faint lg:block">
           Drag to explore
         </p>
       </section>
