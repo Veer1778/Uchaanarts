@@ -78,3 +78,31 @@ add_action('rest_api_init', function () {
  *        Medium  (e.g. "Acrylic on Canvas")
  *        Size    (e.g. "30 x 30 in")
  */
+
+/* 6) REST route for the cross-device wishlist (called from /api/account/wishlist).
+ *    Stores the slug array as user meta. Auth via the JWT token in the header. */
+add_action('rest_api_init', function () {
+  register_rest_route('uchaan/v1', '/wishlist', [
+    [
+      'methods'  => 'GET',
+      'callback' => function () {
+        if (!is_user_logged_in()) return new WP_Error('unauth', 'Sign in required', ['status' => 401]);
+        $slugs = get_user_meta(get_current_user_id(), 'uchaan_wishlist', true);
+        return ['slugs' => is_array($slugs) ? array_values($slugs) : []];
+      },
+      'permission_callback' => '__return_true',
+    ],
+    [
+      'methods'  => 'POST',
+      'callback' => function (WP_REST_Request $req) {
+        if (!is_user_logged_in()) return new WP_Error('unauth', 'Sign in required', ['status' => 401]);
+        $slugs = $req->get_json_params()['slugs'] ?? [];
+        if (!is_array($slugs)) $slugs = [];
+        $slugs = array_slice(array_values(array_unique(array_map('sanitize_title', $slugs))), 0, 500);
+        update_user_meta(get_current_user_id(), 'uchaan_wishlist', $slugs);
+        return ['ok' => true, 'slugs' => $slugs];
+      },
+      'permission_callback' => '__return_true',
+    ],
+  ]);
+});
