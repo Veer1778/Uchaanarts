@@ -120,7 +120,7 @@ export default function Hero() {
 
             <div className="mt-4 flex items-center justify-between">
               <p className="text-sm italic text-muted">
-                Inside the Delhi &amp; Gurgaon spaces
+                Inside the New Delhi &amp; Gurugram spaces
               </p>
               <div className="flex gap-2">
                 <span className="diamond bg-gold" />
