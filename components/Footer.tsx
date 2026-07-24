@@ -12,7 +12,7 @@ export default function Footer() {
   return (
     <footer className="relative mt-24 overflow-hidden border-t border-line bg-wash text-ink">
       
-      <div className="relative mx-auto max-w-[1400px] border-x border-line px-6 py-16 sm:px-10">
+      <div className="relative mx-auto max-w-[1400px] px-6 py-16 sm:px-10">
         <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
             <div className="mb-4 flex items-center gap-2">
