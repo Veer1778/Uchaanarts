@@ -192,28 +192,31 @@ export default function CategoriesGallery() {
   return (
     <>
       {/* Clear divide between the hero and this section */}
-      <div className="mx-auto max-w-6xl px-5">
+      <div className="mx-auto max-w-[1400px] px-6 sm:px-10">
         <hr className="border-t border-line" />
       </div>
 
       <section className="pt-12 sm:pt-16" aria-labelledby="categories">
-        <div className="mx-auto max-w-6xl px-5">
-          <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-signal">
-            Explore our diverse range of art
-          </p>
-          <h2 id="categories" className="font-display text-4xl leading-tight sm:text-5xl">
-            By category
+        <div className="mx-auto max-w-[1400px] px-6 sm:px-10">
+          <div className="mb-4 flex items-center gap-3">
+            <span className="diamond bg-signal" />
+            <span className="diamond bg-gold" />
+            <span className="ml-1 h-px flex-1 bg-line" />
+            <p className="label shrink-0 text-muted">Explore our diverse range of art</p>
+          </div>
+          <h2 id="categories" className="font-display text-4xl leading-[1.05] sm:text-5xl">
+            By <span className="highlight">category</span>
           </h2>
         </div>
 
         {/* MOBILE / TABLET — plain grid */}
-        <div className="mx-auto mt-8 grid max-w-6xl grid-cols-2 gap-4 px-5 sm:grid-cols-3 lg:hidden">
+        <div className="mx-auto mt-8 grid max-w-[1400px] grid-cols-2 gap-4 px-6 sm:px-10 sm:grid-cols-3 lg:hidden">
           {shown.map((c) => (
             <Link
               key={c}
               href={`/art-gallery?category=${encodeURIComponent(c)}`}
               aria-label={`Browse ${c}`}
-              className="group relative block aspect-[3/4] overflow-hidden rounded-[10px] shadow-[0_10px_30px_-12px_rgba(0,0,0,0.35)]"
+              className="group relative block aspect-[3/4] overflow-hidden border border-line"
             >
               {cardFace(c)}
             </Link>
@@ -239,7 +242,7 @@ export default function CategoriesGallery() {
               aria-hidden={i >= shown.length}
               tabIndex={i >= shown.length ? -1 : 0}
               draggable={false}
-              className="group absolute left-1/2 top-1/2 block h-[340px] w-[240px] overflow-hidden rounded-[10px] opacity-0 shadow-[0_16px_40px_-16px_rgba(0,0,0,0.4)] will-change-transform"
+              className="group absolute left-1/2 top-1/2 block h-[340px] w-[240px] overflow-hidden border border-line opacity-0 will-change-transform"
             >
               {cardFace(c)}
             </Link>
