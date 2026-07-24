@@ -49,6 +49,10 @@ export type Filters = {
   priceMax: number;
   size: "" | "S" | "M" | "L";
   orientation: "" | "Portrait" | "Landscape" | "Square";
+  /** Style / theme taxonomy from uchaanarts.com */
+  style: string;
+  /** Traditional folk-art form */
+  folkForm: string;
 };
 
 export const defaultFilters: Filters = {
@@ -58,21 +62,41 @@ export const defaultFilters: Filters = {
   priceMax: 1000000,
   size: "",
   orientation: "",
+  style: "All",
+  folkForm: "All",
 };
+
+/** How many filters are currently narrowing the results. */
+export function activeFilterCount(f: Filters): number {
+  let n = 0;
+  if (f.category !== "All") n++;
+  if (f.artist !== "All") n++;
+  if (f.style !== "All") n++;
+  if (f.folkForm !== "All") n++;
+  if (f.size) n++;
+  if (f.orientation) n++;
+  if (f.priceMin !== 0 || f.priceMax !== 1000000) n++;
+  return n;
+}
 
 export default function FilterSidebar({
   filters,
   setFilters,
   categories,
   artists,
+  styles,
+  folkForms,
   onReset,
 }: {
   filters: Filters;
   setFilters: (f: Filters) => void;
   categories: string[];
   artists: { slug: string; name: string }[];
+  styles: string[];
+  folkForms: string[];
   onReset: () => void;
 }) {
+  const [styleQuery, setStyleQuery] = useState("");
   const setField = <K extends keyof Filters>(k: K, v: Filters[K]) =>
     setFilters({ ...filters, [k]: v });
 
@@ -210,6 +234,74 @@ export default function FilterSidebar({
         </div>
       </Section>
 
+      <Section title="Style / Theme">
+        <div className="space-y-2">
+          {/* The live site lists ~36 styles, so make them searchable rather
+              than an endless scroll. */}
+          <input
+            type="search"
+            value={styleQuery}
+            onChange={(e) => setStyleQuery(e.target.value)}
+            placeholder="Search styles"
+            aria-label="Search styles"
+            className="w-full border border-line bg-paper px-2.5 py-1.5 text-xs outline-none focus:border-signal"
+          />
+          <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
+            <label className="flex cursor-pointer items-center gap-2 text-sm">
+              <input
+                type="radio"
+                name="style"
+                checked={filters.style === "All"}
+                onChange={() => setField("style", "All")}
+                className="accent-signal"
+              />
+              <span>All styles</span>
+            </label>
+            {styles
+              .filter((st) => st.toLowerCase().includes(styleQuery.toLowerCase()))
+              .map((st) => (
+                <label key={st} className="flex cursor-pointer items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="style"
+                    checked={filters.style === st}
+                    onChange={() => setField("style", st)}
+                    className="accent-signal"
+                  />
+                  <span>{st}</span>
+                </label>
+              ))}
+          </div>
+        </div>
+      </Section>
+
+      <Section title="Folk Art Form">
+        <div className="space-y-2">
+          <label className="flex cursor-pointer items-center gap-2 text-sm">
+            <input
+              type="radio"
+              name="folkForm"
+              checked={filters.folkForm === "All"}
+              onChange={() => setField("folkForm", "All")}
+              className="accent-signal"
+            />
+            <span>All forms</span>
+          </label>
+          {folkForms.map((f) => (
+            <label key={f} className="flex cursor-pointer items-center gap-2 text-sm">
+              <input
+                type="radio"
+                name="folkForm"
+                checked={filters.folkForm === f}
+                onChange={() => setField("folkForm", f)}
+                className="accent-signal"
+              />
+              <span>{f}</span>
+            </label>
+          ))}
+        </div>
+      </Section>
+
       <Section title="Uchaan Picks">
         <p className="text-xs text-muted">
           Curator-selected works, updated monthly. Coming soon.
@@ -217,4 +309,4 @@ export default function FilterSidebar({
       </Section>
     </aside>
   );
-}
+    }
