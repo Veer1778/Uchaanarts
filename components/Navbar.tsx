@@ -5,10 +5,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Heart, ShoppingBag, UserRound } from "lucide-react";
+import { Heart, ShoppingBag, Menu, X } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { useAuthOptional } from "@/context/AuthContext";
+
+/**
+ * Navbar — editorial masthead: wordmark left, centred links, and a bracketed
+ * "Sign up" control on the right, as in the reference. Hairline rules tie it
+ * into the modular grid below.
+ */
 
 const links = [
   { href: "/", label: "Home" },
@@ -30,21 +36,25 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-ink/90 bg-paper/95 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
-        {/* Uchaan Arts logo */}
-        <Link href="/" aria-label="Uchaan Arts home" className="flex items-center">
+    <header className="sticky top-0 z-40 border-b border-line bg-paper/95 backdrop-blur">
+      <div className="mx-auto flex h-[72px] max-w-[1400px] items-center justify-between gap-6 px-6 sm:px-10">
+        {/* Wordmark */}
+        <Link href="/" aria-label="Uchaan Arts home" className="flex shrink-0 items-center gap-2.5">
           <Image
             src="/logo.png"
-            alt="Uchaan Arts"
+            alt=""
             width={129}
             height={83}
             priority
-            className="h-9 w-auto"
+            className="h-8 w-auto"
           />
+          <span className="hidden font-display text-lg leading-none sm:block">
+            the<span className="font-semibold">Uchaan</span>Gallery
+          </span>
         </Link>
 
-        <nav aria-label="Primary" className="hidden items-center gap-7 md:flex">
+        {/* Centred links */}
+        <nav className="hidden items-center gap-8 lg:flex">
           {links.map((l) => {
             const active =
               l.href === "/" ? pathname === "/" : pathname.startsWith(l.href);
@@ -52,114 +62,103 @@ export default function Navbar() {
               <Link
                 key={l.href}
                 href={l.href}
-                className={`text-[11px] uppercase tracking-[0.14em] transition-colors ${
+                className={`relative py-1 text-sm transition-colors ${
                   active ? "text-ink" : "text-muted hover:text-ink"
                 }`}
               >
-                <span className="relative">
-                  {l.label}
-                  {active && (
-                    <motion.span
-                      initial={{ opacity: 0, y: 5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, ease: "easeOut" }}
-                      className="absolute -bottom-1.5 left-0 h-px w-full bg-signal"
-                    />
-                  )}
-                </span>
+                {l.label}
+                {active && (
+                  <motion.span
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                    className="absolute -bottom-0.5 left-0 h-px w-full bg-signal"
+                  />
+                )}
               </Link>
             );
           })}
         </nav>
 
-        <div className="flex items-center gap-4">
+        {/* Utilities */}
+        <div className="flex shrink-0 items-center gap-4">
           <Link
-            href={user ? "/account" : "/login"}
-            aria-label={user ? "Your account" : "Sign in"}
-            className="relative text-ink"
+            href="/wishlist"
+            aria-label={`Wishlist, ${wishCount} items`}
+            className="relative text-ink transition-colors hover:text-signal"
           >
-            <UserRound size={19} />
-            {user && (
-              <span
-                aria-hidden
-                className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full border border-paper bg-signal"
-              />
+            <Heart size={19} strokeWidth={1.6} />
+            {wishCount > 0 && (
+              <span className="absolute -right-1.5 -top-1.5 grid h-4 w-4 place-items-center rounded-full bg-signal text-[10px] text-paper">
+                {wishCount}
+              </span>
             )}
           </Link>
 
-          <Link
-            href="/wishlist"
-            className="relative text-ink"
-            aria-label={`Wishlist, ${wishCount} item${wishCount === 1 ? "" : "s"}`}
+          <button
+            type="button"
+            onClick={open}
+            aria-label={`Cart, ${count} items`}
+            className="relative text-ink transition-colors hover:text-signal"
           >
-            <Heart size={19} />
-            <AnimatePresence>
-              {wishCount > 0 && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0 }}
-                  className="absolute -right-2.5 -top-2 grid h-4 w-4 place-items-center rounded-full bg-signal text-[9px] font-semibold text-white"
-                >
-                  {wishCount}
-                </motion.span>
-              )}
-            </AnimatePresence>
+            <ShoppingBag size={19} strokeWidth={1.6} />
+            {count > 0 && (
+              <span className="absolute -right-1.5 -top-1.5 grid h-4 w-4 place-items-center rounded-full bg-signal text-[10px] text-paper">
+                {count}
+              </span>
+            )}
+          </button>
+
+          {/* Bracketed sign-up control from the reference */}
+          <Link
+            href={user ? "/account" : "/login"}
+            className="relative hidden px-4 py-2 text-sm text-ink transition-colors hover:text-signal sm:block"
+          >
+            <span className="absolute left-0 top-0 h-2.5 w-2.5 border-l border-t border-signal" />
+            <span className="absolute bottom-0 right-0 h-2.5 w-2.5 border-b border-r border-signal" />
+            {user ? "Account" : "Sign up"}
           </Link>
 
           <button
-            onClick={open}
-            className="relative text-ink"
-            aria-label={`Open cart, ${count} item${count === 1 ? "" : "s"}`}
-          >
-            <ShoppingBag size={19} />
-            <AnimatePresence>
-              {count > 0 && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0 }}
-                  className="absolute -right-2.5 -top-2 grid h-4 w-4 place-items-center rounded-full bg-signal text-[9px] font-semibold text-white"
-                >
-                  {count}
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </button>
-
-          {/* Mobile menu toggle */}
-          <button
-            className="flex flex-col gap-1.5 md:hidden"
+            type="button"
             onClick={() => setMenuOpen((v) => !v)}
+            aria-label="Menu"
             aria-expanded={menuOpen}
-            aria-label="Toggle menu"
+            className="text-ink lg:hidden"
           >
-            <span className={`h-px w-6 bg-ink transition-transform ${menuOpen ? "translate-y-[3.5px] rotate-45" : ""}`} />
-            <span className={`h-px w-6 bg-ink transition-transform ${menuOpen ? "-translate-y-[3.5px] -rotate-45" : ""}`} />
+            {menuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
       </div>
 
+      {/* Mobile drawer */}
       <AnimatePresence>
         {menuOpen && (
           <motion.nav
-            aria-label="Mobile"
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden border-t border-line bg-paper md:hidden"
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden border-t border-line lg:hidden"
           >
-            <div className="flex flex-col px-5 py-4">
+            <div className="mx-auto max-w-[1400px] px-6 py-4">
               {links.map((l) => (
                 <Link
                   key={l.href}
                   href={l.href}
                   onClick={() => setMenuOpen(false)}
-                  className="py-3 text-sm uppercase tracking-[0.14em] text-ink"
+                  className="block border-b border-line py-3 font-display text-2xl last:border-0"
                 >
                   {l.label}
                 </Link>
               ))}
+              <Link
+                href={user ? "/account" : "/login"}
+                onClick={() => setMenuOpen(false)}
+                className="mt-4 inline-block bg-ink px-5 py-2.5 text-xs uppercase tracking-[0.24em] text-paper"
+              >
+                {user ? "My account" : "Sign up"}
+              </Link>
             </div>
           </motion.nav>
         )}
