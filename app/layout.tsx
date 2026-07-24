@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Poppins } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import Navbar from "@/components/Navbar";
@@ -19,7 +20,6 @@ const poppins = Poppins({
   variable: "--font-poppins",
   display: "swap",
 });
-
 
 export const metadata: Metadata = {
   title: {
@@ -42,14 +42,18 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${playfair.variable} ${poppins.variable}`}>
       <body className="antialiased">
-        <CartProvider>
-          <WishlistProvider>
-            <Navbar />
-            <main>{children}</main>
-            <Footer />
-            <CartDrawer />
-          </WishlistProvider>
-        </CartProvider>
+        {/* AuthProvider MUST wrap the others: CartProvider and
+            WishlistProvider both read from it via useAuth/useAuthOptional. */}
+        <AuthProvider>
+          <CartProvider>
+            <WishlistProvider>
+              <Navbar />
+              <main>{children}</main>
+              <Footer />
+              <CartDrawer />
+            </WishlistProvider>
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );
