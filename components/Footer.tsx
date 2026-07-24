@@ -10,15 +10,19 @@ const socials = [
 
 export default function Footer() {
   return (
-    <footer className="relative mt-24 overflow-hidden border-t border-ink/90 bg-ink text-white">
-      <div className="aura -right-32 -top-40 h-96 w-96 opacity-50" />
-      <div className="relative mx-auto max-w-6xl px-5 py-16">
+    <footer className="relative mt-24 overflow-hidden border-t border-line bg-wash text-ink">
+      
+      <div className="relative mx-auto max-w-[1400px] border-x border-line px-6 py-16 sm:px-10">
         <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
+            <div className="mb-4 flex items-center gap-2">
+              <span className="diamond bg-signal" />
+              <span className="diamond bg-gold" />
+            </div>
             <p className="font-display text-3xl">
-              Uchaan <span className="text-signal">Art</span>s
+              the<span className="font-semibold">Uchaan</span>Gallery
             </p>
-            <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/70">
+            <p className="mt-4 max-w-sm text-sm leading-relaxed text-muted">
               A nurturing ground for art and artists for over 15 years, with
               galleries in Delhi and Gurgaon. Every artwork tells a unique
               story — ours is to carry it to you.
@@ -30,7 +34,7 @@ export default function Footer() {
                   href={s.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[11px] uppercase tracking-[0.18em] text-white/60 transition-colors hover:text-signal"
+                  className="text-[11px] uppercase tracking-[0.18em] text-muted transition-colors hover:text-signal"
                 >
                   {s.label}
                 </a>
@@ -39,52 +43,52 @@ export default function Footer() {
           </div>
 
           <nav aria-label="Explore">
-            <p className="mb-4 text-[11px] uppercase tracking-[0.2em] text-white/50">
+            <p className="mb-4 text-[11px] uppercase tracking-[0.2em] text-faint">
               Explore
             </p>
-            <ul className="space-y-2.5 text-sm text-white/80">
-              <li><Link href="/art-gallery" className="hover:text-white">Art Gallery</Link></li>
-              <li><Link href="/artists" className="hover:text-white">Artists</Link></li>
-              <li><Link href="/exhibitions" className="hover:text-white">Exhibitions</Link></li>
-              <li><Link href="/blog" className="hover:text-white">Blog</Link></li>
-              <li><Link href="/about" className="hover:text-white">About Us</Link></li>
+            <ul className="space-y-2.5 text-sm text-muted">
+              <li><Link href="/art-gallery" className="hover:text-signal">Art Gallery</Link></li>
+              <li><Link href="/artists" className="hover:text-signal">Artists</Link></li>
+              <li><Link href="/exhibitions" className="hover:text-signal">Exhibitions</Link></li>
+              <li><Link href="/blog" className="hover:text-signal">Blog</Link></li>
+              <li><Link href="/about" className="hover:text-signal">About Us</Link></li>
             </ul>
           </nav>
 
           <nav aria-label="Support">
-            <p className="mb-4 text-[11px] uppercase tracking-[0.2em] text-white/50">
+            <p className="mb-4 text-[11px] uppercase tracking-[0.2em] text-faint">
               Support
             </p>
-            <ul className="space-y-2.5 text-sm text-white/80">
-              <li><a href="#" className="hover:text-white">Shipping Policy</a></li>
-              <li><a href="#" className="hover:text-white">Refund Policy</a></li>
-              <li><a href="#" className="hover:text-white">Terms &amp; Conditions</a></li>
-              <li><a href="#" className="hover:text-white">Privacy Policy</a></li>
+            <ul className="space-y-2.5 text-sm text-muted">
+              <li><a href="#" className="hover:text-signal">Shipping Policy</a></li>
+              <li><a href="#" className="hover:text-signal">Refund Policy</a></li>
+              <li><a href="#" className="hover:text-signal">Terms &amp; Conditions</a></li>
+              <li><a href="#" className="hover:text-signal">Privacy Policy</a></li>
             </ul>
           </nav>
 
           <div>
-            <p className="mb-4 text-[11px] uppercase tracking-[0.2em] text-white/50">
+            <p className="mb-4 text-[11px] uppercase tracking-[0.2em] text-faint">
               Visit / Contact
             </p>
-            <ul className="space-y-2.5 text-sm text-white/80">
+            <ul className="space-y-2.5 text-sm text-muted">
               <li>Delhi &amp; Gurgaon, India</li>
               <li>
-                <a href="tel:+918860277388" className="hover:text-white">
+                <a href="tel:+918860277388" className="hover:text-signal">
                   +91 88602 77388
                 </a>
               </li>
               <li>
-                <a href="mailto:info@uchaanarts.com" className="hover:text-white">
+                <a href="mailto:info@uchaanarts.com" className="hover:text-signal">
                   info@uchaanarts.com
                 </a>
               </li>
-              <li className="text-white/60">Open daily · 7 am – 10 pm IST</li>
+              <li className="text-muted">Open daily · 7 am – 10 pm IST</li>
             </ul>
           </div>
         </div>
 
-        <div className="mt-14 flex flex-col items-start justify-between gap-3 border-t border-white/10 pt-6 text-[11px] text-white/50 sm:flex-row">
+        <div className="mt-14 flex flex-col items-start justify-between gap-3 border-t border-line pt-6 text-[11px] text-faint sm:flex-row">
           <p>© {new Date().getFullYear()} Uchaan Arts. All rights reserved.</p>
           <p>Worldwide shipping · 100% secure payments · Expert curation</p>
         </div>
