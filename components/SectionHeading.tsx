@@ -21,7 +21,6 @@ export default function SectionHeading({
         <span className="diamond bg-gold" />
         {kicker && (
           <>
-            <span className="ml-1 h-px flex-1 bg-line" />
             <p className="label shrink-0 text-muted">{kicker}</p>
           </>
         )}
