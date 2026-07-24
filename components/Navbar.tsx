@@ -38,19 +38,16 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-paper/95 backdrop-blur">
       <div className="mx-auto flex h-[72px] max-w-[1400px] items-center justify-between gap-6 px-6 sm:px-10">
-        {/* Wordmark */}
-        <Link href="/" aria-label="Uchaan Arts home" className="flex shrink-0 items-center gap-2.5">
+        {/* Logo */}
+        <Link href="/" aria-label="Uchaan Arts home" className="flex shrink-0 items-center">
           <Image
             src="/logo.png"
-            alt=""
+            alt="Uchaan Arts"
             width={129}
             height={83}
             priority
             className="h-8 w-auto"
           />
-          <span className="hidden font-display text-lg leading-none sm:block">
-            the<span className="font-semibold">Uchaan</span>Gallery
-          </span>
         </Link>
 
         {/* Centred links */}
@@ -165,4 +162,4 @@ export default function Navbar() {
       </AnimatePresence>
     </header>
   );
-}
+          }
