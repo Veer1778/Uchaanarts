@@ -26,14 +26,13 @@ export default async function HomePage() {
       <CategoriesGallery />
 
       {/* Featured collection */}
-      <section className="relative mx-auto max-w-[1400px] border-x border-line px-6 pt-20 sm:px-10" aria-labelledby="featured">
+      <section className="relative mx-auto max-w-[1400px] px-6 pt-20 sm:px-10" aria-labelledby="featured">
         <div className="aura -right-40 top-0 h-96 w-96" />
         <Reveal>
           <div className="mb-10">
             <div className="mb-4 flex items-center gap-3">
               <span className="diamond bg-signal" />
               <span className="diamond bg-gold" />
-              <span className="ml-1 h-px flex-1 bg-line" />
               <p className="label shrink-0 text-muted">Recently acquired</p>
             </div>
             <h2 id="featured" className="font-display text-4xl leading-[1.05] sm:text-6xl">
@@ -55,7 +54,7 @@ export default async function HomePage() {
       </section>
 
       {/* By price */}
-      <section className="mx-auto max-w-[1400px] border-x border-line px-6 pt-20 sm:px-10" aria-labelledby="price">
+      <section className="mx-auto max-w-[1400px] px-6 pt-20 sm:px-10" aria-labelledby="price">
         <Reveal>
           <SectionHeading kicker="Find art within your budget" title="By price" />
         </Reveal>
@@ -81,7 +80,7 @@ export default async function HomePage() {
 
       {/* Exhibitions */}
       {upcoming.length > 0 && (
-        <section className="relative mx-auto max-w-[1400px] border-x border-line px-6 pt-20 sm:px-10" aria-labelledby="exhibitions">
+        <section className="relative mx-auto max-w-[1400px] px-6 pt-20 sm:px-10" aria-labelledby="exhibitions">
           <div className="aura -left-40 top-24 h-96 w-96" />
           <Reveal>
             <SectionHeading kicker="At the gallery" title="Upcoming exhibitions" />
@@ -125,7 +124,7 @@ export default async function HomePage() {
       )}
 
       {/* Blog */}
-      <section className="mx-auto max-w-[1400px] border-x border-line px-6 pt-20 sm:px-10" aria-labelledby="journal">
+      <section className="mx-auto max-w-[1400px] px-6 pt-20 sm:px-10" aria-labelledby="journal">
         <Reveal>
           <SectionHeading kicker="To the world of art, through our eyes" title="From the journal" />
         </Reveal>
@@ -156,7 +155,7 @@ export default async function HomePage() {
       </section>
 
       {/* Trust badges */}
-      <section className="mx-auto max-w-[1400px] border-x border-line px-6 pt-20 sm:px-10" aria-label="Why buy from Uchaan Arts">
+      <section className="mx-auto max-w-[1400px] px-6 pt-20 sm:px-10" aria-label="Why buy from Uchaan Arts">
         <Reveal>
           <div className="grid gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
             {[
