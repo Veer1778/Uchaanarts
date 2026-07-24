@@ -2,26 +2,15 @@
 
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
-import { Play } from "lucide-react";
 import RotatingBadge from "./RotatingBadge";
 
 /**
  * Hero — masthead on the left, gallery film on the right.
  *
- * The right cell is a VIDEO PLACEHOLDER. To drop in the real film, replace the
- * placeholder block marked below with either:
- *
- *   <video className="h-full w-full object-cover" autoPlay muted loop playsInline
- *          poster="/hero-poster.jpg">
- *     <source src="/hero.mp4" type="video/mp4" />
- *   </video>
- *
- * or a YouTube/Vimeo embed:
- *
- *   <iframe className="h-full w-full" src="https://www.youtube.com/embed/VIDEO_ID?autoplay=1&mute=1&loop=1&controls=0"
- *           title="Uchaan Arts" allow="autoplay; encrypted-media" allowFullScreen />
- *
- * Everything around it (sizing, ratio, rounding) stays as-is.
+ * The film is a 4:5 autoplaying loop with no controls and no frame, so it
+ * sits seamlessly on the cream ground. Swapping it is a one-line change to
+ * the <source src>. It has no audio track in use (muted), which is also what
+ * lets it autoplay on mobile.
  */
 export default function Hero() {
   const root = useRef<HTMLElement>(null);
@@ -109,27 +98,24 @@ export default function Hero() {
 
           {/* ---------------- Gallery film ---------------- */}
           <div className="hero-film">
-            <div className="relative aspect-[4/3] w-full overflow-hidden bg-wash lg:aspect-[3/4] xl:aspect-[4/3]">
-              {/* ===== VIDEO PLACEHOLDER — swap this block for <video> or an embed ===== */}
-              <div className="absolute inset-0 grid place-items-center">
-                <div className="flex flex-col items-center gap-5 text-center">
-                  <span className="grid h-16 w-16 place-items-center rounded-full bg-signal text-paper">
-                    <Play size={22} fill="currentColor" strokeWidth={0} className="ml-1" />
-                  </span>
-                  <div>
-                    <p className="label text-muted">Gallery film</p>
-                    <p className="mt-2 font-display text-xl italic text-ink">
-                      A walk through Uchaan
-                    </p>
-                  </div>
-                </div>
-              </div>
-              {/* Corner marks, so the empty frame still reads as designed */}
-              <span className="absolute left-4 top-4 h-4 w-4 border-l border-t border-ink/25" />
-              <span className="absolute right-4 top-4 h-4 w-4 border-r border-t border-ink/25" />
-              <span className="absolute bottom-4 left-4 h-4 w-4 border-b border-l border-ink/25" />
-              <span className="absolute bottom-4 right-4 h-4 w-4 border-b border-r border-ink/25" />
-              {/* ===== end placeholder ===== */}
+            {/* Gallery film — 4:5, no chrome, sitting straight on the cream
+                ground. Muted + playsInline are required for autoplay to be
+                allowed on mobile browsers. */}
+            <div className="relative aspect-[4/5] w-full overflow-hidden">
+              <video
+                className="h-full w-full object-cover"
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                aria-label="A walk through the Uchaan galleries"
+              >
+                <source
+                  src="https://res.cloudinary.com/danuvia5o/video/upload/v1784899418/animo-column-drift-1350p_z4ihjg.mp4"
+                  type="video/mp4"
+                />
+              </video>
             </div>
 
             <div className="mt-4 flex items-center justify-between">
