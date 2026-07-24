@@ -1,13 +1,18 @@
 import Link from "next/link";
 
 /**
- * Footer — oversized black wordmark sitting straight on the page ground and
- * cropped at the baseline by the rule beneath it, so the letterforms read as
- * cut rather than boxed.
+ * Footer — "negative footer".
  *
- * Mobile-first: the wordmark scales with the viewport via clamp(), link
- * columns fall to two-up, and the seal moves onto its own row rather than
- * being squeezed into the grid.
+ * The mechanism from the reference: the oversized wordmark and the content
+ * panel are THE SAME COLOUR, and the panel is pulled up over the lower half of
+ * the letters. Where they meet there is no seam, so the wordmark reads as
+ * dissolving into the footer. Contrast comes from the page ground behind it.
+ *
+ * Reference: white wordmark + white panel on a dark slab.
+ * Here: black wordmark + black panel on the cream page.
+ *
+ * Mobile-first: the wordmark scales with clamp(), the overlap scales with it,
+ * link columns fall to two-up and the seal sits on its own row.
  */
 
 const explore = [
@@ -38,11 +43,7 @@ export default function Footer() {
   return (
     <footer className="mt-24">
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10">
-        {/* ---- Oversized wordmark ----
-             No slab and no dividing rule: the content panel below shares the
-             page colour and is pulled up over the lower half of the letters,
-             so the wordmark sinks into the footer instead of being boxed or
-             visibly clipped. */}
+        {/* Wordmark — same black as the panel below, so the overlap is seamless */}
         <p
           aria-hidden
           className="relative select-none pt-10 text-center font-display leading-[0.78] tracking-[-0.02em] text-ink sm:pt-14"
@@ -51,50 +52,50 @@ export default function Footer() {
           uchaan
         </p>
 
-        {/* ---- Content panel ---- */}
+        {/* Black panel, pulled up over the letters */}
         <div
-          className="relative z-10 bg-paper px-5 pb-10 pt-2 sm:px-8 sm:pb-12"
+          className="relative z-10 bg-ink px-5 pb-10 pt-8 text-paper sm:px-8 sm:pb-12 sm:pt-10"
           style={{ marginTop: "clamp(-4rem, -5vw, -0.9rem)" }}
         >
           <div className="grid gap-10 lg:grid-cols-[1.15fr_1fr_1fr_1fr] lg:gap-8">
-            {/* Statement + newsletter */}
+            {/* Statement */}
             <div>
               <h2 className="font-display text-2xl leading-snug sm:text-[1.7rem]">
                 Art chosen with care.
                 <br />
                 Made to be lived with.
               </h2>
-              <p className="mt-3 max-w-xs text-sm leading-relaxed text-muted">
+              <p className="mt-3 max-w-xs text-sm leading-relaxed text-paper/60">
                 A nurturing ground for artists since 2009, with galleries in
                 Delhi and Gurgaon.
               </p>
 
-              <div className="mt-7 flex items-center gap-4 text-ink">
+              <div className="mt-7 flex items-center gap-4">
                 <a
                   href="https://instagram.com/uchaanarts"
                   aria-label="Instagram"
-                  className="transition-colors hover:text-signal"
+                  className="text-paper/80 transition-colors hover:text-signal"
                 >
                   <Instagram />
                 </a>
                 <a
                   href="https://facebook.com/uchaanarts"
                   aria-label="Facebook"
-                  className="transition-colors hover:text-signal"
+                  className="text-paper/80 transition-colors hover:text-signal"
                 >
                   <Facebook />
                 </a>
                 <a
                   href="https://api.whatsapp.com/send?phone=918860277388"
                   aria-label="WhatsApp"
-                  className="transition-colors hover:text-signal"
+                  className="text-paper/80 transition-colors hover:text-signal"
                 >
                   <WhatsApp />
                 </a>
               </div>
             </div>
 
-            {/* Link columns — two-up on mobile, inline from lg */}
+            {/* Link columns — two-up on mobile */}
             <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:col-span-3 lg:gap-8">
               <FooterColumn title="Explore" links={explore} />
               <FooterColumn title="Support" links={support} />
@@ -102,8 +103,8 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Seal + contact */}
-          <div className="mt-10 flex flex-wrap items-center justify-between gap-6 border-t border-line pt-8">
+          {/* Contact + seal */}
+          <div className="mt-10 flex flex-wrap items-center justify-between gap-6 border-t border-paper/15 pt-8">
             <div className="text-sm">
               <a
                 href="mailto:info@uchaanarts.com"
@@ -113,7 +114,7 @@ export default function Footer() {
               </a>
               <a
                 href="tel:+918860277388"
-                className="block text-muted transition-colors hover:text-signal"
+                className="block text-paper/60 transition-colors hover:text-signal"
               >
                 +91 88602 77388
               </a>
@@ -122,7 +123,7 @@ export default function Footer() {
             <Seal />
           </div>
 
-          <p className="mt-8 text-xs text-faint">
+          <p className="mt-8 text-xs text-paper/40">
             © {new Date().getFullYear()} Uchaan Arts. Nurturing art and artists
             since 2009.
           </p>
@@ -141,11 +142,14 @@ function FooterColumn({
 }) {
   return (
     <div>
-      <p className="label mb-4 text-muted">{title}</p>
+      <p className="label mb-4 text-paper/50">{title}</p>
       <ul className="space-y-2.5 text-sm">
         {links.map((l) => (
           <li key={l.label}>
-            <Link href={l.href} className="transition-colors hover:text-signal">
+            <Link
+              href={l.href}
+              className="text-paper/85 transition-colors hover:text-signal"
+            >
               {l.label}
             </Link>
           </li>
@@ -159,7 +163,11 @@ function FooterColumn({
 function Seal() {
   return (
     <div className="relative grid h-24 w-24 shrink-0 place-items-center">
-      <svg viewBox="0 0 100 100" className="badge-spin absolute inset-0 h-full w-full" aria-hidden>
+      <svg
+        viewBox="0 0 100 100"
+        className="badge-spin absolute inset-0 h-full w-full"
+        aria-hidden
+      >
         <defs>
           <path
             id="seal-circle"
@@ -167,7 +175,10 @@ function Seal() {
             fill="none"
           />
         </defs>
-        <text className="fill-muted" style={{ fontSize: "8px", letterSpacing: "0.16em" }}>
+        <text
+          className="fill-paper/60"
+          style={{ fontSize: "8px", letterSpacing: "0.16em" }}
+        >
           <textPath href="#seal-circle" startOffset="0">
             UCHAAN ARTS · EST 2009 · DELHI &amp; GURGAON ·
           </textPath>
@@ -206,4 +217,4 @@ function WhatsApp() {
       <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z" />
     </svg>
   );
-}
+            }
