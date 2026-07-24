@@ -1,15 +1,12 @@
-"use client";
-
-import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 
 /**
- * Footer — "negative footer": an oversized charcoal slab carrying the wordmark,
- * cropped at the baseline by the content panel that sits directly beneath it.
+ * Footer — oversized black wordmark sitting straight on the page ground and
+ * cropped at the baseline by the rule beneath it, so the letterforms read as
+ * cut rather than boxed.
  *
  * Mobile-first: the wordmark scales with the viewport via clamp(), link
- * columns fall to two-up, and the seal drops below the newsletter rather than
+ * columns fall to two-up, and the seal moves onto its own row rather than
  * being squeezed into the grid.
  */
 
@@ -38,17 +35,14 @@ const collect = [
 ];
 
 export default function Footer() {
-  const [email, setEmail] = useState("");
-  const [sent, setSent] = useState(false);
-
   return (
     <footer className="mt-24">
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10">
-        {/* ---- Charcoal slab with the cropped wordmark ---- */}
-        <div className="relative overflow-hidden bg-ink pt-10 sm:pt-14">
+        {/* ---- Oversized wordmark, cropped at the baseline ---- */}
+        <div className="relative overflow-hidden pt-10 sm:pt-14">
           <p
             aria-hidden
-            className="translate-y-[16%] select-none text-center font-display leading-[0.78] tracking-[-0.02em] text-paper"
+            className="translate-y-[16%] select-none text-center font-display leading-[0.78] tracking-[-0.02em] text-ink"
             style={{ fontSize: "clamp(4.5rem, 23vw, 17rem)" }}
           >
             uchaan
@@ -56,7 +50,7 @@ export default function Footer() {
         </div>
 
         {/* ---- Content panel ---- */}
-        <div className="border border-t-0 border-line bg-paper px-5 py-10 sm:px-8 sm:py-12">
+        <div className="border-t border-line px-5 py-10 sm:px-8 sm:py-12">
           <div className="grid gap-10 lg:grid-cols-[1.15fr_1fr_1fr_1fr] lg:gap-8">
             {/* Statement + newsletter */}
             <div>
@@ -70,38 +64,7 @@ export default function Footer() {
                 Delhi and Gurgaon.
               </p>
 
-              <p className="mt-7 text-sm font-semibold">Enter the Uchaan Journal</p>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (email.trim()) setSent(true);
-                }}
-                className="mt-3 flex max-w-sm items-center gap-2"
-              >
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="type your email"
-                  aria-label="Email address"
-                  className="min-w-0 flex-1 border border-line bg-wash px-3 py-2.5 text-sm outline-none transition-colors focus:border-ink"
-                />
-                <button
-                  type="submit"
-                  aria-label="Subscribe"
-                  className="grid h-[42px] w-[42px] shrink-0 place-items-center bg-ink text-paper transition-opacity hover:opacity-90"
-                >
-                  <ArrowRight size={17} />
-                </button>
-              </form>
-              {sent && (
-                <p className="mt-2 text-xs text-signal">
-                  Thank you — we&apos;ll be in touch.
-                </p>
-              )}
-
-              <div className="mt-6 flex items-center gap-4 text-ink">
+              <div className="mt-7 flex items-center gap-4 text-ink">
                 <a
                   href="https://instagram.com/uchaanarts"
                   aria-label="Instagram"
@@ -238,4 +201,4 @@ function WhatsApp() {
       <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z" />
     </svg>
   );
-                }
+}
