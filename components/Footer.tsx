@@ -38,19 +38,24 @@ export default function Footer() {
   return (
     <footer className="mt-24">
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10">
-        {/* ---- Oversized wordmark, cropped at the baseline ---- */}
-        <div className="relative overflow-hidden pt-10 sm:pt-14">
-          <p
-            aria-hidden
-            className="translate-y-[16%] select-none text-center font-display leading-[0.78] tracking-[-0.02em] text-ink"
-            style={{ fontSize: "clamp(4.5rem, 23vw, 17rem)" }}
-          >
-            uchaan
-          </p>
-        </div>
+        {/* ---- Oversized wordmark ----
+             No slab and no dividing rule: the content panel below shares the
+             page colour and is pulled up over the lower half of the letters,
+             so the wordmark sinks into the footer instead of being boxed or
+             visibly clipped. */}
+        <p
+          aria-hidden
+          className="relative select-none pt-10 text-center font-display leading-[0.78] tracking-[-0.02em] text-ink sm:pt-14"
+          style={{ fontSize: "clamp(4.5rem, 23vw, 17rem)" }}
+        >
+          uchaan
+        </p>
 
         {/* ---- Content panel ---- */}
-        <div className="border-t border-line px-5 py-10 sm:px-8 sm:py-12">
+        <div
+          className="relative z-10 bg-paper px-5 pb-10 pt-2 sm:px-8 sm:pb-12"
+          style={{ marginTop: "clamp(-4rem, -5vw, -0.9rem)" }}
+        >
           <div className="grid gap-10 lg:grid-cols-[1.15fr_1fr_1fr_1fr] lg:gap-8">
             {/* Statement + newsletter */}
             <div>
