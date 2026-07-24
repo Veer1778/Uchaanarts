@@ -30,6 +30,10 @@ export type Artwork = {
   tag?: "Latest" | "Popular" | "Curated";
   /** WooCommerce product ID — used for headless checkout */
   wooId?: number;
+  /** Style / theme, matching the taxonomy on uchaanarts.com */
+  style?: string;
+  /** Traditional folk-art form, where applicable */
+  folkForm?: string;
   description: string;
 };
 
@@ -150,6 +154,7 @@ export const artists: Artist[] = [
 export const artworks: Artwork[] = [
   {
     slug: "procession",
+    style: "Figurative",
     title: "Procession",
     artist: "pankaj-bawdekar",
     image: img("itempic/thumbmain/1740229981_pankaj_bawadekar.jpg"),
@@ -164,6 +169,7 @@ export const artworks: Artwork[] = [
   },
   {
     slug: "agomoni",
+    style: "Divine",
     title: "Agomoni",
     artist: "chandan-roy",
     image: img("itempic/thumbmain/1726310195_agomoni_17x19x5_bronze_140000.jpg"),
@@ -178,6 +184,7 @@ export const artworks: Artwork[] = [
   },
   {
     slug: "spirit",
+    style: "Abstract",
     title: "Spirit",
     artist: "ridhi-jain",
     image: img("itempic/thumbmain/1747563640_horse_resonance_1.JPG"),
@@ -192,6 +199,7 @@ export const artworks: Artwork[] = [
   },
   {
     slug: "market-hustle",
+    style: "Cityscape",
     title: "Market Hustle",
     artist: "ramesh-jhawar",
     image: img("itempic/thumbmain/1744531634_whatsapp_image_2025-04-12_at_190101_5eb25f3e.jpg"),
@@ -206,6 +214,7 @@ export const artworks: Artwork[] = [
   },
   {
     slug: "search-of-eternity",
+    style: "Spiritual",
     title: "Search of Eternity — 1203",
     artist: "raghu-neware",
     image: img("itempic/thumbmain/1732105315_raghu_neware_search_of_eternity-1203__36x36_oil_on_canvas_180000.jpg"),
@@ -220,6 +229,7 @@ export const artworks: Artwork[] = [
   },
   {
     slug: "posing-on-a-boat",
+    style: "Realistic",
     title: "Posing on a Boat",
     artist: "jyoti-singh",
     image: img("itempic/thumbmain/1763810405_whatsapp_image_2025-11-22_at_160530.jpeg"),
@@ -233,6 +243,7 @@ export const artworks: Artwork[] = [
   },
   {
     slug: "maya",
+    style: "Contemporary",
     title: "Maya",
     artist: "suchismita-majumdar",
     image: img("itempic/thumbmain/1741109721_su.jpg"),
@@ -259,6 +270,7 @@ export const artworks: Artwork[] = [
   },
   {
     slug: "horse-resonance-1",
+    style: "Animals",
     title: "Horse (Resonance) 1",
     artist: "pratick-mallick",
     image: img("itempic/thumbmain/1747563640_horse_resonance_1.JPG"),
@@ -272,6 +284,7 @@ export const artworks: Artwork[] = [
   },
   {
     slug: "ganesha-series",
+    style: "Ganesha",
     title: "Ganesha Series",
     artist: "amit-srivastava",
     image: img("slider/1728130444_ganesha_series_36x54_oil_on_linen_canvas_300000_-_copy.jpg"),
@@ -299,6 +312,7 @@ export const artworks: Artwork[] = [
   },
   {
     slug: "monsoon-wash",
+    style: "Landscape",
     title: "Monsoon Wash",
     artist: "jyoti-kalra",
     image: img("slider/1724254173_wash_copy.jpg"),
@@ -452,6 +466,63 @@ export const categories = [
   "Photography",
   "Digital Art",
   "Folk Art",
+  "Abstract",
+  "Oleograph",
+] as const;
+
+/** Style / theme taxonomy, taken from the filters on uchaanarts.com. */
+export const styles = [
+  "Realistic",
+  "Semi Realistic",
+  "Abstract",
+  "Impressionism",
+  "Expressionism",
+  "Contemporary",
+  "Figurative",
+  "Portraits",
+  "Still life",
+  "Landscape",
+  "Seascape",
+  "Cityscape",
+  "Minimalist",
+  "Miniature",
+  "Cubism",
+  "Baroque",
+  "Pop Art",
+  "Calligraphy",
+  "Drawings",
+  "Mandala",
+  "Animals",
+  "Divine",
+  "Spiritual",
+  "Banaras",
+  "Floral",
+  "Architectural",
+  "Nature",
+  "Ganesha",
+  "Buddha",
+  "Krishna",
+  "Tree",
+  "Peace",
+  "Dance",
+  "Mythical / Folklore",
+  "Mountains",
+  "Waterfall",
+] as const;
+
+/** Traditional folk-art forms, also from the live site. */
+export const folkForms = [
+  "Gond",
+  "Pichawai",
+  "Madhubani",
+  "Thangka Art",
+  "Pattachitra",
+  "Warli Art",
+  "Phad",
+  "Kalighat",
+  "Kerala Mural",
+  "Mural",
+  "Tanjore",
 ] as const;
 
 export const priceBands = [
