@@ -5,7 +5,13 @@ import { AnimatePresence, motion } from "motion/react";
 import type { Artwork, Artist } from "@/lib/data";
 import { categories } from "@/lib/data";
 import MasonryCards from "./MasonryCards";
-import FilterSidebar, { defaultFilters, type Filters } from "./FilterSidebar";
+import FilterSidebar, {
+  defaultFilters,
+  activeFilterCount,
+  type Filters,
+} from "./FilterSidebar";
+import { styles as allStyles, folkForms as allFolkForms } from "@/lib/data";
+import { SlidersHorizontal, X } from "lucide-react";
 
 type Sort = "newest" | "price-asc" | "price-desc";
 
@@ -43,6 +49,10 @@ export default function GalleryGrid({
     category: initialCategory ?? "All",
   });
   const [sort, setSort] = useState<Sort>("newest");
+  // Mobile: filters live in a slide-over sheet instead of stacking above the
+  // grid, which pushed the artworks off the first screen entirely.
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const activeCount = activeFilterCount(filters);
 
   useEffect(() => {
     if (initialPriceBand === undefined) return;
@@ -68,6 +78,8 @@ export default function GalleryGrid({
       if (w.price < filters.priceMin || w.price > filters.priceMax) return false;
       if (filters.size && sizeBucket(w) !== filters.size) return false;
       if (filters.orientation && orientationOf(w) !== filters.orientation) return false;
+      if (filters.style !== "All" && w.style !== filters.style) return false;
+      if (filters.folkForm !== "All" && w.folkForm !== filters.folkForm) return false;
       return true;
     });
     if (sort === "price-asc") list = [...list].sort((a, b) => a.price - b.price);
@@ -75,23 +87,93 @@ export default function GalleryGrid({
     return list;
   }, [artworks, filters, sort]);
 
+  const sidebar = (
+    <FilterSidebar
+      filters={filters}
+      setFilters={setFilters}
+      categories={[...categories]}
+      artists={artists.map((a) => ({ slug: a.slug, name: a.name }))}
+      styles={[...allStyles]}
+      folkForms={[...allFolkForms]}
+      onReset={() => setFilters(defaultFilters)}
+    />
+  );
+
   return (
     <div className="grid gap-10 lg:grid-cols-[240px_1fr]">
-      <div>
-        <FilterSidebar
-          filters={filters}
-          setFilters={setFilters}
-          categories={[...categories]}
-          artists={artists.map((a) => ({ slug: a.slug, name: a.name }))}
-          onReset={() => setFilters(defaultFilters)}
-        />
-      </div>
+      {/* Desktop sidebar */}
+      <div className="hidden lg:block">{sidebar}</div>
+
+      {/* Mobile slide-over */}
+      <AnimatePresence>
+        {sheetOpen && (
+          <>
+            <motion.div
+              key="scrim"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSheetOpen(false)}
+              className="fixed inset-0 z-50 bg-ink/40 lg:hidden"
+            />
+            <motion.aside
+              key="sheet"
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "tween", duration: 0.28, ease: "easeOut" }}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Filters"
+              className="fixed inset-y-0 left-0 z-50 flex w-[86%] max-w-sm flex-col bg-paper shadow-2xl lg:hidden"
+            >
+              <div className="flex items-center justify-between border-b border-line px-5 py-4">
+                <p className="font-display text-2xl">Filters</p>
+                <button
+                  type="button"
+                  onClick={() => setSheetOpen(false)}
+                  aria-label="Close filters"
+                  className="text-muted hover:text-ink"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto px-5 py-4">{sidebar}</div>
+              <div className="border-t border-line px-5 py-4">
+                <button
+                  type="button"
+                  onClick={() => setSheetOpen(false)}
+                  className="w-full bg-ink px-5 py-3 text-xs uppercase tracking-[0.28em] text-paper"
+                >
+                  Show {filtered.length} artwork{filtered.length === 1 ? "" : "s"}
+                </button>
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
 
       <div>
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-muted" aria-live="polite">
-            {filtered.length} artwork{filtered.length === 1 ? "" : "s"}
-          </p>
+          <div className="flex items-center gap-3">
+            {/* Mobile trigger */}
+            <button
+              type="button"
+              onClick={() => setSheetOpen(true)}
+              className="flex items-center gap-2 border border-line px-3 py-2 text-sm lg:hidden"
+            >
+              <SlidersHorizontal size={15} />
+              Filters
+              {activeCount > 0 && (
+                <span className="grid h-5 w-5 place-items-center rounded-full bg-signal text-[10px] text-paper">
+                  {activeCount}
+                </span>
+              )}
+            </button>
+            <p className="text-sm text-muted" aria-live="polite">
+              {filtered.length} artwork{filtered.length === 1 ? "" : "s"}
+            </p>
+          </div>
           <label className="flex items-center gap-2 text-sm">
             <span className="text-muted">Sort</span>
             <select
@@ -99,9 +181,9 @@ export default function GalleryGrid({
               onChange={(e) => setSort(e.target.value as Sort)}
               className="border border-line bg-paper px-3 py-2 text-sm focus:border-signal focus:outline-none"
             >
-              <option value="newest">Newest first</option>
-              <option value="price-asc">Price: low to high</option>
-              <option value="price-desc">Price: high to low</option>
+              <option value="newest">New to Old</option>
+              <option value="price-asc">Low to High</option>
+              <option value="price-desc">High to Low</option>
             </select>
           </label>
         </div>
@@ -126,7 +208,7 @@ export default function GalleryGrid({
             </motion.p>
           ) : (
             <MasonryCards
-              key={`${filters.category}-${filters.artist}-${sort}`}
+              key={`${filters.category}-${filters.artist}-${filters.style}-${filters.folkForm}-${sort}`}
               items={filtered}
               names={names}
             />
