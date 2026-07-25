@@ -1,17 +1,22 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ink: #111111;
-  --color-muted: #57534a;
-  --color-faint: #a8a294;
-  --color-signal: #eb0000; /* Uchaan red */
-  --color-signal-dark: #b30000;
-  --color-gold: #f0c419; /* diamond motif accent */
-  --color-paper: #fcf9ef; /* warm editorial cream */
-  --color-wash: #f5f1e2;
-  --color-line: #ddd7c5; /* warm hairline for the modular grid */
+  /* Palette is restricted to white, beige, grey and black.
+     `signal` stays as the accent token so existing utilities keep working —
+     it is simply black now rather than red. */
+  --color-ink: #14130f; /* black */
+  --color-muted: #6f6b61; /* grey */
+  --color-faint: #a6a196; /* light grey */
+  --color-signal: #14130f; /* accent = black */
+  --color-signal-dark: #000000;
+  --color-gold: #cfc7b6; /* beige accent (name kept for compatibility) */
+  --color-sand: #cfc7b6; /* beige, preferred name */
+  --color-stone: #8c8779; /* mid grey */
+  --color-paper: #ffffff; /* white */
+  --color-wash: #f4f1ea; /* beige ground */
+  --color-line: #e2ded4; /* grey hairline */
 
-  --font-display: var(--font-playfair), "Playfair Display", Georgia, serif;
+  --font-display: var(--font-bodoni), "Bodoni Moda", "Didot", Georgia, serif;
   --font-body: var(--font-poppins), "Poppins", system-ui, sans-serif;
 }
 
@@ -48,15 +53,14 @@ h3,
 .aura {
   position: absolute;
   border-radius: 9999px;
+  pointer-events: none;
   background: radial-gradient(
     circle,
-    rgba(235, 0, 0, 0.14) 0%,
-    rgba(235, 0, 0, 0.05) 45%,
-    rgba(235, 0, 0, 0) 70%
+    rgba(20, 19, 15, 0.05) 0%,
+    rgba(20, 19, 15, 0.02) 45%,
+    rgba(20, 19, 15, 0) 70%
   );
   filter: blur(60px);
-  pointer-events: none;
-  z-index: 0;
 }
 
 /* Vertical social rail labels */
@@ -146,7 +150,6 @@ button:focus-visible {
 
 /* Editorial caps label. */
 .label {
-  font-size: 10px;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.18em;
 }
