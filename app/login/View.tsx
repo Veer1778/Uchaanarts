@@ -20,8 +20,40 @@ import GoogleSignInButton from "@/components/GoogleSignInButton";
 
 type Mode = "signin" | "register" | "reset";
 
-const PLATE =
-  "https://www.uchaanarts.com/uploaded_files/itempic/thumbmain/1732105315_raghu_neware_search_of_eternity-1203__36x36_oil_on_canvas_180000.jpg";
+/* The plate rotates on each visit so the page feels like part of a living
+   collection. Chosen after mount to avoid a server/client hydration mismatch. */
+const PLATES = [
+  {
+    src: "https://www.uchaanarts.com/uploaded_files/itempic/thumbmain/1732105315_raghu_neware_search_of_eternity-1203__36x36_oil_on_canvas_180000.jpg",
+    title: "Search of Eternity",
+    artist: "Raghu Neware",
+  },
+  {
+    src: "https://www.uchaanarts.com/uploaded_files/itempic/thumbmain/1740229981_pankaj_bawadekar.jpg",
+    title: "Procession",
+    artist: "Pankaj Bawdekar",
+  },
+  {
+    src: "https://www.uchaanarts.com/uploaded_files/itempic/thumbmain/1747563640_horse_resonance_1.JPG",
+    title: "Horse, Resonance",
+    artist: "Vinay Sharma",
+  },
+  {
+    src: "https://www.uchaanarts.com/uploaded_files/slider/1724254173_wash_copy.jpg",
+    title: "Monsoon Wash",
+    artist: "Sanjay Sarfare",
+  },
+  {
+    src: "https://www.uchaanarts.com/uploaded_files/itempic/thumbmain/1744531634_whatsapp_image_2025-04-12_at_190101_5eb25f3e.jpg",
+    title: "Market Hustle",
+    artist: "Yashwant Shirwadkar",
+  },
+  {
+    src: "https://www.uchaanarts.com/uploaded_files/itempic/thumbmain/1741109721_su.jpg",
+    title: "Maya",
+    artist: "Sunil Kale",
+  },
+];
 
 function LoginInner() {
   const {
@@ -44,6 +76,11 @@ function LoginInner() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Index 0 renders on the server; a random plate is chosen once mounted.
+  const [plate, setPlate] = useState(0);
+  useEffect(() => {
+    setPlate(Math.floor(Math.random() * PLATES.length));
+  }, []);
 
   useEffect(() => {
     if (!loading && user) router.replace(next);
@@ -88,20 +125,29 @@ function LoginInner() {
       <aside className="relative hidden overflow-hidden bg-wash lg:block">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={PLATE}
-          alt=""
+          key={PLATES[plate].src}
+          src={PLATES[plate].src}
+          alt={`${PLATES[plate].title} by ${PLATES[plate].artist}`}
           className="absolute inset-0 h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-ink/45" />
+        <div className="absolute inset-0 bg-ink/50" />
         <div className="relative flex h-full flex-col justify-between p-12">
           <p className="label text-paper/70">Uchaan Arts · Est 2009</p>
+
           <div className="max-w-sm">
             <p className="font-display text-3xl italic leading-snug text-paper">
               Every work here was chosen to be lived with, not merely looked at.
             </p>
-            <p className="mt-5 text-sm text-paper/60">
-              Delhi &amp; Gurgaon
-            </p>
+
+            {/* Credit for the work on show */}
+            <div className="mt-8 border-t border-paper/25 pt-5">
+              <p className="font-display text-lg text-paper">
+                {PLATES[plate].title}
+              </p>
+              <p className="mt-0.5 text-sm text-paper/60">
+                {PLATES[plate].artist} · Delhi &amp; Gurgaon
+              </p>
+            </div>
           </div>
         </div>
       </aside>
