@@ -41,22 +41,26 @@ const collect = [
 
 export default function Footer() {
   return (
-    <footer className="mt-24">
-      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10">
-        {/* Wordmark — same black as the panel below, so the overlap is seamless */}
-        <p
-          aria-hidden
-          className="relative select-none pt-10 text-center font-display leading-[0.78] tracking-[-0.02em] text-ink sm:pt-14"
-          style={{ fontSize: "clamp(4.5rem, 23vw, 17rem)" }}
-        >
-          uchaan
-        </p>
+    <footer className="mt-16">
+      {/* Wordmark — same black as the panel below, so the overlap is seamless.
+          Full-width stage so it reads as a masthead rather than a boxed word. */}
+      <p
+        aria-hidden
+        className="relative select-none px-4 pt-10 text-center font-display leading-[0.78] tracking-[-0.02em] text-ink sm:pt-14"
+        style={{ fontSize: "clamp(4.5rem, 24vw, 18rem)" }}
+      >
+        uchaan
+      </p>
 
-        {/* Black panel, pulled up over the letters */}
-        <div
-          className="relative z-10 bg-ink px-5 pb-10 pt-8 text-paper sm:px-8 sm:pb-12 sm:pt-10"
-          style={{ marginTop: "clamp(-4rem, -5vw, -0.9rem)" }}
-        >
+      {/* Black panel — full bleed, so no cream gutters frame it. Content stays
+          aligned to the same 1400px measure as the rest of the site.
+          The negative margin is deliberately shallow: it should catch only the
+          baseline of the wordmark, not swallow the letterforms. */}
+      <div
+        className="relative z-10 bg-ink text-paper"
+        style={{ marginTop: "clamp(-1.5rem, -1.4vw, -0.35rem)" }}
+      >
+        <div className="mx-auto max-w-[1400px] px-5 pb-12 pt-10 sm:px-8 lg:px-10">
           <div className="grid gap-10 lg:grid-cols-[1.15fr_1fr_1fr_1fr] lg:gap-8">
             {/* Statement */}
             <div>
@@ -217,4 +221,4 @@ function WhatsApp() {
       <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z" />
     </svg>
   );
-            }
+}
