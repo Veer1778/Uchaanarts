@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Poppins } from "next/font/google";
+import { Bodoni_Moda, Poppins } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
@@ -8,9 +8,13 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CartDrawer from "@/components/CartDrawer";
 
-const playfair = Playfair_Display({
+const bodoni = Bodoni_Moda({
   subsets: ["latin"],
-  variable: "--font-playfair",
+  // Bodoni's high contrast is the point — load the range so very large
+  // display sizes render with proper hairline serifs.
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-bodoni",
   display: "swap",
 });
 
@@ -40,17 +44,15 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${playfair.variable} ${poppins.variable}`}>
+    <html lang="en" className={`${bodoni.variable} ${poppins.variable}`}>
       <body className="antialiased">
-        {/* AuthProvider MUST wrap the others: CartProvider and
-            WishlistProvider both read from it via useAuth/useAuthOptional. */}
         <AuthProvider>
           <CartProvider>
             <WishlistProvider>
-              <Navbar />
-              <main>{children}</main>
-              <Footer />
-              <CartDrawer />
+            <Navbar />
+            <main>{children}</main>
+            <Footer />
+            <CartDrawer />
             </WishlistProvider>
           </CartProvider>
         </AuthProvider>
