@@ -1,6 +1,5 @@
 "use client";
 
-
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -9,14 +8,20 @@ import { useAuth } from "@/context/AuthContext";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
 
 /**
- * /login — a single page that hosts three modes:
- *   • signin  — email + password, plus Google
- *   • register — name, email, password
- *   • reset   — request a password reset email
- * A ?next=<url> query redirects there after a successful sign-in.
+ * /login — a two-panel sign-in.
+ *
+ * Left: a full-bleed artwork with a quiet quotation, so the page feels like
+ * part of the gallery rather than a utility form. Right: the form itself,
+ * generously spaced, hairline-ruled inputs, no boxes or shadows.
+ *
+ * Three modes live here: signin, register and reset. `?next=` redirects after
+ * success; `?mode=register` deep-links to the register tab.
  */
 
 type Mode = "signin" | "register" | "reset";
+
+const PLATE =
+  "https://www.uchaanarts.com/uploaded_files/itempic/thumbmain/1732105315_raghu_neware_search_of_eternity-1203__36x36_oil_on_canvas_180000.jpg";
 
 function LoginInner() {
   const {
@@ -78,158 +83,199 @@ function LoginInner() {
   };
 
   return (
-    <main className="relative mx-auto grid min-h-[80vh] max-w-md place-items-center px-5 py-16">
-      <div className="aura -right-32 top-0 h-80 w-80 opacity-60" />
-
-      <div className="relative w-full">
-        {/* Mode switch */}
-        {mode !== "reset" && (
-          <div className="mb-6 flex gap-6 text-xs uppercase tracking-[0.28em]">
-            {(["signin", "register"] as const).map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setMode(m)}
-                className={`transition-colors ${
-                  mode === m ? "text-signal" : "text-muted hover:text-ink"
-                }`}
-              >
-                {m === "signin" ? "Sign in" : "Create account"}
-              </button>
-            ))}
+    <main className="grid min-h-[calc(100vh-72px)] lg:grid-cols-2">
+      {/* ---------- Plate ---------- */}
+      <aside className="relative hidden overflow-hidden bg-wash lg:block">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={PLATE}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-ink/45" />
+        <div className="relative flex h-full flex-col justify-between p-12">
+          <p className="label text-paper/70">Uchaan Arts · Est 2009</p>
+          <div className="max-w-sm">
+            <p className="font-display text-3xl italic leading-snug text-paper">
+              Every work here was chosen to be lived with, not merely looked at.
+            </p>
+            <p className="mt-5 text-sm text-paper/60">
+              Delhi &amp; Gurgaon
+            </p>
           </div>
-        )}
+        </div>
+      </aside>
 
-        <h1 className="mb-2 font-display text-4xl leading-tight">
-          {mode === "signin" && "Welcome back."}
-          {mode === "register" && "Join the collection."}
-          {mode === "reset" && "Reset password."}
-        </h1>
-        <p className="mb-8 text-sm text-muted">
-          {mode === "signin" && "Sign in to view orders, save works and track exhibitions."}
-          {mode === "register" && "Create an account to buy artworks and save your wishlist."}
-          {mode === "reset" &&
-            "Enter your account email and we'll send you a link to reset your password."}
-        </p>
+      {/* ---------- Form ---------- */}
+      <div className="flex items-center justify-center px-6 py-16 sm:px-12">
+        <div className="w-full max-w-sm">
+          <p className="label mb-6 text-muted">
+            {mode === "reset" ? "Account recovery" : "Client access"}
+          </p>
 
-        <form onSubmit={submit} className="space-y-4">
-          <AnimatePresence mode="popLayout" initial={false}>
-            {mode === "register" && (
-              <motion.div
-                key="name"
-                initial={{ opacity: 0, y: -6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-              >
-                <Field
-                  label="Full name"
-                  type="text"
-                  value={name}
-                  onChange={setName}
-                  autoComplete="name"
-                  required
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <h1 className="font-display text-4xl leading-tight sm:text-[2.75rem]">
+            {mode === "signin" && "Welcome back"}
+            {mode === "register" && "Create an account"}
+            {mode === "reset" && "Reset password"}
+          </h1>
+          <p className="mt-3 text-sm leading-relaxed text-muted">
+            {mode === "signin" &&
+              "Sign in to follow artists, keep a private wishlist and track your acquisitions."}
+            {mode === "register" &&
+              "Save works you love, and collect from the gallery with your details remembered."}
+            {mode === "reset" &&
+              "Enter the email on your account and we'll send a link to set a new password."}
+          </p>
 
-          <Field
-            label="Email"
-            type="email"
-            value={email}
-            onChange={setEmail}
-            autoComplete="email"
-            required
-          />
+          <form onSubmit={submit} className="mt-10 space-y-6">
+            <AnimatePresence mode="popLayout" initial={false}>
+              {mode === "register" && (
+                <motion.div
+                  key="name"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <Field
+                    label="Full name"
+                    type="text"
+                    value={name}
+                    onChange={setName}
+                    autoComplete="name"
+                    required
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-          {mode !== "reset" && (
             <Field
-              label="Password"
-              type="password"
-              value={password}
-              onChange={setPassword}
-              autoComplete={mode === "signin" ? "current-password" : "new-password"}
-              hint={mode === "register" ? "At least 6 characters." : undefined}
+              label="Email"
+              type="email"
+              value={email}
+              onChange={setEmail}
+              autoComplete="email"
               required
             />
+
+            {mode !== "reset" && (
+              <Field
+                label="Password"
+                type="password"
+                value={password}
+                onChange={setPassword}
+                autoComplete={mode === "signin" ? "current-password" : "new-password"}
+                hint={mode === "register" ? "At least six characters." : undefined}
+                required
+              />
+            )}
+
+            {error && (
+              <p className="border-l-2 border-ink pl-3 text-sm text-ink">{error}</p>
+            )}
+            {notice && (
+              <p className="border-l-2 border-line pl-3 text-sm text-muted">
+                {notice}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={busy}
+              className="w-full bg-ink px-5 py-3.5 text-sm text-paper transition-opacity hover:opacity-85 disabled:opacity-50"
+            >
+              {busy
+                ? "One moment…"
+                : mode === "signin"
+                ? "Sign in"
+                : mode === "register"
+                ? "Create account"
+                : "Send reset link"}
+            </button>
+          </form>
+
+          {mode !== "reset" && (
+            <>
+              <div className="my-8 flex items-center gap-4 text-xs text-faint">
+                <hr className="flex-1 border-line" />
+                or
+                <hr className="flex-1 border-line" />
+              </div>
+              <div className="flex justify-center">
+                <GoogleSignInButton
+                  onCredential={onGoogle}
+                  label={mode === "signin" ? "signin_with" : "signup_with"}
+                />
+              </div>
+            </>
           )}
 
-          {error && (
-            <p className="rounded-sm border border-signal/30 bg-signal/5 px-3 py-2 text-sm text-signal">
-              {error}
-            </p>
-          )}
-          {notice && (
-            <p className="rounded-sm border border-line bg-wash px-3 py-2 text-sm text-muted">
-              {notice}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            disabled={busy}
-            className="w-full bg-ink px-5 py-3 text-xs uppercase tracking-[0.28em] text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-          >
-            {busy
-              ? "Please wait…"
-              : mode === "signin"
-              ? "Sign in"
-              : mode === "register"
-              ? "Create account"
-              : "Send reset link"}
-          </button>
-
-          {mode === "signin" && (
-            <div className="text-right">
+          {/* Mode switching, kept as quiet text rather than tabs */}
+          <div className="mt-10 space-y-2 border-t border-line pt-6 text-sm">
+            {mode === "signin" && (
+              <>
+                <p className="text-muted">
+                  New to Uchaan?{" "}
+                  <button
+                    type="button"
+                    onClick={() => setMode("register")}
+                    className="text-ink underline underline-offset-4"
+                  >
+                    Create an account
+                  </button>
+                </p>
+                <p className="text-muted">
+                  <button
+                    type="button"
+                    onClick={() => setMode("reset")}
+                    className="underline underline-offset-4 hover:text-ink"
+                  >
+                    Forgotten your password?
+                  </button>
+                </p>
+              </>
+            )}
+            {mode === "register" && (
+              <p className="text-muted">
+                Already have an account?{" "}
+                <button
+                  type="button"
+                  onClick={() => setMode("signin")}
+                  className="text-ink underline underline-offset-4"
+                >
+                  Sign in
+                </button>
+              </p>
+            )}
+            {mode === "reset" && (
               <button
                 type="button"
-                onClick={() => setMode("reset")}
-                className="text-xs text-muted underline underline-offset-2 hover:text-ink"
+                onClick={() => setMode("signin")}
+                className="text-muted underline underline-offset-4 hover:text-ink"
               >
-                Forgot password?
+                Back to sign in
               </button>
-            </div>
-          )}
-        </form>
+            )}
+          </div>
 
-        {mode !== "reset" && (
-          <>
-            <div className="my-6 flex items-center gap-3 text-[10px] uppercase tracking-[0.28em] text-faint">
-              <hr className="flex-1 border-line" />
-              or
-              <hr className="flex-1 border-line" />
-            </div>
-            <div className="flex justify-center">
-              <GoogleSignInButton
-                onCredential={onGoogle}
-                label={mode === "signin" ? "signin_with" : "signup_with"}
-              />
-            </div>
-          </>
-        )}
-
-        {mode === "reset" && (
-          <button
-            type="button"
-            onClick={() => setMode("signin")}
-            className="mt-6 text-xs uppercase tracking-[0.28em] text-muted hover:text-ink"
-          >
-            ← Back to sign in
-          </button>
-        )}
-
-        <p className="mt-8 text-center text-xs text-muted">
-          By continuing you agree to Uchaan's{" "}
-          <Link href="/about" className="underline underline-offset-2">
-            terms
-          </Link>
-          .
-        </p>
+          <p className="mt-8 text-xs leading-relaxed text-faint">
+            By continuing you agree to Uchaan&apos;s{" "}
+            <Link href="/about" className="underline underline-offset-2">
+              terms
+            </Link>{" "}
+            and{" "}
+            <Link href="/about" className="underline underline-offset-2">
+              privacy policy
+            </Link>
+            .
+          </p>
+        </div>
       </div>
     </main>
   );
 }
 
+/** Hairline-ruled input: no box, just a baseline that darkens on focus. */
 function Field({
   label,
   type,
@@ -249,7 +295,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[11px] uppercase tracking-[0.24em] text-muted">
+      <span className="mb-2 block text-xs tracking-[0.12em] text-muted">
         {label}
       </span>
       <input
@@ -258,9 +304,9 @@ function Field({
         onChange={(e) => onChange(e.target.value)}
         autoComplete={autoComplete}
         required={required}
-        className="w-full border border-line bg-transparent px-3 py-2.5 text-sm text-ink outline-none transition-colors focus:border-ink"
+        className="w-full border-0 border-b border-line bg-transparent px-0 py-2 text-[15px] text-ink outline-none transition-colors placeholder:text-faint focus:border-ink"
       />
-      {hint && <span className="mt-1 block text-[11px] text-faint">{hint}</span>}
+      {hint && <span className="mt-2 block text-xs text-faint">{hint}</span>}
     </label>
   );
 }
