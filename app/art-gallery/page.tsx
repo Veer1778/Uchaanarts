@@ -29,7 +29,10 @@ export default async function ArtGalleryPage({
           shipped worldwide. Filter by category, artist or budget.
         </p>
       </Reveal>
+      {/* key: see the note on the home page — GalleryGrid seeds its filters
+          from props once, so it must remount when the category changes. */}
       <GalleryGrid
+        key={params.category ?? "all"}
         artworks={artworks}
         artists={artists}
         initialCategory={params.category}
