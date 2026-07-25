@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Heart, ShoppingBag, Menu, X } from "lucide-react";
 import { useCart } from "@/context/CartContext";
@@ -16,17 +16,35 @@ import { useAuthOptional } from "@/context/AuthContext";
  * into the modular grid below.
  */
 
-const links = [
-  { href: "/", label: "Home" },
-  { href: "/art-gallery", label: "Art Gallery" },
+/* Primary nav is the catalogue itself: the shopper picks a medium straight
+   from the header rather than hunting through editorial pages. */
+const categoryLinks = [
+  { href: "/art-gallery", label: "All Art" },
+  { href: "/art-gallery?category=Painting", label: "Painting" },
+  { href: "/art-gallery?category=Sculpture", label: "Sculpture" },
+  { href: "/art-gallery?category=Serigraph", label: "Serigraph" },
+  { href: "/art-gallery?category=Photography", label: "Photography" },
+  { href: "/art-gallery?category=Folk%20Art", label: "Folk Art" },
+  { href: "/art-gallery?category=Digital%20Art", label: "Digital Art" },
+];
+
+/* Editorial pages move to the secondary row / mobile drawer. */
+const secondaryLinks = [
   { href: "/artists", label: "Artists" },
   { href: "/exhibitions", label: "Exhibitions" },
-  { href: "/blog", label: "Blog" },
+  { href: "/blog", label: "Journal" },
   { href: "/about", label: "About" },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
+  // Category links differ only by their query string. useSearchParams() would
+  // opt every page out of static rendering from the root layout, so the query
+  // is read on the client after mount instead.
+  const [current, setCurrent] = useState(pathname);
+  useEffect(() => {
+    setCurrent(`${pathname}${window.location.search}`);
+  }, [pathname]);
   const { count, open } = useCart();
   const { count: wishCount } = useWishlist();
   // Optional: the Navbar renders on /_not-found too, which prerenders
@@ -50,16 +68,15 @@ export default function Navbar() {
           />
         </Link>
 
-        {/* Centred links */}
-        <nav className="hidden items-center gap-8 lg:flex">
-          {links.map((l) => {
-            const active =
-              l.href === "/" ? pathname === "/" : pathname.startsWith(l.href);
+        {/* Categories */}
+        <nav className="hidden items-center gap-6 xl:gap-7 lg:flex">
+          {categoryLinks.map((l) => {
+            const active = current === l.href;
             return (
               <Link
                 key={l.href}
                 href={l.href}
-                className={`relative py-1 text-sm transition-colors ${
+                className={`relative whitespace-nowrap py-1 text-sm transition-colors ${
                   active ? "text-ink" : "text-muted hover:text-ink"
                 }`}
               >
@@ -69,7 +86,7 @@ export default function Navbar() {
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, ease: "easeOut" }}
-                    className="absolute -bottom-0.5 left-0 h-px w-full bg-signal"
+                    className="absolute -bottom-0.5 left-0 h-px w-full bg-ink"
                   />
                 )}
               </Link>
@@ -128,6 +145,23 @@ export default function Navbar() {
         </div>
       </div>
 
+      {/* Secondary row — editorial pages, kept out of the shopping path */}
+      <div className="hidden border-t border-line lg:block">
+        <div className="mx-auto flex h-10 max-w-[1400px] items-center gap-7 px-6 sm:px-10">
+          {secondaryLinks.map((l) => (
+            <Link
+              key={l.href}
+              href={l.href}
+              className={`text-xs transition-colors ${
+                pathname.startsWith(l.href) ? "text-ink" : "text-muted hover:text-ink"
+              }`}
+            >
+              {l.label}
+            </Link>
+          ))}
+        </div>
+      </div>
+
       {/* Mobile drawer */}
       <AnimatePresence>
         {menuOpen && (
@@ -139,20 +173,32 @@ export default function Navbar() {
             className="overflow-hidden border-t border-line lg:hidden"
           >
             <div className="mx-auto max-w-[1400px] px-6 py-4">
-              {links.map((l) => (
+              {categoryLinks.map((l) => (
                 <Link
                   key={l.href}
                   href={l.href}
                   onClick={() => setMenuOpen(false)}
-                  className="block border-b border-line py-3 font-display text-2xl last:border-0"
+                  className="block border-b border-line py-3 font-display text-2xl"
                 >
                   {l.label}
                 </Link>
               ))}
+              <div className="flex flex-wrap gap-x-6 gap-y-2 pt-4">
+                {secondaryLinks.map((l) => (
+                  <Link
+                    key={l.href}
+                    href={l.href}
+                    onClick={() => setMenuOpen(false)}
+                    className="text-sm text-muted"
+                  >
+                    {l.label}
+                  </Link>
+                ))}
+              </div>
               <Link
                 href={user ? "/account" : "/login"}
                 onClick={() => setMenuOpen(false)}
-                className="mt-4 inline-block bg-ink px-5 py-2.5 text-xs uppercase tracking-[0.24em] text-paper"
+                className="mt-4 inline-block bg-ink px-5 py-2.5 text-xs tracking-[0.14em] text-paper"
               >
                 {user ? "My account" : "Sign up"}
               </Link>
@@ -162,4 +208,4 @@ export default function Navbar() {
       </AnimatePresence>
     </header>
   );
-          }
+}
