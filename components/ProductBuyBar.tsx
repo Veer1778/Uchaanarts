@@ -6,6 +6,7 @@ import { Frame, Heart, Eye, Share2, ShoppingCart } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import type { Artwork } from "@/lib/data";
+import ArtOnWall from "./ArtOnWall";
 
 export default function ProductBuyBar({
   artwork,
@@ -19,6 +20,7 @@ export default function ProductBuyBar({
   const { add, checkout, checkingOut } = useCart();
   const { has, toggle } = useWishlist();
   const [shared, setShared] = useState(false);
+  const [wallOpen, setWallOpen] = useState(false);
   const wished = has(artwork.slug);
 
   const cartItem = {
@@ -60,17 +62,15 @@ export default function ProductBuyBar({
     "flex items-center gap-1.5 border border-line px-3 py-2.5 text-sm text-muted transition-colors hover:border-signal hover:text-signal";
 
   return (
+    <>
     <div className="flex flex-wrap items-center gap-2.5">
-      <a
-        href={`https://api.whatsapp.com/send?phone=918860277388&text=${encodeURIComponent(
-          `Hi, could I see "${artwork.title}" by ${artistName} on my wall?`
-        )}`}
-        target="_blank"
-        rel="noopener noreferrer"
+      <button
+        type="button"
+        onClick={() => setWallOpen(true)}
         className={iconBtn}
       >
-        <Frame size={15} /> Art On Wall
-      </a>
+        <Frame size={15} /> Art on Wall
+      </button>
 
       <button
         onClick={() => toggle(wishItem)}
@@ -105,10 +105,20 @@ export default function ProductBuyBar({
           await checkout();
         }}
         disabled={checkingOut}
-        className="flex items-center gap-2 bg-signal px-7 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-signal-dark disabled:opacity-60"
+        className="flex items-center gap-2 bg-signal px-7 py-2.5 text-xs font-semibold tracking-[0.16em] text-white transition-colors hover:bg-signal-dark disabled:opacity-60"
       >
         {checkingOut ? "…" : "Buy Now"}
       </motion.button>
     </div>
+
+      <ArtOnWall
+        open={wallOpen}
+        onClose={() => setWallOpen(false)}
+        image={artwork.image}
+        title={artwork.title}
+        artistName={artistName}
+        size={artwork.size}
+      />
+    </>
   );
 }
