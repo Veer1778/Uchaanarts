@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Heart, ShoppingBag, Menu, X } from "lucide-react";
 import { useCart } from "@/context/CartContext";
@@ -18,14 +18,14 @@ import { useAuthOptional } from "@/context/AuthContext";
 
 /* Primary nav is the catalogue itself: the shopper picks a medium straight
    from the header rather than hunting through editorial pages. */
-const categoryLinks = [
+const categoryLinks: { href: string; label: string; category?: string }[] = [
   { href: "/art-gallery", label: "All Art" },
-  { href: "/art-gallery?category=Painting", label: "Painting" },
-  { href: "/art-gallery?category=Sculpture", label: "Sculpture" },
-  { href: "/art-gallery?category=Serigraph", label: "Serigraph" },
-  { href: "/art-gallery?category=Photography", label: "Photography" },
-  { href: "/art-gallery?category=Folk%20Art", label: "Folk Art" },
-  { href: "/art-gallery?category=Digital%20Art", label: "Digital Art" },
+  { href: "/art-gallery?category=Painting", label: "Painting", category: "Painting" },
+  { href: "/art-gallery?category=Sculpture", label: "Sculpture", category: "Sculpture" },
+  { href: "/art-gallery?category=Serigraph", label: "Serigraph", category: "Serigraph" },
+  { href: "/art-gallery?category=Photography", label: "Photography", category: "Photography" },
+  { href: "/art-gallery?category=Folk%20Art", label: "Folk Art", category: "Folk Art" },
+  { href: "/art-gallery?category=Digital%20Art", label: "Digital Art", category: "Digital Art" },
 ];
 
 /* Editorial pages move to the secondary row / mobile drawer. */
@@ -38,13 +38,11 @@ const secondaryLinks = [
 
 export default function Navbar() {
   const pathname = usePathname();
-  // Category links differ only by their query string. useSearchParams() would
-  // opt every page out of static rendering from the root layout, so the query
-  // is read on the client after mount instead.
-  const [current, setCurrent] = useState(pathname);
-  useEffect(() => {
-    setCurrent(`${pathname}${window.location.search}`);
-  }, [pathname]);
+  const params = useSearchParams();
+  // Category links differ only by query string, so the active check has to
+  // read the query too. (An effect keyed on `pathname` never fires between
+  // ?category=A and ?category=B — the pathname is identical.)
+  const activeCategory = params.get("category");
   const { count, open } = useCart();
   const { count: wishCount } = useWishlist();
   // Optional: the Navbar renders on /_not-found too, which prerenders
@@ -71,7 +69,10 @@ export default function Navbar() {
         {/* Categories */}
         <nav className="hidden items-center gap-6 xl:gap-7 lg:flex">
           {categoryLinks.map((l) => {
-            const active = current === l.href;
+            const onShop = pathname === "/art-gallery" || pathname === "/";
+            const active = onShop
+              ? (l.category ?? null) === activeCategory
+              : false;
             return (
               <Link
                 key={l.href}
