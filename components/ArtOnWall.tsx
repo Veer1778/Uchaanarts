@@ -2,24 +2,30 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Frame } from "lucide-react";
+import { X, Frame as FrameIcon } from "lucide-react";
 
 /**
- * Art on Wall — shows a work at true scale against a reference wall.
+ * Art on Wall — a to-scale room view.
  *
- * The wall is 10 ft (120 in) floor to ceiling, so a 30 in painting occupies a
- * quarter of that height. Dimensions are parsed from the artwork's `size`
- * string, which may be two- or three-axis and in inches or centimetres:
+ * The scene is drawn in SVG on a real measurement grid: the wall is 10 ft from
+ * floor to ceiling and 90 user units = 1 ft, so every element (sofa, lamp,
+ * plant, figure) sits at its true size and the artwork can be compared against
+ * them honestly. The work hangs with its centre at 57 in, the museum standard
+ * eye level.
  *
- *   "30 x 30 in"        -> 30 × 30 inches
- *   "17 x 19 x 5 in"    -> 17 × 19 inches (depth ignored for a wall view)
- *   "76 x 76 cm"        -> converted to inches
- *
- * A human silhouette can be toggled for a second scale cue, and the wall tone
- * can be switched so buyers can judge the work against their own room.
+ * Dimensions come from the artwork's `size` string, which may be two- or
+ * three-axis and in inches or centimetres:
+ *   "30 x 30 in" · "17 x 19 x 5 in" · "76 x 76 cm"
  */
 
-const WALL_HEIGHT_IN = 120; // 10 ft
+const PPF = 90; // pixels (user units) per foot
+const FLOOR_Y = 900; // wall/floor junction
+const SCENE_W = 1600;
+const SCENE_H = 1010;
+const EYE_LEVEL_IN = 57;
+
+const ft = (feet: number) => feet * PPF;
+const inches = (i: number) => (i / 12) * PPF;
 
 type Parsed = { w: number; h: number };
 
@@ -28,7 +34,6 @@ function parseSize(size: string): Parsed | null {
   const isCm = /cm/i.test(size);
   const nums = size.match(/[\d.]+/g);
   if (!nums || nums.length < 2) return null;
-  // Width × height; a third value is depth and irrelevant on a wall.
   let w = parseFloat(nums[0]);
   let h = parseFloat(nums[1]);
   if (!Number.isFinite(w) || !Number.isFinite(h)) return null;
@@ -40,11 +45,13 @@ function parseSize(size: string): Parsed | null {
 }
 
 const walls = [
-  { id: "white", label: "White", bg: "#ffffff" },
-  { id: "beige", label: "Beige", bg: "#f4f1ea" },
-  { id: "grey", label: "Grey", bg: "#d9d6d0" },
-  { id: "charcoal", label: "Charcoal", bg: "#2b2a27" },
+  { id: "white", label: "White", top: "#ffffff", bottom: "#f1efe9" },
+  { id: "beige", label: "Beige", top: "#f7f4ec", bottom: "#eae5d8" },
+  { id: "grey", label: "Grey", top: "#dcd9d3", bottom: "#cbc7c0" },
+  { id: "charcoal", label: "Charcoal", top: "#33322e", bottom: "#232220" },
 ] as const;
+
+type WallId = (typeof walls)[number]["id"];
 
 export default function ArtOnWall({
   open,
@@ -61,13 +68,13 @@ export default function ArtOnWall({
   artistName?: string;
   size: string;
 }) {
-  const [wall, setWall] = useState<(typeof walls)[number]["id"]>("white");
-  const [showFigure, setShowFigure] = useState(true);
+  const [wall, setWall] = useState<WallId>("white");
+  const [framed, setFramed] = useState(true);
+  const [furnished, setFurnished] = useState(true);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
-  // Lock body scroll while open.
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
@@ -84,105 +91,258 @@ export default function ArtOnWall({
 
   if (!mounted || !open) return null;
 
-  const wallTone = walls.find((w) => w.id === wall)!;
+  const tone = walls.find((w) => w.id === wall)!;
   const dark = wall === "charcoal";
 
-  // Artwork height as a percentage of the 10 ft wall.
-  const heightPct = dims ? (dims.h / WALL_HEIGHT_IN) * 100 : 25;
-  const aspect = dims ? dims.w / dims.h : 1;
+  // Artwork geometry in scene units
+  const artW = inches(dims?.w ?? 30);
+  const artH = inches(dims?.h ?? 30);
+  const artCx = SCENE_W / 2;
+  const artCy = FLOOR_Y - inches(EYE_LEVEL_IN);
+  const frameW = framed ? Math.max(artW * 0.035, 6) : 0;
+
+  const furnitureFill = dark ? "#3f3e3a" : "#cbc6ba";
+  const furnitureDeep = dark ? "#4a4844" : "#bdb7a9";
+  const floorTop = dark ? "#2a2926" : "#d8d2c5";
+  const floorBottom = dark ? "#1f1e1c" : "#c8c1b1";
 
   return createPortal(
     <div className="fixed inset-0 z-[100] flex flex-col bg-paper">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-line px-5 py-4 sm:px-8">
-        <div className="flex items-center gap-2.5">
-          <Frame size={16} />
-          <p className="text-sm">
-            Art on Wall
-            <span className="ml-2 text-muted">
-              — {title}
-              {artistName ? ` · ${artistName}` : ""}
-            </span>
+      <div className="flex items-center justify-between gap-4 border-b border-line px-5 py-4 sm:px-8">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <FrameIcon size={16} className="shrink-0" />
+          <p className="truncate text-sm">
+            {title}
+            {artistName && <span className="text-muted"> · {artistName}</span>}
           </p>
         </div>
         <button
           type="button"
           onClick={onClose}
           aria-label="Close preview"
-          className="text-muted transition-colors hover:text-ink"
+          className="shrink-0 text-muted transition-colors hover:text-ink"
         >
           <X size={20} />
         </button>
       </div>
 
       {/* Scene */}
-      <div
-        className="relative flex-1 overflow-hidden transition-colors duration-300"
-        style={{ background: wallTone.bg }}
-      >
-        {/* Floor */}
-        <div
-          className="absolute inset-x-0 bottom-0 h-[14%] border-t"
-          style={{
-            background: dark ? "#232220" : "#e8e4dc",
-            borderColor: dark ? "#3a3835" : "#d8d3c9",
-          }}
-        />
+      <div className="relative flex-1 overflow-hidden bg-wash">
+        <svg
+          viewBox={`0 0 ${SCENE_W} ${SCENE_H}`}
+          preserveAspectRatio="xMidYMid slice"
+          className="h-full w-full"
+          role="img"
+          aria-label={`${title} shown to scale on a ten foot wall`}
+        >
+          <defs>
+            <linearGradient id="wallGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={tone.top} />
+              <stop offset="100%" stopColor={tone.bottom} />
+            </linearGradient>
+            <linearGradient id="floorGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={floorTop} />
+              <stop offset="100%" stopColor={floorBottom} />
+            </linearGradient>
+            {/* Pool of light from above, so the wall isn't flat */}
+            <radialGradient id="lightPool" cx="50%" cy="0%" r="70%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity={dark ? 0.13 : 0.55} />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+            </radialGradient>
+            <filter id="artShadow" x="-30%" y="-30%" width="160%" height="180%">
+              <feDropShadow
+                dx="0"
+                dy="10"
+                stdDeviation="14"
+                floodColor="#000000"
+                floodOpacity={dark ? 0.5 : 0.28}
+              />
+            </filter>
+            <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="0" dy="6" stdDeviation="9" floodColor="#000000" floodOpacity="0.13" />
+            </filter>
+          </defs>
 
-        {/* 10 ft scale marker */}
-        <div className="absolute bottom-[14%] left-6 top-8 hidden w-px sm:block"
-             style={{ background: dark ? "#6b6862" : "#c9c4b8" }}>
-          <span
-            className="absolute -left-1.5 top-0 block h-px w-4"
-            style={{ background: dark ? "#6b6862" : "#c9c4b8" }}
-          />
-          <span
-            className="absolute -left-1.5 bottom-0 block h-px w-4"
-            style={{ background: dark ? "#6b6862" : "#c9c4b8" }}
-          />
-          <span
-            className={`absolute left-3 top-1/2 -translate-y-1/2 whitespace-nowrap text-[10px] tracking-[0.14em] ${
-              dark ? "text-paper/60" : "text-muted"
-            }`}
-            style={{ writingMode: "vertical-rl" }}
-          >
-            10 ft ceiling
-          </span>
-        </div>
+          {/* Wall */}
+          <rect x="0" y="0" width={SCENE_W} height={FLOOR_Y} fill="url(#wallGrad)" />
+          <rect x="0" y="0" width={SCENE_W} height={FLOOR_Y} fill="url(#lightPool)" />
 
-        {/* Wall content: figure + artwork share the floor line */}
-        <div className="absolute inset-x-0 bottom-[14%] top-8 flex items-end justify-center gap-10 px-8 sm:gap-16">
-          {showFigure && (
-            <Figure
-              // 5 ft 7 in average height as a share of the 10 ft wall
-              heightPct={(67 / WALL_HEIGHT_IN) * 100}
-              dark={dark}
+          {/* Floor */}
+          <rect x="0" y={FLOOR_Y} width={SCENE_W} height={SCENE_H - FLOOR_Y} fill="url(#floorGrad)" />
+          {/* Board seams, receding */}
+          {[0.18, 0.42, 0.7].map((t) => (
+            <line
+              key={t}
+              x1="0"
+              x2={SCENE_W}
+              y1={FLOOR_Y + (SCENE_H - FLOOR_Y) * t}
+              y2={FLOOR_Y + (SCENE_H - FLOOR_Y) * t}
+              stroke={dark ? "#000000" : "#b9b2a1"}
+              strokeOpacity="0.35"
+              strokeWidth="1.5"
             />
+          ))}
+
+          {/* Skirting board */}
+          <rect
+            x="0"
+            y={FLOOR_Y - 26}
+            width={SCENE_W}
+            height="26"
+            fill={dark ? "#2c2b28" : "#efece4"}
+          />
+          <line
+            x1="0"
+            x2={SCENE_W}
+            y1={FLOOR_Y - 26}
+            y2={FLOOR_Y - 26}
+            stroke={dark ? "#000000" : "#cfc9bb"}
+            strokeWidth="2"
+          />
+
+          {furnished && (
+            <g>
+              {/* Sofa — 7 ft wide, 2 ft 6 in tall */}
+              <g filter="url(#softShadow)">
+                <rect
+                  x={ft(1.1)}
+                  y={FLOOR_Y - ft(2.4)}
+                  width={ft(7)}
+                  height={ft(2.1)}
+                  rx="14"
+                  fill={furnitureFill}
+                />
+                <rect
+                  x={ft(1.1)}
+                  y={FLOOR_Y - ft(1.35)}
+                  width={ft(7)}
+                  height={ft(1.05)}
+                  rx="12"
+                  fill={furnitureDeep}
+                />
+                {/* legs */}
+                <rect x={ft(1.5)} y={FLOOR_Y - ft(0.32)} width="14" height={ft(0.32)} fill={furnitureDeep} />
+                <rect x={ft(7.6)} y={FLOOR_Y - ft(0.32)} width="14" height={ft(0.32)} fill={furnitureDeep} />
+                {/* cushions */}
+                <line
+                  x1={ft(3.4)}
+                  x2={ft(3.4)}
+                  y1={FLOOR_Y - ft(2.3)}
+                  y2={FLOOR_Y - ft(1.4)}
+                  stroke={furnitureDeep}
+                  strokeWidth="3"
+                />
+                <line
+                  x1={ft(5.8)}
+                  x2={ft(5.8)}
+                  y1={FLOOR_Y - ft(2.3)}
+                  y2={FLOOR_Y - ft(1.4)}
+                  stroke={furnitureDeep}
+                  strokeWidth="3"
+                />
+              </g>
+
+              {/* Floor lamp — 5 ft 6 in */}
+              <g filter="url(#softShadow)">
+                <rect x={ft(15.2)} y={FLOOR_Y - ft(5.5)} width="6" height={ft(5.2)} fill={furnitureDeep} />
+                <path
+                  d={`M ${ft(14.75)} ${FLOOR_Y - ft(5.5)} L ${ft(15.9)} ${FLOOR_Y - ft(5.5)} L ${ft(
+                    15.65
+                  )} ${FLOOR_Y - ft(4.85)} L ${ft(15.0)} ${FLOOR_Y - ft(4.85)} Z`}
+                  fill={dark ? "#5a5852" : "#e6e1d4"}
+                />
+                <ellipse cx={ft(15.35)} cy={FLOOR_Y - ft(0.28)} rx={ft(0.5)} ry={ft(0.12)} fill={furnitureDeep} />
+              </g>
+
+              {/* Plant — 4 ft */}
+              <g filter="url(#softShadow)">
+                <path
+                  d={`M ${ft(10.4)} ${FLOOR_Y - ft(0.95)} L ${ft(11.25)} ${FLOOR_Y - ft(0.95)} L ${ft(
+                    11.05
+                  )} ${FLOOR_Y - ft(0.05)} L ${ft(10.6)} ${FLOOR_Y - ft(0.05)} Z`}
+                  fill={furnitureDeep}
+                />
+                {[-1, -0.45, 0.1, 0.6].map((lean, i) => (
+                  <path
+                    key={i}
+                    d={`M ${ft(10.82)} ${FLOOR_Y - ft(0.95)} Q ${ft(10.82 + lean * 0.55)} ${
+                      FLOOR_Y - ft(2.4)
+                    } ${ft(10.82 + lean)} ${FLOOR_Y - ft(3.6 - Math.abs(lean) * 0.5)}`}
+                    stroke={furnitureFill}
+                    strokeWidth="9"
+                    fill="none"
+                    strokeLinecap="round"
+                  />
+                ))}
+              </g>
+            </g>
           )}
 
-          {/* The work, hung with its centre at eye level (57 in) */}
-          <div
-            className="relative"
-            style={{
-              height: `${heightPct}%`,
-              aspectRatio: `${aspect}`,
-              marginBottom: `${((57 - (dims?.h ?? 30) / 2) / WALL_HEIGHT_IN) * 100}%`,
-            }}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={image}
-              alt={title}
-              className="h-full w-full object-cover shadow-[0_18px_40px_-18px_rgba(0,0,0,0.45)]"
+          {/* Human figure — 5 ft 7 in, for scale */}
+          <g opacity={dark ? 0.5 : 0.42}>
+            <circle cx={ft(12.9)} cy={FLOOR_Y - ft(5.25)} r={ft(0.36)} fill={furnitureDeep} />
+            <path
+              d={`M ${ft(12.9)} ${FLOOR_Y - ft(4.85)}
+                  c ${-ft(0.55)} 0 ${-ft(0.8)} ${ft(0.4)} ${-ft(0.8)} ${ft(0.95)}
+                  l 0 ${ft(1.5)}
+                  c 0 ${ft(0.2)} ${ft(0.12)} ${ft(0.3)} ${ft(0.26)} ${ft(0.3)}
+                  l ${ft(0.06)} ${ft(2.05)}
+                  c 0 ${ft(0.2)} ${ft(0.14)} ${ft(0.3)} ${ft(0.28)} ${ft(0.3)}
+                  l ${ft(0.42)} 0
+                  c ${ft(0.14)} 0 ${ft(0.28)} ${-ft(0.1)} ${ft(0.28)} ${-ft(0.3)}
+                  l ${ft(0.06)} ${-ft(2.05)}
+                  c ${ft(0.14)} 0 ${ft(0.26)} ${-ft(0.1)} ${ft(0.26)} ${-ft(0.3)}
+                  l 0 ${-ft(1.5)}
+                  c 0 ${-ft(0.55)} ${-ft(0.25)} ${-ft(0.95)} ${-ft(0.8)} ${-ft(0.95)} Z`}
+              fill={furnitureDeep}
             />
-          </div>
-        </div>
+          </g>
+
+          {/* The artwork */}
+          <g filter="url(#artShadow)">
+            {framed && (
+              <rect
+                x={artCx - artW / 2 - frameW}
+                y={artCy - artH / 2 - frameW}
+                width={artW + frameW * 2}
+                height={artH + frameW * 2}
+                fill={dark ? "#e8e4da" : "#26251f"}
+              />
+            )}
+            <image
+              href={image}
+              x={artCx - artW / 2}
+              y={artCy - artH / 2}
+              width={artW}
+              height={artH}
+              preserveAspectRatio="xMidYMid slice"
+            />
+          </g>
+
+          {/* Ceiling-height dimension line */}
+          <g stroke={dark ? "#7a7770" : "#a8a196"} strokeWidth="2">
+            <line x1={ft(0.55)} x2={ft(0.55)} y1="14" y2={FLOOR_Y} />
+            <line x1={ft(0.3)} x2={ft(0.8)} y1="14" y2="14" />
+            <line x1={ft(0.3)} x2={ft(0.8)} y1={FLOOR_Y} y2={FLOOR_Y} />
+          </g>
+          <text
+            x={ft(0.95)}
+            y={FLOOR_Y / 2}
+            fill={dark ? "#9a968e" : "#6f6b61"}
+            fontSize="26"
+            letterSpacing="3"
+            dominantBaseline="middle"
+          >
+            10 ft
+          </text>
+        </svg>
       </div>
 
       {/* Controls */}
       <div className="border-t border-line px-5 py-4 sm:px-8">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-3">
+          <div className="flex items-center gap-2">
             <span className="mr-1 text-xs text-muted">Wall</span>
             {walls.map((w) => (
               <button
@@ -192,28 +352,39 @@ export default function ArtOnWall({
                 aria-label={`${w.label} wall`}
                 aria-pressed={wall === w.id}
                 className={`h-7 w-7 border transition-transform ${
-                  wall === w.id ? "border-ink scale-110" : "border-line"
+                  wall === w.id ? "scale-110 border-ink" : "border-line"
                 }`}
-                style={{ background: w.bg }}
+                style={{ background: w.top }}
               />
             ))}
           </div>
 
-          <label className="flex items-center gap-2 text-xs text-muted">
-            <input
-              type="checkbox"
-              checked={showFigure}
-              onChange={(e) => setShowFigure(e.target.checked)}
-              className="h-3.5 w-3.5 accent-black"
-            />
-            Show figure for scale
-          </label>
+          <div className="flex items-center gap-5 text-xs text-muted">
+            <label className="flex cursor-pointer items-center gap-2">
+              <input
+                type="checkbox"
+                checked={framed}
+                onChange={(e) => setFramed(e.target.checked)}
+                className="h-3.5 w-3.5 accent-black"
+              />
+              Framed
+            </label>
+            <label className="flex cursor-pointer items-center gap-2">
+              <input
+                type="checkbox"
+                checked={furnished}
+                onChange={(e) => setFurnished(e.target.checked)}
+                className="h-3.5 w-3.5 accent-black"
+              />
+              Furniture
+            </label>
+          </div>
 
           <p className="text-xs text-muted">
             {dims
-              ? `${round(dims.w)} × ${round(dims.h)} in · ${round(
-                  dims.w * 2.54
-                )} × ${round(dims.h * 2.54)} cm`
+              ? `${round(dims.w)} × ${round(dims.h)} in · ${round(dims.w * 2.54)} × ${round(
+                  dims.h * 2.54
+                )} cm · hung at ${EYE_LEVEL_IN} in`
               : size}
           </p>
         </div>
@@ -224,22 +395,3 @@ export default function ArtOnWall({
 }
 
 const round = (n: number) => Math.round(n * 10) / 10;
-
-/** Simple silhouette — a scale cue, not a character. */
-function Figure({ heightPct, dark }: { heightPct: number; dark: boolean }) {
-  const fill = dark ? "#4a4844" : "#cfcabf";
-  return (
-    <svg
-      viewBox="0 0 40 160"
-      style={{ height: `${heightPct}%` }}
-      className="w-auto shrink-0"
-      aria-hidden
-    >
-      <circle cx="20" cy="14" r="10" fill={fill} />
-      <path
-        d="M20 26c-9 0-14 6-14 14v34c0 3 2 5 4 5l1 33c0 3 2 5 4 5h10c2 0 4-2 4-5l1-33c2 0 4-2 4-5V40c0-8-5-14-14-14z"
-        fill={fill}
-      />
-    </svg>
-  );
-}
