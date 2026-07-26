@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Bodoni_Moda, Poppins } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
@@ -49,10 +50,14 @@ export default function RootLayout({
         <AuthProvider>
           <CartProvider>
             <WishlistProvider>
-            <Navbar />
-            <main>{children}</main>
-            <Footer />
-            <CartDrawer />
+              {/* Navbar reads the category query string, so it needs a
+                  Suspense boundary to keep pages statically renderable. */}
+              <Suspense fallback={<div className="h-[72px] border-b border-line" />}>
+                <Navbar />
+              </Suspense>
+              <main>{children}</main>
+              <Footer />
+              <CartDrawer />
             </WishlistProvider>
           </CartProvider>
         </AuthProvider>
