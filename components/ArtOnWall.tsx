@@ -5,27 +5,29 @@ import { createPortal } from "react-dom";
 import { X, Frame as FrameIcon } from "lucide-react";
 
 /**
- * Art on Wall — a to-scale room view.
+ * Art on Wall — a generic interior with a scale rule, in the manner of the
+ * room previews used across art marketplaces.
  *
- * The scene is drawn in SVG on a real measurement grid: the wall is 10 ft from
- * floor to ceiling and 90 user units = 1 ft, so every element (sofa, lamp,
- * plant, figure) sits at its true size and the artwork can be compared against
- * them honestly. The work hangs with its centre at 57 in, the museum standard
- * eye level.
+ * The scene is drawn rather than photographed, which matters for accuracy: it
+ * is constructed on a measurement grid (90 units = 1 ft, wall 10 ft floor to
+ * ceiling), so every element sits at its true size and the artwork can be
+ * placed exactly. A photograph would need per-image calibration to achieve the
+ * same thing, and would still distort with the lens used.
  *
- * Dimensions come from the artwork's `size` string, which may be two- or
- * three-axis and in inches or centimetres:
- *   "30 x 30 in" · "17 x 19 x 5 in" · "76 x 76 cm"
+ * The work hangs with its centre at 57 in — the museum standard eye level.
+ *
+ * Sizes are read from the artwork's `size` string, two- or three-axis, in
+ * inches or centimetres: "30 x 30 in" · "17 x 19 x 5 in" · "76 x 76 cm".
  */
 
-const PPF = 90; // pixels (user units) per foot
+const PPF = 90; // units per foot
 const FLOOR_Y = 900; // wall/floor junction
 const SCENE_W = 1600;
 const SCENE_H = 1010;
 const EYE_LEVEL_IN = 57;
 
-const ft = (feet: number) => feet * PPF;
-const inches = (i: number) => (i / 12) * PPF;
+const ft = (f: number) => f * PPF;
+const inch = (i: number) => (i / 12) * PPF;
 
 type Parsed = { w: number; h: number };
 
@@ -44,14 +46,14 @@ function parseSize(size: string): Parsed | null {
   return { w, h };
 }
 
-const walls = [
-  { id: "white", label: "White", top: "#ffffff", bottom: "#f1efe9" },
-  { id: "beige", label: "Beige", top: "#f7f4ec", bottom: "#eae5d8" },
-  { id: "grey", label: "Grey", top: "#dcd9d3", bottom: "#cbc7c0" },
-  { id: "charcoal", label: "Charcoal", top: "#33322e", bottom: "#232220" },
-] as const;
+const round = (n: number) => Math.round(n * 10) / 10;
 
-type WallId = (typeof walls)[number]["id"];
+const walls = [
+  { id: "white", label: "White", a: "#fbfaf7", b: "#eeece6" },
+  { id: "beige", label: "Beige", a: "#f6f2e9", b: "#e7e1d3" },
+  { id: "grey", label: "Grey", a: "#dedbd5", b: "#cbc8c1" },
+  { id: "charcoal", label: "Charcoal", a: "#35342f", b: "#242320" },
+] as const;
 
 export default function ArtOnWall({
   open,
@@ -68,9 +70,8 @@ export default function ArtOnWall({
   artistName?: string;
   size: string;
 }) {
-  const [wall, setWall] = useState<WallId>("white");
+  const [wallId, setWallId] = useState<(typeof walls)[number]["id"]>("white");
   const [framed, setFramed] = useState(true);
-  const [furnished, setFurnished] = useState(true);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -88,23 +89,23 @@ export default function ArtOnWall({
   }, [open, onClose]);
 
   const dims = useMemo(() => parseSize(size), [size]);
-
   if (!mounted || !open) return null;
 
-  const tone = walls.find((w) => w.id === wall)!;
-  const dark = wall === "charcoal";
+  const tone = walls.find((w) => w.id === wallId)!;
+  const dark = wallId === "charcoal";
 
-  // Artwork geometry in scene units
-  const artW = inches(dims?.w ?? 30);
-  const artH = inches(dims?.h ?? 30);
-  const artCx = SCENE_W / 2;
-  const artCy = FLOOR_Y - inches(EYE_LEVEL_IN);
-  const frameW = framed ? Math.max(artW * 0.035, 6) : 0;
+  const art = dims ?? { w: 30, h: 30 };
+  const artW = inch(art.w);
+  const artH = inch(art.h);
+  const artCx = SCENE_W * 0.52;
+  const artCy = FLOOR_Y - inch(EYE_LEVEL_IN);
+  const frameW = framed ? Math.max(artW * 0.03, 5) : 0;
 
-  const furnitureFill = dark ? "#3f3e3a" : "#cbc6ba";
-  const furnitureDeep = dark ? "#4a4844" : "#bdb7a9";
-  const floorTop = dark ? "#2a2926" : "#d8d2c5";
-  const floorBottom = dark ? "#1f1e1c" : "#c8c1b1";
+  // Neutral furniture tones that sit inside the site palette.
+  const solid = dark ? "#46443f" : "#c9c4b9";
+  const shade = dark ? "#3a3833" : "#b6b0a3";
+  const light = dark ? "#57544d" : "#dcd7cc";
+  const ruleColor = dark ? "#8b877f" : "#57534a";
 
   return createPortal(
     <div className="fixed inset-0 z-[100] flex flex-col bg-paper">
@@ -134,180 +135,160 @@ export default function ArtOnWall({
           preserveAspectRatio="xMidYMid slice"
           className="h-full w-full"
           role="img"
-          aria-label={`${title} shown to scale on a ten foot wall`}
+          aria-label={`${title} shown to scale against a ten foot wall`}
         >
           <defs>
-            <linearGradient id="wallGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={tone.top} />
-              <stop offset="100%" stopColor={tone.bottom} />
+            <linearGradient id="aowWall" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={tone.a} />
+              <stop offset="100%" stopColor={tone.b} />
             </linearGradient>
-            <linearGradient id="floorGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={floorTop} />
-              <stop offset="100%" stopColor={floorBottom} />
+            <linearGradient id="aowFloor" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={dark ? "#2b2a26" : "#cfc6b4"} />
+              <stop offset="100%" stopColor={dark ? "#1d1c1a" : "#bdb29c"} />
             </linearGradient>
-            {/* Pool of light from above, so the wall isn't flat */}
-            <radialGradient id="lightPool" cx="50%" cy="0%" r="70%">
-              <stop offset="0%" stopColor="#ffffff" stopOpacity={dark ? 0.13 : 0.55} />
+            <radialGradient id="aowLight" cx="52%" cy="2%" r="62%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity={dark ? 0.12 : 0.6} />
               <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
             </radialGradient>
-            <filter id="artShadow" x="-30%" y="-30%" width="160%" height="180%">
+            <linearGradient id="aowCurtain" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor={light} />
+              <stop offset="50%" stopColor={solid} />
+              <stop offset="100%" stopColor={shade} />
+            </linearGradient>
+            <filter id="aowArtShadow" x="-40%" y="-40%" width="180%" height="200%">
               <feDropShadow
                 dx="0"
-                dy="10"
-                stdDeviation="14"
-                floodColor="#000000"
-                floodOpacity={dark ? 0.5 : 0.28}
+                dy="9"
+                stdDeviation="13"
+                floodColor="#000"
+                floodOpacity={dark ? 0.55 : 0.3}
               />
             </filter>
-            <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
-              <feDropShadow dx="0" dy="6" stdDeviation="9" floodColor="#000000" floodOpacity="0.13" />
+            <filter id="aowSoft" x="-40%" y="-40%" width="180%" height="180%">
+              <feDropShadow dx="0" dy="7" stdDeviation="11" floodColor="#000" floodOpacity="0.14" />
             </filter>
           </defs>
 
-          {/* Wall */}
-          <rect x="0" y="0" width={SCENE_W} height={FLOOR_Y} fill="url(#wallGrad)" />
-          <rect x="0" y="0" width={SCENE_W} height={FLOOR_Y} fill="url(#lightPool)" />
+          {/* ---- Wall ---- */}
+          <rect x="0" y="0" width={SCENE_W} height={FLOOR_Y} fill="url(#aowWall)" />
+          <rect x="0" y="0" width={SCENE_W} height={FLOOR_Y} fill="url(#aowLight)" />
 
-          {/* Floor */}
-          <rect x="0" y={FLOOR_Y} width={SCENE_W} height={SCENE_H - FLOOR_Y} fill="url(#floorGrad)" />
-          {/* Board seams, receding */}
-          {[0.18, 0.42, 0.7].map((t) => (
+          {/* Panel seams, as in a rendered interior */}
+          {[0.3, 0.62].map((t) => (
+            <line
+              key={t}
+              x1="0"
+              x2={SCENE_W}
+              y1={FLOOR_Y * t}
+              y2={FLOOR_Y * t}
+              stroke={dark ? "#000" : "#000"}
+              strokeOpacity={dark ? 0.22 : 0.05}
+              strokeWidth="2"
+            />
+          ))}
+
+          {/* ---- Floor ---- */}
+          <rect x="0" y={FLOOR_Y} width={SCENE_W} height={SCENE_H - FLOOR_Y} fill="url(#aowFloor)" />
+          {[0.25, 0.55, 0.85].map((t) => (
             <line
               key={t}
               x1="0"
               x2={SCENE_W}
               y1={FLOOR_Y + (SCENE_H - FLOOR_Y) * t}
               y2={FLOOR_Y + (SCENE_H - FLOOR_Y) * t}
-              stroke={dark ? "#000000" : "#b9b2a1"}
-              strokeOpacity="0.35"
-              strokeWidth="1.5"
+              stroke="#000"
+              strokeOpacity="0.09"
+              strokeWidth="2"
+            />
+          ))}
+          {/* plank joins */}
+          {[220, 640, 1080, 1440].map((x, i) => (
+            <line
+              key={x}
+              x1={x}
+              x2={x}
+              y1={FLOOR_Y + (i % 2 ? 30 : 0)}
+              y2={FLOOR_Y + (i % 2 ? 78 : 42)}
+              stroke="#000"
+              strokeOpacity="0.08"
+              strokeWidth="2"
             />
           ))}
 
-          {/* Skirting board */}
-          <rect
-            x="0"
-            y={FLOOR_Y - 26}
-            width={SCENE_W}
-            height="26"
-            fill={dark ? "#2c2b28" : "#efece4"}
-          />
-          <line
-            x1="0"
-            x2={SCENE_W}
-            y1={FLOOR_Y - 26}
-            y2={FLOOR_Y - 26}
-            stroke={dark ? "#000000" : "#cfc9bb"}
-            strokeWidth="2"
-          />
+          {/* Skirting */}
+          <rect x="0" y={FLOOR_Y - 24} width={SCENE_W} height="24" fill={dark ? "#2e2d29" : "#f3f1ea"} />
+          <line x1="0" x2={SCENE_W} y1={FLOOR_Y - 24} y2={FLOOR_Y - 24} stroke="#000" strokeOpacity="0.12" strokeWidth="2" />
 
-          {furnished && (
-            <g>
-              {/* Sofa — 7 ft wide, 2 ft 6 in tall */}
-              <g filter="url(#softShadow)">
-                <rect
-                  x={ft(1.1)}
-                  y={FLOOR_Y - ft(2.4)}
-                  width={ft(7)}
-                  height={ft(2.1)}
-                  rx="14"
-                  fill={furnitureFill}
-                />
-                <rect
-                  x={ft(1.1)}
-                  y={FLOOR_Y - ft(1.35)}
-                  width={ft(7)}
-                  height={ft(1.05)}
-                  rx="12"
-                  fill={furnitureDeep}
-                />
-                {/* legs */}
-                <rect x={ft(1.5)} y={FLOOR_Y - ft(0.32)} width="14" height={ft(0.32)} fill={furnitureDeep} />
-                <rect x={ft(7.6)} y={FLOOR_Y - ft(0.32)} width="14" height={ft(0.32)} fill={furnitureDeep} />
-                {/* cushions */}
-                <line
-                  x1={ft(3.4)}
-                  x2={ft(3.4)}
-                  y1={FLOOR_Y - ft(2.3)}
-                  y2={FLOOR_Y - ft(1.4)}
-                  stroke={furnitureDeep}
-                  strokeWidth="3"
-                />
-                <line
-                  x1={ft(5.8)}
-                  x2={ft(5.8)}
-                  y1={FLOOR_Y - ft(2.3)}
-                  y2={FLOOR_Y - ft(1.4)}
-                  stroke={furnitureDeep}
-                  strokeWidth="3"
-                />
-              </g>
+          {/* ---- Curtain, far right ---- */}
+          <g>
+            <rect x={SCENE_W - ft(2.6)} y="0" width={ft(2.6)} height={FLOOR_Y} fill="url(#aowCurtain)" opacity="0.9" />
+            {[0.18, 0.42, 0.68, 0.9].map((t) => (
+              <line
+                key={t}
+                x1={SCENE_W - ft(2.6) + ft(2.6) * t}
+                x2={SCENE_W - ft(2.6) + ft(2.6) * t}
+                y1="0"
+                y2={FLOOR_Y}
+                stroke="#000"
+                strokeOpacity="0.07"
+                strokeWidth="6"
+              />
+            ))}
+          </g>
 
-              {/* Floor lamp — 5 ft 6 in */}
-              <g filter="url(#softShadow)">
-                <rect x={ft(15.2)} y={FLOOR_Y - ft(5.5)} width="6" height={ft(5.2)} fill={furnitureDeep} />
-                <path
-                  d={`M ${ft(14.75)} ${FLOOR_Y - ft(5.5)} L ${ft(15.9)} ${FLOOR_Y - ft(5.5)} L ${ft(
-                    15.65
-                  )} ${FLOOR_Y - ft(4.85)} L ${ft(15.0)} ${FLOOR_Y - ft(4.85)} Z`}
-                  fill={dark ? "#5a5852" : "#e6e1d4"}
-                />
-                <ellipse cx={ft(15.35)} cy={FLOOR_Y - ft(0.28)} rx={ft(0.5)} ry={ft(0.12)} fill={furnitureDeep} />
-              </g>
-
-              {/* Plant — 4 ft */}
-              <g filter="url(#softShadow)">
-                <path
-                  d={`M ${ft(10.4)} ${FLOOR_Y - ft(0.95)} L ${ft(11.25)} ${FLOOR_Y - ft(0.95)} L ${ft(
-                    11.05
-                  )} ${FLOOR_Y - ft(0.05)} L ${ft(10.6)} ${FLOOR_Y - ft(0.05)} Z`}
-                  fill={furnitureDeep}
-                />
-                {[-1, -0.45, 0.1, 0.6].map((lean, i) => (
-                  <path
-                    key={i}
-                    d={`M ${ft(10.82)} ${FLOOR_Y - ft(0.95)} Q ${ft(10.82 + lean * 0.55)} ${
-                      FLOOR_Y - ft(2.4)
-                    } ${ft(10.82 + lean)} ${FLOOR_Y - ft(3.6 - Math.abs(lean) * 0.5)}`}
-                    stroke={furnitureFill}
-                    strokeWidth="9"
-                    fill="none"
-                    strokeLinecap="round"
-                  />
-                ))}
-              </g>
-            </g>
-          )}
-
-          {/* Human figure — 5 ft 7 in, for scale */}
-          <g opacity={dark ? 0.5 : 0.42}>
-            <circle cx={ft(12.9)} cy={FLOOR_Y - ft(5.25)} r={ft(0.36)} fill={furnitureDeep} />
+          {/* ---- Armchair (3 ft wide, 2 ft 8 tall) ---- */}
+          <g filter="url(#aowSoft)">
+            <rect x={ft(11.6)} y={FLOOR_Y - ft(2.65)} width={ft(3)} height={ft(2.35)} rx="16" fill={solid} />
+            <rect x={ft(11.85)} y={FLOOR_Y - ft(1.55)} width={ft(2.5)} height={ft(1.25)} rx="12" fill={light} />
+            <rect x={ft(11.6)} y={FLOOR_Y - ft(1.75)} width={ft(0.42)} height={ft(1.45)} rx="10" fill={shade} />
+            <rect x={ft(14.18)} y={FLOOR_Y - ft(1.75)} width={ft(0.42)} height={ft(1.45)} rx="10" fill={shade} />
+            <rect x={ft(11.95)} y={FLOOR_Y - ft(0.3)} width="13" height={ft(0.3)} fill={shade} />
+            <rect x={ft(14.05)} y={FLOOR_Y - ft(0.3)} width="13" height={ft(0.3)} fill={shade} />
+            {/* throw */}
             <path
-              d={`M ${ft(12.9)} ${FLOOR_Y - ft(4.85)}
-                  c ${-ft(0.55)} 0 ${-ft(0.8)} ${ft(0.4)} ${-ft(0.8)} ${ft(0.95)}
-                  l 0 ${ft(1.5)}
-                  c 0 ${ft(0.2)} ${ft(0.12)} ${ft(0.3)} ${ft(0.26)} ${ft(0.3)}
-                  l ${ft(0.06)} ${ft(2.05)}
-                  c 0 ${ft(0.2)} ${ft(0.14)} ${ft(0.3)} ${ft(0.28)} ${ft(0.3)}
-                  l ${ft(0.42)} 0
-                  c ${ft(0.14)} 0 ${ft(0.28)} ${-ft(0.1)} ${ft(0.28)} ${-ft(0.3)}
-                  l ${ft(0.06)} ${-ft(2.05)}
-                  c ${ft(0.14)} 0 ${ft(0.26)} ${-ft(0.1)} ${ft(0.26)} ${-ft(0.3)}
-                  l 0 ${-ft(1.5)}
-                  c 0 ${-ft(0.55)} ${-ft(0.25)} ${-ft(0.95)} ${-ft(0.8)} ${-ft(0.95)} Z`}
-              fill={furnitureDeep}
+              d={`M ${ft(13.6)} ${FLOOR_Y - ft(2.55)} q ${ft(0.7)} ${ft(0.9)} ${ft(0.25)} ${ft(1.9)} l ${-ft(0.5)} 0 q ${ft(0.35)} ${-ft(1)} ${-ft(0.3)} ${-ft(1.85)} Z`}
+              fill={light}
+              opacity="0.95"
             />
           </g>
 
-          {/* The artwork */}
-          <g filter="url(#artShadow)">
+          {/* ---- Floor lamp (5 ft 6) ---- */}
+          <g filter="url(#aowSoft)">
+            <ellipse cx={ft(15.75)} cy={FLOOR_Y - ft(0.06)} rx={ft(0.44)} ry={ft(0.1)} fill={shade} />
+            <rect x={ft(15.71)} y={FLOOR_Y - ft(5.4)} width="7" height={ft(5.35)} fill={shade} />
+            <path
+              d={`M ${ft(15.25)} ${FLOOR_Y - ft(5.4)} L ${ft(16.3)} ${FLOOR_Y - ft(5.4)} L ${ft(16.08)} ${FLOOR_Y - ft(4.78)} L ${ft(15.47)} ${FLOOR_Y - ft(4.78)} Z`}
+              fill={dark ? "#6a675f" : "#e9e4d8"}
+            />
+          </g>
+
+          {/* ---- Plant (3 ft 8) ---- */}
+          <g filter="url(#aowSoft)">
+            <path
+              d={`M ${ft(9.5)} ${FLOOR_Y - ft(0.92)} L ${ft(10.32)} ${FLOOR_Y - ft(0.92)} L ${ft(10.12)} ${FLOOR_Y - ft(0.04)} L ${ft(9.7)} ${FLOOR_Y - ft(0.04)} Z`}
+              fill={dark ? "#54514a" : "#e4dfd3"}
+            />
+            {[-0.85, -0.35, 0.15, 0.6].map((lean, i) => (
+              <path
+                key={i}
+                d={`M ${ft(9.91)} ${FLOOR_Y - ft(0.92)} Q ${ft(9.91 + lean * 0.5)} ${FLOOR_Y - ft(2.2)} ${ft(9.91 + lean)} ${FLOOR_Y - ft(3.5 - Math.abs(lean) * 0.45)}`}
+                stroke={solid}
+                strokeWidth="10"
+                fill="none"
+                strokeLinecap="round"
+              />
+            ))}
+          </g>
+
+          {/* ---- The artwork ---- */}
+          <g filter="url(#aowArtShadow)">
             {framed && (
               <rect
                 x={artCx - artW / 2 - frameW}
                 y={artCy - artH / 2 - frameW}
                 width={artW + frameW * 2}
                 height={artH + frameW * 2}
-                fill={dark ? "#e8e4da" : "#26251f"}
+                fill={dark ? "#e9e5db" : "#23221e"}
               />
             )}
             <image
@@ -320,21 +301,34 @@ export default function ArtOnWall({
             />
           </g>
 
-          {/* Ceiling-height dimension line */}
-          <g stroke={dark ? "#7a7770" : "#a8a196"} strokeWidth="2">
-            <line x1={ft(0.55)} x2={ft(0.55)} y1="14" y2={FLOOR_Y} />
-            <line x1={ft(0.3)} x2={ft(0.8)} y1="14" y2="14" />
-            <line x1={ft(0.3)} x2={ft(0.8)} y1={FLOOR_Y} y2={FLOOR_Y} />
+          {/* ---- 10 FT scale rule ---- */}
+          <g stroke={ruleColor} strokeWidth="2.5" fill="none">
+            <line x1={ft(4.6)} x2={ft(4.6)} y1="18" y2={FLOOR_Y} />
+            <line x1={ft(4.35)} x2={ft(4.85)} y1="18" y2="18" />
+            <line x1={ft(4.35)} x2={ft(4.85)} y1={FLOOR_Y} y2={FLOOR_Y} />
+            {/* foot ticks */}
+            {Array.from({ length: 9 }, (_, i) => i + 1).map((f) => (
+              <line
+                key={f}
+                x1={ft(4.6)}
+                x2={ft(4.78)}
+                y1={FLOOR_Y - ft(f)}
+                y2={FLOOR_Y - ft(f)}
+                strokeWidth="1.5"
+                strokeOpacity="0.65"
+              />
+            ))}
           </g>
           <text
-            x={ft(0.95)}
+            x={ft(4.28)}
             y={FLOOR_Y / 2}
-            fill={dark ? "#9a968e" : "#6f6b61"}
-            fontSize="26"
-            letterSpacing="3"
-            dominantBaseline="middle"
+            fill={ruleColor}
+            fontSize="30"
+            letterSpacing="4"
+            textAnchor="middle"
+            transform={`rotate(-90 ${ft(4.28)} ${FLOOR_Y / 2})`}
           >
-            10 ft
+            10 FT
           </text>
         </svg>
       </div>
@@ -348,37 +342,26 @@ export default function ArtOnWall({
               <button
                 key={w.id}
                 type="button"
-                onClick={() => setWall(w.id)}
+                onClick={() => setWallId(w.id)}
                 aria-label={`${w.label} wall`}
-                aria-pressed={wall === w.id}
+                aria-pressed={wallId === w.id}
                 className={`h-7 w-7 border transition-transform ${
-                  wall === w.id ? "scale-110 border-ink" : "border-line"
+                  wallId === w.id ? "scale-110 border-ink" : "border-line"
                 }`}
-                style={{ background: w.top }}
+                style={{ background: w.a }}
               />
             ))}
           </div>
 
-          <div className="flex items-center gap-5 text-xs text-muted">
-            <label className="flex cursor-pointer items-center gap-2">
-              <input
-                type="checkbox"
-                checked={framed}
-                onChange={(e) => setFramed(e.target.checked)}
-                className="h-3.5 w-3.5 accent-black"
-              />
-              Framed
-            </label>
-            <label className="flex cursor-pointer items-center gap-2">
-              <input
-                type="checkbox"
-                checked={furnished}
-                onChange={(e) => setFurnished(e.target.checked)}
-                className="h-3.5 w-3.5 accent-black"
-              />
-              Furniture
-            </label>
-          </div>
+          <label className="flex cursor-pointer items-center gap-2 text-xs text-muted">
+            <input
+              type="checkbox"
+              checked={framed}
+              onChange={(e) => setFramed(e.target.checked)}
+              className="h-3.5 w-3.5 accent-black"
+            />
+            Framed
+          </label>
 
           <p className="text-xs text-muted">
             {dims
@@ -393,5 +376,3 @@ export default function ArtOnWall({
     document.body
   );
 }
-
-const round = (n: number) => Math.round(n * 10) / 10;
