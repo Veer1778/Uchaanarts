@@ -1,93 +1,71 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { Heart, ShoppingBag, Menu, X } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { Search, Bookmark, Menu, X, ShoppingBag } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { useAuthOptional } from "@/context/AuthContext";
 
 /**
- * Navbar — editorial masthead: wordmark left, centred links, and a bracketed
- * "Sign up" control on the right, as in the reference. Hairline rules tie it
- * into the modular grid below.
+ * Header — letterspaced UCHAAN / ARTS wordmark on the left, editorial nav
+ * centred, and utilities plus a terracotta Enquire button on the right, as in
+ * the client reference.
  */
 
-/* Primary nav is the catalogue itself: the shopper picks a medium straight
-   from the header rather than hunting through editorial pages. */
-const categoryLinks: { href: string; label: string; category?: string }[] = [
-  { href: "/art-gallery", label: "All Art" },
-  { href: "/art-gallery?category=Painting", label: "Painting", category: "Painting" },
-  { href: "/art-gallery?category=Sculpture", label: "Sculpture", category: "Sculpture" },
-  { href: "/art-gallery?category=Serigraph", label: "Serigraph", category: "Serigraph" },
-  { href: "/art-gallery?category=Photography", label: "Photography", category: "Photography" },
-  { href: "/art-gallery?category=Folk%20Art", label: "Folk Art", category: "Folk Art" },
-  { href: "/art-gallery?category=Digital%20Art", label: "Digital Art", category: "Digital Art" },
-];
-
-/* Editorial pages move to the secondary row / mobile drawer. */
-const secondaryLinks = [
+const links = [
+  { href: "/art-gallery", label: "Art" },
   { href: "/artists", label: "Artists" },
   { href: "/exhibitions", label: "Exhibitions" },
+  { href: "/advisory", label: "Art Advisory" },
+  { href: "/trade", label: "Trade & Corporate" },
   { href: "/blog", label: "Journal" },
   { href: "/about", label: "About" },
+  { href: "/visit", label: "Visit" },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
-  const params = useSearchParams();
-  // Category links differ only by query string, so the active check has to
-  // read the query too. (An effect keyed on `pathname` never fires between
-  // ?category=A and ?category=B — the pathname is identical.)
-  const activeCategory = params.get("category");
   const { count, open } = useCart();
   const { count: wishCount } = useWishlist();
-  // Optional: the Navbar renders on /_not-found too, which prerenders
-  // without AuthProvider around it.
   const auth = useAuthOptional();
   const user = auth?.user ?? null;
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-paper/95 backdrop-blur">
-      <div className="mx-auto flex h-[72px] max-w-[1400px] items-center justify-between gap-6 px-6 sm:px-10">
-        {/* Logo */}
-        <Link href="/" aria-label="Uchaan Arts home" className="flex shrink-0 items-center">
-          <Image
-            src="/logo.png"
-            alt="Uchaan Arts"
-            width={129}
-            height={83}
-            priority
-            className="h-8 w-auto"
-          />
+      <div className="mx-auto flex h-[76px] max-w-[1400px] items-center justify-between gap-6 px-5 sm:px-8 lg:px-10">
+        {/* Wordmark */}
+        <Link href="/" aria-label="Uchaan Arts home" className="shrink-0">
+          <span className="wordmark block text-[1.45rem] leading-none sm:text-[1.6rem]">
+            UCHAAN
+          </span>
+          <span className="wordmark mt-0.5 block text-[0.6rem] text-muted">
+            ARTS
+          </span>
         </Link>
 
-        {/* Categories */}
+        {/* Nav */}
         <nav className="hidden items-center gap-6 xl:gap-7 lg:flex">
-          {categoryLinks.map((l) => {
-            const onShop = pathname === "/art-gallery" || pathname === "/";
-            const active = onShop
-              ? (l.category ?? null) === activeCategory
-              : false;
+          {links.map((l) => {
+            const active = pathname.startsWith(l.href);
             return (
               <Link
                 key={l.href}
                 href={l.href}
-                className={`relative whitespace-nowrap py-1 text-sm transition-colors ${
+                className={`relative whitespace-nowrap py-1 text-[13px] transition-colors ${
                   active ? "text-ink" : "text-muted hover:text-ink"
                 }`}
               >
                 {l.label}
                 {active && (
                   <motion.span
-                    initial={{ opacity: 0, y: 5 }}
+                    initial={{ opacity: 0, y: 4 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, ease: "easeOut" }}
-                    className="absolute -bottom-0.5 left-0 h-px w-full bg-ink"
+                    transition={{ duration: 0.25 }}
+                    className="absolute -bottom-0.5 left-0 h-px w-full bg-signal"
                   />
                 )}
               </Link>
@@ -98,13 +76,21 @@ export default function Navbar() {
         {/* Utilities */}
         <div className="flex shrink-0 items-center gap-4">
           <Link
+            href="/art-gallery"
+            aria-label="Search artworks"
+            className="hidden text-ink transition-colors hover:text-signal sm:block"
+          >
+            <Search size={18} strokeWidth={1.5} />
+          </Link>
+
+          <Link
             href="/wishlist"
-            aria-label={`Wishlist, ${wishCount} items`}
+            aria-label={`Saved works, ${wishCount}`}
             className="relative text-ink transition-colors hover:text-signal"
           >
-            <Heart size={19} strokeWidth={1.6} />
+            <Bookmark size={18} strokeWidth={1.5} />
             {wishCount > 0 && (
-              <span className="absolute -right-1.5 -top-1.5 grid h-4 w-4 place-items-center rounded-full bg-signal text-[10px] text-paper">
+              <span className="absolute -right-1.5 -top-1.5 grid h-4 w-4 place-items-center rounded-full bg-signal text-[10px] text-white">
                 {wishCount}
               </span>
             )}
@@ -116,22 +102,19 @@ export default function Navbar() {
             aria-label={`Cart, ${count} items`}
             className="relative text-ink transition-colors hover:text-signal"
           >
-            <ShoppingBag size={19} strokeWidth={1.6} />
+            <ShoppingBag size={18} strokeWidth={1.5} />
             {count > 0 && (
-              <span className="absolute -right-1.5 -top-1.5 grid h-4 w-4 place-items-center rounded-full bg-signal text-[10px] text-paper">
+              <span className="absolute -right-1.5 -top-1.5 grid h-4 w-4 place-items-center rounded-full bg-signal text-[10px] text-white">
                 {count}
               </span>
             )}
           </button>
 
-          {/* Bracketed sign-up control from the reference */}
           <Link
             href={user ? "/account" : "/login"}
-            className="relative hidden px-4 py-2 text-sm text-ink transition-colors hover:text-signal sm:block"
+            className="btn-accent hidden px-5 py-2.5 text-[13px] sm:block"
           >
-            <span className="absolute left-0 top-0 h-2.5 w-2.5 border-l border-t border-signal" />
-            <span className="absolute bottom-0 right-0 h-2.5 w-2.5 border-b border-r border-signal" />
-            {user ? "Account" : "Sign up"}
+            {user ? "Account" : "Enquire"}
           </Link>
 
           <button
@@ -146,23 +129,6 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Secondary row — editorial pages, kept out of the shopping path */}
-      <div className="hidden border-t border-line lg:block">
-        <div className="mx-auto flex h-10 max-w-[1400px] items-center gap-7 px-6 sm:px-10">
-          {secondaryLinks.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className={`text-xs transition-colors ${
-                pathname.startsWith(l.href) ? "text-ink" : "text-muted hover:text-ink"
-              }`}
-            >
-              {l.label}
-            </Link>
-          ))}
-        </div>
-      </div>
-
       {/* Mobile drawer */}
       <AnimatePresence>
         {menuOpen && (
@@ -173,35 +139,23 @@ export default function Navbar() {
             transition={{ duration: 0.25 }}
             className="overflow-hidden border-t border-line lg:hidden"
           >
-            <div className="mx-auto max-w-[1400px] px-6 py-4">
-              {categoryLinks.map((l) => (
+            <div className="mx-auto max-w-[1400px] px-5 py-3 sm:px-8">
+              {links.map((l) => (
                 <Link
                   key={l.href}
                   href={l.href}
                   onClick={() => setMenuOpen(false)}
-                  className="block border-b border-line py-3 font-display text-2xl"
+                  className="block border-b border-line py-3 font-display text-xl last:border-0"
                 >
                   {l.label}
                 </Link>
               ))}
-              <div className="flex flex-wrap gap-x-6 gap-y-2 pt-4">
-                {secondaryLinks.map((l) => (
-                  <Link
-                    key={l.href}
-                    href={l.href}
-                    onClick={() => setMenuOpen(false)}
-                    className="text-sm text-muted"
-                  >
-                    {l.label}
-                  </Link>
-                ))}
-              </div>
               <Link
                 href={user ? "/account" : "/login"}
                 onClick={() => setMenuOpen(false)}
-                className="mt-4 inline-block bg-ink px-5 py-2.5 text-xs tracking-[0.14em] text-paper"
+                className="btn-accent mt-4 inline-block px-6 py-3 text-sm"
               >
-                {user ? "My account" : "Sign up"}
+                {user ? "My account" : "Enquire"}
               </Link>
             </div>
           </motion.nav>
