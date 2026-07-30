@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Bodoni_Moda, Poppins } from "next/font/google";
+import { Cormorant_Garamond, Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
@@ -9,20 +9,18 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CartDrawer from "@/components/CartDrawer";
 
-const bodoni = Bodoni_Moda({
+const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
-  // Bodoni's high contrast is the point — load the range so very large
-  // display sizes render with proper hairline serifs.
-  weight: ["400", "500", "600", "700"],
+  weight: ["300", "400", "500", "600"],
   style: ["normal", "italic"],
-  variable: "--font-bodoni",
+  variable: "--font-cormorant",
   display: "swap",
 });
 
-const poppins = Poppins({
+const inter = Inter({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600"],
-  variable: "--font-poppins",
+  variable: "--font-inter",
   display: "swap",
 });
 
@@ -45,7 +43,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${bodoni.variable} ${poppins.variable}`}>
+    <html lang="en" className={`${cormorant.variable} ${inter.variable}`}>
       <body className="antialiased">
         <AuthProvider>
           <CartProvider>
