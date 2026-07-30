@@ -1,23 +1,25 @@
 @import "tailwindcss";
 
 @theme {
-  /* Palette is restricted to white, beige, grey and black.
-     `signal` stays as the accent token so existing utilities keep working —
-     it is simply black now rather than red. */
-  --color-ink: #14130f; /* black */
-  --color-muted: #6f6b61; /* grey */
-  --color-faint: #a6a196; /* light grey */
-  --color-signal: #14130f; /* accent = black */
-  --color-signal-dark: #000000;
-  --color-gold: #cfc7b6; /* beige accent (name kept for compatibility) */
-  --color-sand: #cfc7b6; /* beige, preferred name */
-  --color-stone: #8c8779; /* mid grey */
-  --color-paper: #ffffff; /* white */
-  --color-wash: #f4f1ea; /* beige ground */
-  --color-line: #e2ded4; /* grey hairline */
+  /* Palette per the client reference: warm cream ground, terracotta accent,
+     charcoal for the footer and type. `signal` remains the accent token so
+     existing utilities keep working. */
+  --color-ink: #1f1d1a; /* near-black type */
+  --color-charcoal: #292725; /* footer slab */
+  --color-muted: #6d675f; /* body grey */
+  --color-faint: #9d968b; /* light grey */
+  --color-signal: #b0482b; /* terracotta accent */
+  --color-signal-dark: #94391f;
+  --color-sand: #ded5c4; /* beige accent */
+  --color-gold: #ded5c4; /* alias, kept for compatibility */
+  --color-stone: #8c8779;
+  --color-paper: #fbf8f3; /* warm cream page */
+  --color-card: #ffffff; /* card white */
+  --color-wash: #f1ebe0; /* beige band */
+  --color-line: #e4ded1; /* hairline */
 
-  --font-display: var(--font-bodoni), "Bodoni Moda", "Didot", Georgia, serif;
-  --font-body: var(--font-poppins), "Poppins", system-ui, sans-serif;
+  --font-display: var(--font-cormorant), "Cormorant Garamond", Garamond, Georgia, serif;
+  --font-body: var(--font-inter), "Inter", system-ui, sans-serif;
 }
 
 /* Decorative .aura blobs are positioned with negative offsets (e.g. -right-40),
@@ -152,4 +154,53 @@ button:focus-visible {
 .label {
   font-size: 11px;
   letter-spacing: 0.18em;
+}
+
+
+/* ---------------------------------------------------------------------------
+   Reference-specific utilities
+   --------------------------------------------------------------------------- */
+
+/* Letterspaced caps wordmark, as in "UCHAAN / ARTS". */
+.wordmark {
+  font-family: var(--font-display);
+  letter-spacing: 0.16em;
+  line-height: 1;
+}
+
+/* Solid terracotta button. */
+.btn-accent {
+  background: var(--color-signal);
+  color: #fff;
+  transition: background-color 0.2s ease;
+}
+.btn-accent:hover {
+  background: var(--color-signal-dark);
+}
+
+/* Outlined button on cream. */
+.btn-outline {
+  border: 1px solid var(--color-line);
+  background: var(--color-card);
+  transition: border-color 0.2s ease;
+}
+.btn-outline:hover {
+  border-color: var(--color-ink);
+}
+
+/* Horizontal snap rail used for the mobile carousels. */
+.rail {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.rail::-webkit-scrollbar {
+  display: none;
+}
+.rail > * {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
 }
