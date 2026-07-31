@@ -16,13 +16,13 @@ export default function Testimonials() {
   return (
     <div>
       {/* Desktop: all three */}
-      <div className="hidden gap-5 md:grid md:grid-cols-3">
+      <div className="hidden gap-6 md:grid md:grid-cols-3">
         {testimonials.map((t) => (
           <blockquote key={t.by}>
-            <p className="font-display text-[13px] italic leading-relaxed">
+            <p className="font-display text-[14.5px] italic leading-relaxed">
               &ldquo;{t.quote}&rdquo;
             </p>
-            <footer className="mt-2.5 text-[10px] text-muted">— {t.by}</footer>
+            <footer className="mt-3 text-[12px] text-muted">— {t.by}</footer>
           </blockquote>
         ))}
       </div>
@@ -30,10 +30,10 @@ export default function Testimonials() {
       {/* Mobile: one at a time */}
       <div className="md:hidden">
         <blockquote>
-          <p className="font-display text-[13px] italic leading-relaxed">
+          <p className="font-display text-[14.5px] italic leading-relaxed">
             &ldquo;{testimonials[i].quote}&rdquo;
           </p>
-          <footer className="mt-2.5 text-[10px] text-muted">
+          <footer className="mt-3 text-[12px] text-muted">
             — {testimonials[i].by}
           </footer>
         </blockquote>
