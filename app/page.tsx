@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   ArrowRight,
+  ChevronLeft,
   ChevronRight,
   IndianRupee,
   Frame,
@@ -9,6 +10,7 @@ import {
   LayoutGrid,
   BadgeCheck,
   MessageSquare,
+  Users,
   Truck,
   Clock,
   MapPin,
@@ -17,33 +19,42 @@ import {
   ClipboardCheck,
   PackageCheck,
 } from "lucide-react";
-import ArtworkCarousel from "@/components/ArtworkCarousel";
-import SpacesRail from "@/components/SpacesRail";
+import HeroPlate from "@/components/HeroPlate";
 import Testimonials from "@/components/Testimonials";
 import { getArtworks, getArtists, getPosts, getExhibitions } from "@/lib/cms";
-import { curatedPaths, advisorySteps, assurances } from "@/lib/site";
+import { curatedPaths, advisorySteps, realSpaces, assurances } from "@/lib/site";
+import { formatINR } from "@/lib/data";
 
 /**
- * Home — built to the client's mobile reference, section for section.
+ * Home — built to the client's desktop reference.
  *
- * Order: hero (text left, artwork bleeding right) · trust strip · New &
- * Noteworthy · Curated Paths · Artist Focus · Art Advisory · Art in Real
- * Spaces · At the Gallery · assurances · Collectors Say · From the Journal ·
- * Visit the Gallery · Stay Inspired (terracotta band) · footer.
+ * Full-width bands: hero, New & Noteworthy, Curated Paths, the assurance bar,
+ * and the Visit / Stay Inspired strip.
  *
- * The mockup is mobile, so that is the source of truth; wider screens keep the
- * same structure with more room rather than a different layout.
+ * Everything from Curated Paths downward that isn't a band is PAIRED into two
+ * columns with a vertical rule between them:
+ *
+ *   Artist Focus        │ Art Advisory
+ *   Art in Real Spaces  │ At the Gallery
+ *   Collectors Say      │ From the Journal
+ *
+ * Those pairs stack on mobile, where the rule becomes a horizontal divider.
  */
 
 const pathIcons = { rupee: IndianRupee, frame: Frame, sprout: Sprout, grid: LayoutGrid };
-const assuranceIcons = { certificate: BadgeCheck, guidance: MessageSquare, delivery: Truck };
+const assuranceIcons = {
+  certificate: BadgeCheck,
+  guidance: MessageSquare,
+  relationships: Users,
+  delivery: Truck,
+};
 const stepIcons = [UserRound, ClipboardCheck, PackageCheck];
 
-/** Heading with a right-aligned link — used throughout the reference. */
+/** Section heading with a right-aligned link. */
 function Head({ title, href, cta }: { title: string; href: string; cta: string }) {
   return (
     <div className="mb-5 flex items-baseline justify-between gap-4">
-      <h2 className="font-display text-[1.35rem] leading-none sm:text-2xl">{title}</h2>
+      <h2 className="font-display text-xl leading-none sm:text-2xl">{title}</h2>
       <Link
         href={href}
         className="inline-flex shrink-0 items-center gap-1 text-[11px] text-muted transition-colors hover:text-ink"
@@ -51,6 +62,20 @@ function Head({ title, href, cta }: { title: string; href: string; cta: string }
         {cta} <ArrowRight size={11} />
       </Link>
     </div>
+  );
+}
+
+/** A paired two-column block with a dividing rule. */
+function Pair({ left, right }: { left: React.ReactNode; right: React.ReactNode }) {
+  return (
+    <section className="border-b border-line">
+      <div className="mx-auto grid max-w-[1400px] lg:grid-cols-2">
+        <div className="border-b border-line px-5 py-9 sm:px-8 lg:border-b-0 lg:border-r lg:px-10 lg:py-12">
+          {left}
+        </div>
+        <div className="px-5 py-9 sm:px-8 lg:px-10 lg:py-12">{right}</div>
+      </div>
+    </section>
   );
 }
 
@@ -65,8 +90,8 @@ export default async function HomePage() {
   const names: Record<string, string> = {};
   artists.forEach((a) => (names[a.slug] = a.name));
 
-  const hero = artworks[0];
-  const noteworthy = artworks.slice(0, 4);
+  const heroWorks = artworks.slice(0, 4);
+  const noteworthy = artworks.slice(0, 5);
   const focusArtist = artists.find((a) => a.featured) ?? artists[0];
   const focusWorks = artworks.filter((w) => w.artist === focusArtist?.slug).slice(0, 2);
   const current = exhibitions[0];
@@ -75,120 +100,123 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* ───────── Hero — text on cream, artwork bleeding off the right ───────── */}
-      <section className="relative overflow-hidden border-b border-line">
-        <div className="mx-auto grid max-w-[1400px] grid-cols-[1fr_0.95fr] items-center lg:grid-cols-[1fr_1.15fr]">
-          <div className="py-10 pl-5 pr-3 sm:pl-8 sm:pr-6 lg:py-20 lg:pl-10">
-            <h1 className="font-display text-[1.75rem] leading-[1.15] sm:text-4xl lg:text-[3.2rem]">
-              Contemporary
-              <br />
-              Indian art,
-              <br />
-              <em className="italic">thoughtfully</em>
-              <br />
-              <em className="italic">curated.</em>
-            </h1>
-            <p className="mt-4 max-w-xs text-[11px] leading-relaxed text-muted sm:text-sm">
-              Original works by emerging and established artists, selected for
-              homes, collections and meaningful spaces.
-            </p>
-
-            <div className="mt-6 flex flex-col gap-2.5 sm:flex-row">
-              <Link
-                href="/art-gallery"
-                className="btn-accent px-6 py-3 text-center text-xs sm:text-sm"
-              >
-                Explore Art
-              </Link>
-              <Link
-                href="/advisory"
-                className="btn-outline px-6 py-3 text-center text-xs sm:text-sm"
-              >
-                Speak to a Curator
-              </Link>
+      {/* ───────── Hero ───────── */}
+      <section className="border-b border-line">
+        <div className="mx-auto grid max-w-[1400px] items-stretch lg:grid-cols-[0.88fr_1.12fr]">
+          {/* Copy */}
+          <div className="flex flex-col justify-between px-5 pb-7 pt-10 sm:px-8 lg:px-10 lg:pb-8 lg:pt-16">
+            <div>
+              <h1 className="font-display text-[2rem] leading-[1.16] sm:text-4xl xl:text-[2.9rem]">
+                Contemporary Indian art,
+                <br />
+                <em className="italic">thoughtfully curated.</em>
+              </h1>
+              <p className="mt-5 max-w-sm text-xs leading-relaxed text-muted sm:text-sm">
+                Original works by emerging and established artists,
+                <br className="hidden sm:block" />
+                selected for homes, collections and meaningful spaces.
+              </p>
+              <div className="mt-7 flex flex-wrap gap-3">
+                <Link href="/art-gallery" className="btn-accent px-7 py-3 text-xs sm:text-sm">
+                  Explore Art
+                </Link>
+                <Link href="/advisory" className="btn-outline px-7 py-3 text-xs sm:text-sm">
+                  Speak to a Curator
+                </Link>
+              </div>
             </div>
+
+            {/* Trust strip, sitting at the foot of the copy column */}
+            <ul className="mt-10 flex flex-wrap gap-x-7 gap-y-3 text-[10px] text-muted sm:text-[11px]">
+              {[
+                { Icon: Clock, label: "Curating art since 2009" },
+                { Icon: MapPin, label: "Delhi & Gurugram" },
+                { Icon: Globe, label: "Worldwide delivery" },
+              ].map(({ Icon, label }) => (
+                <li key={label} className="flex items-center gap-2">
+                  <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full border border-line">
+                    <Icon size={11} strokeWidth={1.4} />
+                  </span>
+                  {label}
+                </li>
+              ))}
+            </ul>
           </div>
 
-          {/* Full-bleed plate: no frame, runs to the top, right and bottom edges */}
-          <div className="relative h-full min-h-[320px] self-stretch lg:min-h-[560px]">
-            {hero && (
-              <Image
-                src={hero.image}
-                alt={hero.title}
-                fill
-                priority
-                sizes="(max-width: 1024px) 55vw, 50vw"
-                className="object-cover"
-              />
-            )}
+          {/* Plate */}
+          <div className="min-h-[300px] lg:min-h-[440px]">
+            <HeroPlate works={heroWorks} names={names} />
           </div>
         </div>
       </section>
 
-      {/* ───────── Trust strip ───────── */}
+      {/* ───────── New & Noteworthy (full width) ───────── */}
       <section className="border-b border-line">
-        <div className="mx-auto grid max-w-[1400px] grid-cols-3 divide-x divide-line">
-          {[
-            { Icon: Clock, label: "Curating art\nsince 2009" },
-            { Icon: MapPin, label: "Delhi &\nGurugram" },
-            { Icon: Globe, label: "Worldwide\ndelivery" },
-          ].map(({ Icon, label }) => (
-            <div
-              key={label}
-              className="flex items-center justify-center gap-2.5 px-2 py-4 sm:py-5"
-            >
-              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-line">
-                <Icon size={13} strokeWidth={1.4} />
-              </span>
-              <span className="whitespace-pre-line text-[10px] leading-tight text-muted sm:text-xs">
-                {label}
-              </span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ───────── New & Noteworthy ───────── */}
-      <section className="border-b border-line">
-        <div className="mx-auto max-w-[1400px] px-5 py-9 sm:px-8 lg:px-10 lg:py-14">
+        <div className="mx-auto max-w-[1400px] px-5 py-9 sm:px-8 lg:px-10 lg:py-12">
           <Head title="New & Noteworthy" href="/art-gallery" cta="View all artworks" />
-          <ArtworkCarousel works={noteworthy} names={names} />
+
+          {/* First work runs wide, four narrower beside it. */}
+          <div className="rail lg:grid lg:grid-cols-[2.5fr_1fr_1fr_1fr_1fr] lg:gap-5">
+            {noteworthy.map((w, i) => (
+              <Link
+                key={w.slug}
+                href={`/art/${w.slug}`}
+                className={`group block ${i === 0 ? "w-[80vw] sm:w-[52vw]" : "w-[42vw] sm:w-[28vw]"} lg:w-auto`}
+              >
+                <div className="relative h-[150px] overflow-hidden bg-wash sm:h-[190px] lg:h-[215px]">
+                  <Image
+                    src={w.image}
+                    alt={w.title}
+                    fill
+                    sizes="(max-width: 1024px) 60vw, 25vw"
+                    className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                  />
+                </div>
+                <p className="mt-2.5 text-[11px]">{names[w.artist] ?? ""}</p>
+                <p className="text-[11px] italic text-muted">{w.title}</p>
+                <p className="mt-1 text-[10px] leading-snug text-muted">{w.medium}</p>
+                <p className="text-[10px] text-muted">{w.size}</p>
+                <p className="mt-1.5 text-[11px]">
+                  {w.price > 0 ? formatINR(w.price) : "Price on request"}
+                </p>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* ───────── Curated Paths ───────── */}
+      {/* ───────── Curated Paths (full width band) ───────── */}
       <section className="border-b border-line bg-wash">
-        <div className="mx-auto max-w-[1400px] px-5 py-10 sm:px-8 lg:px-10 lg:py-14">
-          <h2 className="text-center font-display text-[1.4rem] leading-snug sm:text-3xl">
-            Curated Paths to Begin
-            <br className="sm:hidden" /> Your Collection
+        <div className="mx-auto max-w-[1400px] px-5 py-10 sm:px-8 lg:px-10 lg:py-12">
+          <h2 className="text-center font-display text-xl sm:text-2xl">
+            Curated Paths to Begin Your Collection
           </h2>
 
-          <div className="mt-8 grid grid-cols-4 gap-2 sm:gap-6 lg:gap-0">
+          <div className="mt-8 grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-4 sm:gap-0">
             {curatedPaths.map((p, i) => {
               const Icon = pathIcons[p.icon];
               return (
                 <div
                   key={p.slug}
-                  className={`text-center sm:text-left lg:px-7 ${
-                    i > 0 ? "lg:border-l lg:border-line" : ""
+                  className={`flex items-start gap-3 sm:px-6 ${
+                    i > 0 ? "sm:border-l sm:border-line" : ""
                   }`}
                 >
-                  <span className="mx-auto grid h-9 w-9 place-items-center rounded-full border border-line bg-paper sm:mx-0">
+                  <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line bg-paper">
                     <Icon size={15} strokeWidth={1.3} />
                   </span>
-                  <p className="mt-2.5 font-display text-[0.82rem] leading-tight sm:text-base">
-                    {p.title}
-                  </p>
-                  <p className="mt-1.5 text-[9.5px] leading-snug text-muted sm:text-[11px]">
-                    {p.blurb}
-                  </p>
-                  <Link
-                    href={p.href}
-                    className="mt-2 inline-flex items-center gap-1 text-[9.5px] transition-colors hover:text-signal sm:text-[11px]"
-                  >
-                    Explore <ArrowRight size={10} />
-                  </Link>
+                  <div>
+                    <p className="font-display text-sm leading-snug sm:text-[0.95rem]">
+                      {p.title}
+                    </p>
+                    <p className="mt-1 text-[10px] leading-snug text-muted">{p.blurb}</p>
+                    <Link
+                      href={p.href}
+                      className="mt-2 inline-flex items-center gap-1 text-[10px] transition-colors hover:text-signal"
+                    >
+                      Explore <ArrowRight size={10} />
+                    </Link>
+                  </div>
                 </div>
               );
             })}
@@ -196,290 +224,322 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ───────── Artist Focus ───────── */}
-      <section className="border-b border-line">
-        <div className="mx-auto max-w-[1400px] px-5 py-9 sm:px-8 lg:px-10 lg:py-14">
-          <h2 className="font-display text-[1.35rem] leading-none sm:text-2xl">
-            Artist Focus
-          </h2>
-          <p className="mt-1 font-display text-[1.35rem] italic leading-none text-muted sm:text-2xl">
-            {focusArtist?.name}
-          </p>
+      {/* ───────── Artist Focus │ Art Advisory ───────── */}
+      <Pair
+        left={
+          <>
+            <h2 className="font-display text-xl leading-none sm:text-2xl">Artist Focus</h2>
+            <p className="mt-1 font-display text-xl italic leading-none text-muted sm:text-2xl">
+              {focusArtist?.name}
+            </p>
 
-          <div className="mt-5 grid grid-cols-[1.55fr_1fr] gap-2.5 lg:max-w-3xl">
-            <div className="relative aspect-[4/5] overflow-hidden bg-wash">
-              {focusArtist?.image && (
-                <Image
-                  src={focusArtist.image}
-                  alt={focusArtist.name}
-                  fill
-                  sizes="(max-width: 1024px) 55vw, 30vw"
-                  className="object-cover"
-                />
-              )}
-            </div>
-            <div className="grid grid-rows-2 gap-2.5">
-              {focusWorks.map((w) => (
+            <div className="mt-5 grid grid-cols-[1fr_1.15fr_0.95fr] gap-3">
+              <div className="self-center">
+                <p className="text-[11px] leading-relaxed text-muted">
+                  {focusArtist?.bio
+                    ? `${focusArtist.bio.slice(0, 96).trim()}…`
+                    : "Exploring memory, landscape and the quiet poetry of everyday moments."}
+                </p>
                 <Link
-                  key={w.slug}
-                  href={`/art/${w.slug}`}
-                  className="relative block overflow-hidden bg-wash"
+                  href={`/artists/${focusArtist?.slug ?? ""}`}
+                  className="mt-4 inline-block border-b border-ink pb-0.5 text-[11px] transition-opacity hover:opacity-60"
                 >
-                  <Image
-                    src={w.image}
-                    alt={w.title}
-                    fill
-                    sizes="(max-width: 1024px) 35vw, 18vw"
-                    className="object-cover"
-                  />
+                  Discover the artist →
                 </Link>
-              ))}
-            </div>
-          </div>
+              </div>
 
-          <p className="mt-4 max-w-md text-[11px] leading-relaxed text-muted sm:text-sm">
-            {focusArtist?.bio
-              ? `${focusArtist.bio.slice(0, 120).trim()}…`
-              : "Exploring memory, landscape and the quiet poetry of everyday moments."}
-          </p>
-          <Link
-            href={`/artists/${focusArtist?.slug ?? ""}`}
-            className="mt-3 inline-block border-b border-ink pb-0.5 text-xs transition-opacity hover:opacity-60 sm:text-sm"
-          >
-            Discover the artist →
-          </Link>
-        </div>
-      </section>
-
-      {/* ───────── Art Advisory ───────── */}
-      <section className="border-b border-line">
-        <div className="mx-auto max-w-[1400px] px-5 py-9 sm:px-8 lg:px-10 lg:py-14">
-          <h2 className="font-display text-[1.35rem] leading-none sm:text-2xl">
-            Art Advisory
-          </h2>
-
-          <div className="mt-5 grid gap-8 sm:grid-cols-[1fr_auto] sm:gap-12">
-            <div>
-              <p className="font-display text-[1.3rem] leading-snug sm:text-2xl">
-                Art can be personal.
-                <br />
-                <em className="italic text-muted">Choosing it should be too.</em>
-              </p>
-              <Link
-                href="/advisory"
-                className="mt-5 inline-block border-b border-ink pb-0.5 text-xs transition-opacity hover:opacity-60 sm:text-sm"
-              >
-                Book a Consultation →
-              </Link>
-            </div>
-
-            <ol className="space-y-4">
-              {advisorySteps.map((s, i) => {
-                const Icon = stepIcons[i];
-                return (
-                  <li key={s.n} className="flex items-center gap-3">
-                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-line">
-                      <Icon size={13} strokeWidth={1.3} />
-                    </span>
-                    <p className="text-[11px] leading-snug sm:text-xs">
-                      <span className="text-faint">{s.n}</span>{" "}
-                      <span className="text-muted">{s.label}</span>
-                    </p>
-                  </li>
-                );
-              })}
-            </ol>
-          </div>
-        </div>
-      </section>
-
-      {/* ───────── Art in Real Spaces ───────── */}
-      <section className="border-b border-line">
-        <div className="mx-auto max-w-[1400px] px-5 py-9 sm:px-8 lg:px-10 lg:py-14">
-          <Head title="Art in Real Spaces" href="/art-gallery" cta="View more projects" />
-          <SpacesRail />
-        </div>
-      </section>
-
-      {/* ───────── At the Gallery ───────── */}
-      <section className="border-b border-line">
-        <div className="mx-auto max-w-[1400px] px-5 py-9 sm:px-8 lg:px-10 lg:py-14">
-          <Head title="At the Gallery" href="/exhibitions" cta="View all exhibitions" />
-
-          {current && (
-            <div className="grid grid-cols-[0.85fr_1fr] gap-4 lg:max-w-3xl lg:gap-8">
               <div className="relative aspect-[3/4] overflow-hidden bg-wash">
-                {current.image && (
+                {focusArtist?.image && (
                   <Image
-                    src={current.image}
-                    alt={current.title}
+                    src={focusArtist.image}
+                    alt={focusArtist.name}
                     fill
-                    sizes="(max-width: 1024px) 42vw, 22vw"
+                    sizes="(max-width: 1024px) 35vw, 16vw"
                     className="object-cover"
                   />
                 )}
               </div>
-              <div className="self-center">
-                <p className="text-[10px] text-muted sm:text-[11px]">Current Exhibition</p>
-                <p className="mt-1 font-display text-xl italic leading-tight sm:text-2xl">
-                  {current.title}
+
+              <div className="grid grid-rows-2 gap-3">
+                {focusWorks.map((w) => (
+                  <Link
+                    key={w.slug}
+                    href={`/art/${w.slug}`}
+                    className="relative block overflow-hidden bg-wash"
+                  >
+                    <Image
+                      src={w.image}
+                      alt={w.title}
+                      fill
+                      sizes="(max-width: 1024px) 28vw, 13vw"
+                      className="object-cover"
+                    />
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </>
+        }
+        right={
+          <>
+            <h2 className="font-display text-xl leading-none sm:text-2xl">Art Advisory</h2>
+
+            <div className="mt-5 grid gap-7 sm:grid-cols-[1fr_auto] sm:gap-8">
+              <div>
+                <p className="font-display text-lg leading-snug sm:text-xl">
+                  Art can be personal.
+                  <br />
+                  <em className="italic">Choosing it should be too.</em>
                 </p>
-                <p className="mt-2 text-[11px] leading-relaxed text-muted sm:text-sm">
-                  {current.blurb
-                    ? `${current.blurb.slice(0, 68).trim()}…`
+                <p className="mt-3.5 max-w-xs text-[11px] leading-relaxed text-muted">
+                  Share your space, preferences and budget with our curatorial
+                  team. We&apos;ll recommend original works suited to you.
+                </p>
+                <Link
+                  href="/advisory"
+                  className="mt-4 inline-block border-b border-ink pb-0.5 text-[11px] transition-opacity hover:opacity-60"
+                >
+                  Book a Consultation →
+                </Link>
+              </div>
+
+              <ol className="space-y-4 sm:border-l sm:border-line sm:pl-7">
+                {advisorySteps.map((s, i) => {
+                  const Icon = stepIcons[i];
+                  return (
+                    <li key={s.n} className="flex items-start gap-3">
+                      <span className="grid h-8 w-8 shrink-0 place-items-center border border-line">
+                        <Icon size={13} strokeWidth={1.3} />
+                      </span>
+                      <div>
+                        <p className="text-[10px] text-faint">{s.n}</p>
+                        <p className="max-w-[8.5rem] text-[11px] leading-snug text-muted">
+                          {s.label}
+                        </p>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          </>
+        }
+      />
+
+      {/* ───────── Art in Real Spaces │ At the Gallery ───────── */}
+      <Pair
+        left={
+          <>
+            <Head title="Art in Real Spaces" href="/art-gallery" cta="View more projects" />
+            <div className="rail sm:grid sm:grid-cols-4 sm:gap-3">
+              {realSpaces.map((s) => (
+                <div key={s.label} className="w-[40vw] sm:w-auto">
+                  <div className="relative aspect-[4/3] overflow-hidden bg-wash">
+                    <Image
+                      src={s.image}
+                      alt={s.label}
+                      fill
+                      sizes="(max-width: 640px) 40vw, 12vw"
+                      className="object-cover"
+                    />
+                  </div>
+                  <p className="mt-2 text-[10px]">{s.label}</p>
+                  <p className="text-[9.5px] leading-snug text-muted">{s.sub}</p>
+                </div>
+              ))}
+            </div>
+          </>
+        }
+        right={
+          <>
+            <Head title="At the Gallery" href="/exhibitions" cta="View all exhibitions" />
+
+            <div className="grid gap-4 sm:grid-cols-[0.8fr_1.15fr_0.95fr]">
+              {/* Current exhibition plate */}
+              <div className="relative aspect-[3/4] overflow-hidden bg-wash">
+                {current?.image && (
+                  <Image
+                    src={current.image}
+                    alt={current.title}
+                    fill
+                    sizes="(max-width: 640px) 100vw, 14vw"
+                    className="object-cover"
+                  />
+                )}
+              </div>
+
+              {/* Details */}
+              <div className="self-center">
+                <p className="text-[10px] text-muted">Current Exhibition</p>
+                <p className="mt-0.5 font-display text-lg italic leading-tight">
+                  {current?.title}
+                </p>
+                <p className="mt-2 text-[10px] leading-relaxed text-muted">
+                  {current?.blurb
+                    ? `${current.blurb.slice(0, 62).trim()}…`
                     : "A group show exploring memory, material and mark."}
                 </p>
-                <p className="mt-3 text-[10px] text-muted sm:text-[11px]">
-                  {current.end ? `Until ${current.end}` : ""}
-                  {current.venue ? <><br />{current.venue}</> : null}
+                <p className="mt-2.5 text-[10px] leading-snug text-muted">
+                  {current?.end ? `Until ${current.end}` : ""}
+                  {current?.venue ? (
+                    <>
+                      <br />
+                      {current.venue}
+                    </>
+                  ) : null}
                 </p>
                 <Link
                   href="/exhibitions"
-                  className="mt-3 inline-block border-b border-ink pb-0.5 text-[11px] transition-opacity hover:opacity-60 sm:text-sm"
+                  className="mt-2.5 inline-block border-b border-ink pb-0.5 text-[10px] transition-opacity hover:opacity-60"
                 >
                   Explore Exhibition →
                 </Link>
               </div>
+
+              {/* Upcoming / past cards */}
+              <div className="grid grid-rows-2 gap-3">
+                {others.map((e, i) => (
+                  <Link
+                    key={e.slug}
+                    href="/exhibitions"
+                    className="group flex items-center gap-2.5 border border-line p-2"
+                  >
+                    <div className="relative h-12 w-10 shrink-0 overflow-hidden bg-wash">
+                      {e.image && (
+                        <Image src={e.image} alt={e.title} fill sizes="40px" className="object-cover" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[9px] text-muted">{i === 0 ? "Upcoming" : "Past"}</p>
+                      <p className="truncate font-display text-[13px] leading-tight">{e.title}</p>
+                      <p className="text-[9px] text-muted">
+                        {e.start}
+                        {e.end ? ` – ${e.end}` : ""}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
             </div>
-          )}
+          </>
+        }
+      />
 
-          <div className="mt-5 divide-y divide-line border-t border-line lg:max-w-3xl">
-            {others.map((e, i) => (
-              <Link key={e.slug} href="/exhibitions" className="group flex items-center gap-3.5 py-3">
-                <div className="relative h-12 w-12 shrink-0 overflow-hidden bg-wash">
-                  {e.image && (
-                    <Image src={e.image} alt={e.title} fill sizes="48px" className="object-cover" />
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[10px] text-muted">{i === 0 ? "Upcoming" : "Past"}</p>
-                  <p className="truncate font-display text-base">{e.title}</p>
-                  <p className="text-[10px] text-muted">
-                    {e.start}
-                    {e.end ? ` – ${e.end}` : ""}
-                  </p>
-                </div>
-                <ChevronRight size={15} className="shrink-0 text-faint transition-colors group-hover:text-ink" />
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ───────── Assurances ───────── */}
+      {/* ───────── Assurances (full width) ───────── */}
       <section className="border-b border-line">
-        <div className="mx-auto grid max-w-[1400px] grid-cols-3 gap-3 px-5 py-8 sm:px-8 lg:gap-10 lg:px-10">
-          {assurances.map((a) => {
+        <div className="mx-auto grid max-w-[1400px] grid-cols-2 gap-x-5 gap-y-7 px-5 py-8 sm:px-8 lg:grid-cols-4 lg:gap-0 lg:px-10">
+          {assurances.map((a, i) => {
             const Icon = assuranceIcons[a.icon];
             return (
-              <div key={a.title} className="text-center">
-                <Icon size={20} strokeWidth={1.2} className="mx-auto" />
-                <p className="mt-2.5 text-[11px] sm:text-sm">{a.title}</p>
-                <p className="mt-1.5 text-[9.5px] leading-snug text-muted sm:text-[11px]">
-                  {a.body}
-                </p>
+              <div
+                key={a.title}
+                className={`flex items-start gap-3 lg:px-8 ${
+                  i > 0 ? "lg:border-l lg:border-line" : ""
+                }`}
+              >
+                <Icon size={19} strokeWidth={1.2} className="mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-[12px]">{a.title}</p>
+                  <p className="mt-1 text-[10px] leading-snug text-muted">{a.body}</p>
+                </div>
               </div>
             );
           })}
         </div>
       </section>
 
-      {/* ───────── Collectors Say ───────── */}
-      <section className="border-b border-line">
-        <div className="mx-auto max-w-[1400px] px-5 py-9 sm:px-8 lg:px-10 lg:py-14">
-          <h2 className="mb-5 font-display text-[1.35rem] leading-none sm:text-2xl">
-            Collectors Say
-          </h2>
-          <Testimonials />
-        </div>
-      </section>
+      {/* ───────── Collectors Say │ From the Journal ───────── */}
+      <Pair
+        left={
+          <>
+            <h2 className="mb-5 font-display text-xl leading-none sm:text-2xl">
+              Collectors Say
+            </h2>
+            <Testimonials />
+          </>
+        }
+        right={
+          <>
+            <Head title="From the Journal" href="/blog" cta="View all articles" />
+            <div className="grid gap-4 sm:grid-cols-3">
+              {journal.map((p) => (
+                <Link key={p.slug} href={`/blog/${p.slug}`} className="group block">
+                  <div className="relative aspect-[4/3] overflow-hidden bg-wash">
+                    {p.image && (
+                      <Image
+                        src={p.image}
+                        alt={p.title}
+                        fill
+                        sizes="(max-width: 640px) 100vw, 14vw"
+                        className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                      />
+                    )}
+                  </div>
+                  <p className="mt-2 text-[9.5px] text-muted">{p.category}</p>
+                  <p className="mt-0.5 font-display text-[13px] leading-snug">{p.title}</p>
+                  <span className="mt-1 inline-flex items-center gap-1 text-[9.5px] text-muted transition-colors group-hover:text-ink">
+                    Read more <ArrowRight size={9} />
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </>
+        }
+      />
 
-      {/* ───────── From the Journal ───────── */}
-      <section className="border-b border-line">
-        <div className="mx-auto max-w-[1400px] px-5 py-9 sm:px-8 lg:px-10 lg:py-14">
-          <Head title="From the Journal" href="/blog" cta="View all articles" />
-          <div className="divide-y divide-line lg:grid lg:max-w-4xl lg:grid-cols-3 lg:gap-6 lg:divide-y-0">
-            {journal.map((p) => (
-              <Link
-                key={p.slug}
-                href={`/blog/${p.slug}`}
-                className="group flex items-center gap-3.5 py-3.5 first:pt-0 lg:block lg:py-0"
-              >
-                <div className="relative h-14 w-20 shrink-0 overflow-hidden bg-wash lg:h-auto lg:w-full lg:aspect-[4/3]">
-                  {p.image && (
-                    <Image src={p.image} alt={p.title} fill sizes="(max-width:1024px) 80px, 22vw" className="object-cover" />
-                  )}
-                </div>
-                <div className="min-w-0 lg:mt-3">
-                  <p className="text-[10px] text-muted">{p.category}</p>
-                  <p className="mt-0.5 font-display text-[0.95rem] leading-snug">{p.title}</p>
-                </div>
-                <ChevronRight size={15} className="ml-auto shrink-0 text-faint lg:hidden" />
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ───────── Visit the Gallery ───────── */}
-      <section className="border-b border-line">
-        <div className="mx-auto grid max-w-[1400px] grid-cols-[1fr_0.95fr] items-center gap-5 px-5 py-9 sm:px-8 lg:gap-12 lg:px-10 lg:py-14">
+      {/* ───────── Visit │ image │ Stay Inspired ───────── */}
+      <section>
+        <div className="mx-auto grid max-w-[1400px] items-center gap-6 px-5 py-8 sm:px-8 lg:grid-cols-[0.85fr_1.1fr_1fr] lg:gap-10 lg:px-10">
           <div>
-            <h2 className="font-display text-[1.35rem] leading-none sm:text-2xl">
+            <h2 className="font-display text-xl leading-none sm:text-2xl">
               Visit the Gallery
             </h2>
-            <p className="mt-2.5 text-[11px] leading-relaxed text-muted sm:text-sm">
-              Experience the artwork in person. We&apos;d love to welcome you.
+            <p className="mt-2.5 text-[11px] leading-relaxed text-muted">
+              Experience the artwork in person.
+              <br />
+              We&apos;d love to welcome you.
             </p>
             <Link
               href="/visit"
-              className="mt-3 inline-block border-b border-ink pb-0.5 text-[11px] transition-opacity hover:opacity-60 sm:text-sm"
+              className="mt-3 inline-block border-b border-ink pb-0.5 text-[11px] transition-opacity hover:opacity-60"
             >
               Plan your visit →
             </Link>
           </div>
-          <div className="relative aspect-[4/3] overflow-hidden bg-wash">
+
+          <div className="relative aspect-[16/7] overflow-hidden bg-wash">
             <Image
               src="https://www.uchaanarts.com/uploaded_files/slider/1728130444_ganesha_series_36x54_oil_on_linen_canvas_300000_-_copy.jpg"
               alt="Inside the Uchaan gallery"
               fill
-              sizes="(max-width: 1024px) 45vw, 30vw"
+              sizes="(max-width: 1024px) 100vw, 30vw"
               className="object-cover"
             />
           </div>
-        </div>
-      </section>
 
-      {/* ───────── Stay Inspired — terracotta band ───────── */}
-      <section className="bg-signal text-white">
-        <div className="mx-auto max-w-[1400px] px-5 py-8 sm:px-8 lg:flex lg:items-center lg:justify-between lg:gap-12 lg:px-10 lg:py-10">
           <div>
-            <h2 className="font-display text-[1.35rem] leading-none sm:text-2xl">
-              Stay Inspired
-            </h2>
-            <p className="mt-2 text-[11px] text-white/75 sm:text-sm">
-              Curated stories, new works and exhibition updates.
+            <h2 className="font-display text-xl leading-none sm:text-2xl">Stay Inspired</h2>
+            <p className="mt-2.5 text-[11px] leading-relaxed text-muted">
+              Curated stories, new works
+              <br />
+              and exhibition updates.
             </p>
+            <form className="mt-3.5 flex max-w-sm">
+              <label htmlFor="subscribe" className="sr-only">
+                Email address
+              </label>
+              <input
+                id="subscribe"
+                type="email"
+                required
+                placeholder="Enter your email"
+                className="min-w-0 flex-1 border border-line bg-card px-3 py-2.5 text-[11px] outline-none focus:border-ink"
+              />
+              <button type="submit" className="btn-accent shrink-0 px-5 py-2.5 text-[11px]">
+                Subscribe
+              </button>
+            </form>
           </div>
-
-          <form className="mt-4 flex w-full max-w-md lg:mt-0">
-            <label htmlFor="subscribe" className="sr-only">
-              Email address
-            </label>
-            <input
-              id="subscribe"
-              type="email"
-              required
-              placeholder="Enter your email"
-              className="min-w-0 flex-1 bg-white px-3.5 py-2.5 text-xs text-ink outline-none placeholder:text-faint sm:text-sm"
-            />
-            <button
-              type="submit"
-              className="shrink-0 bg-charcoal px-5 py-2.5 text-xs text-white transition-opacity hover:opacity-90 sm:text-sm"
-            >
-              Subscribe
-            </button>
-          </form>
         </div>
       </section>
     </>
