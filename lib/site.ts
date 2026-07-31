@@ -80,6 +80,11 @@ export const assurances = [
     body: "Personal recommendations for collectors and spaces.",
   },
   {
+    icon: "relationships" as const,
+    title: "Artist Relationships",
+    body: "A growing programme of established and emerging artists.",
+  },
+  {
     icon: "delivery" as const,
     title: "Safe Delivery",
     body: "Professional packing and worldwide shipping.",
