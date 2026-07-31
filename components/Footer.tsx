@@ -59,7 +59,7 @@ export default function Footer() {
           <div>
             <p className="wordmark text-[1.3rem] leading-none text-white">UCHAAN</p>
             <p className="wordmark mt-1 text-[0.55rem] text-white/45">ARTS</p>
-            <p className="mt-4 text-[10px] leading-relaxed text-white/45">
+            <p className="mt-4 text-[12px] leading-relaxed text-white/45">
               Contemporary Indian art.
               <br />
               Curated with care.
@@ -69,8 +69,8 @@ export default function Footer() {
           {/* Link columns */}
           {columns.map((c) => (
             <div key={c.title}>
-              <p className="mb-3 text-[11px] text-white/85">{c.title}</p>
-              <ul className="space-y-1.5 text-[10px]">
+              <p className="mb-3.5 text-[13px] text-white/85">{c.title}</p>
+              <ul className="space-y-2 text-[12px]">
                 {c.links.map((l) => (
                   <li key={l.label}>
                     <Link href={l.href} className="transition-colors hover:text-white">
@@ -84,8 +84,8 @@ export default function Footer() {
 
           {/* Connect */}
           <div>
-            <p className="mb-3 text-[11px] text-white/85">Connect</p>
-            <ul className="space-y-1.5 text-[10px]">
+            <p className="mb-3.5 text-[13px] text-white/85">Connect</p>
+            <ul className="space-y-2 text-[12px]">
               <li>
                 <a href="mailto:info@uchaanarts.com" className="transition-colors hover:text-white">
                   info@uchaanarts.com
@@ -112,7 +112,7 @@ export default function Footer() {
         </div>
 
         {/* Legal */}
-        <div className="mt-9 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-5 text-[10px] text-white/35">
+        <div className="mt-9 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-5 text-[12px] text-white/35">
           <p>© {new Date().getFullYear()} Uchaan Arts. All rights reserved.</p>
           <div className="flex gap-5">
             <Link href="/about" className="transition-colors hover:text-white">
