@@ -48,7 +48,7 @@ export default function HeroPlate({
       </Link>
 
       <div className="flex items-center justify-between gap-4 px-5 py-2.5 sm:px-8 lg:px-10">
-        <p className="truncate text-[10px] text-muted sm:text-[11px]">
+        <p className="truncate text-[12px] text-muted">
           {names[w.artist] ? `${names[w.artist]}, ` : ""}
           <span className="italic">{w.title}</span>
           {w.medium ? `, ${w.medium}` : ""}
