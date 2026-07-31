@@ -50,14 +50,22 @@ const assuranceIcons = {
 };
 const stepIcons = [UserRound, ClipboardCheck, PackageCheck];
 
+/** Trim to a word boundary so excerpts never cut mid-word. */
+function excerpt(text: string | undefined, max: number, fallback: string) {
+  if (!text) return fallback;
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max);
+  return `${cut.slice(0, cut.lastIndexOf(" ")).replace(/[,;:.\s]+$/, "")}…`;
+}
+
 /** Section heading with a right-aligned link. */
 function Head({ title, href, cta }: { title: string; href: string; cta: string }) {
   return (
     <div className="mb-5 flex items-baseline justify-between gap-4">
-      <h2 className="font-display text-xl leading-none sm:text-2xl">{title}</h2>
+      <h2 className="font-display text-2xl leading-none sm:text-[1.7rem]">{title}</h2>
       <Link
         href={href}
-        className="inline-flex shrink-0 items-center gap-1 text-[11px] text-muted transition-colors hover:text-ink"
+        className="inline-flex shrink-0 items-center gap-1 text-[14px] text-muted transition-colors hover:text-ink"
       >
         {cta} <ArrowRight size={11} />
       </Link>
@@ -127,7 +135,7 @@ export default async function HomePage() {
             </div>
 
             {/* Trust strip, sitting at the foot of the copy column */}
-            <ul className="mt-10 flex flex-wrap gap-x-7 gap-y-3 text-[10px] text-muted sm:text-[11px]">
+            <ul className="mt-10 flex flex-wrap gap-x-7 gap-y-3 text-[14px] text-muted sm:text-[14px]">
               {[
                 { Icon: Clock, label: "Curating art since 2009" },
                 { Icon: MapPin, label: "Delhi & Gurugram" },
@@ -156,14 +164,16 @@ export default async function HomePage() {
           <Head title="New & Noteworthy" href="/art-gallery" cta="View all artworks" />
 
           {/* First work runs wide, four narrower beside it. */}
-          <div className="rail lg:grid lg:grid-cols-[2.5fr_1fr_1fr_1fr_1fr] lg:gap-5">
+          <div className="rail lg:grid lg:grid-cols-[2.1fr_1fr_1fr_1fr_1fr] lg:gap-5">
             {noteworthy.map((w, i) => (
               <Link
                 key={w.slug}
                 href={`/art/${w.slug}`}
-                className={`group block ${i === 0 ? "w-[80vw] sm:w-[52vw]" : "w-[42vw] sm:w-[28vw]"} lg:w-auto`}
+                /* Uniform card width on the mobile rail — mixed widths read as
+                   a mistake rather than a hierarchy at small sizes. */
+                className="group block w-[62vw] shrink-0 sm:w-[34vw] lg:w-auto"
               >
-                <div className="relative h-[150px] overflow-hidden bg-wash sm:h-[190px] lg:h-[215px]">
+                <div className="relative h-[230px] overflow-hidden bg-wash sm:h-[250px] lg:h-[265px]">
                   <Image
                     src={w.image}
                     alt={w.title}
@@ -172,11 +182,11 @@ export default async function HomePage() {
                     className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
                   />
                 </div>
-                <p className="mt-2.5 text-[11px]">{names[w.artist] ?? ""}</p>
-                <p className="text-[11px] italic text-muted">{w.title}</p>
-                <p className="mt-1 text-[10px] leading-snug text-muted">{w.medium}</p>
-                <p className="text-[10px] text-muted">{w.size}</p>
-                <p className="mt-1.5 text-[11px]">
+                <p className="mt-2.5 text-[14px]">{names[w.artist] ?? ""}</p>
+                <p className="text-[14px] italic text-muted">{w.title}</p>
+                <p className="mt-1 text-[14px] leading-snug text-muted">{w.medium}</p>
+                <p className="text-[14px] text-muted">{w.size}</p>
+                <p className="mt-1.5 text-[14px]">
                   {w.price > 0 ? formatINR(w.price) : "Price on request"}
                 </p>
               </Link>
@@ -188,7 +198,7 @@ export default async function HomePage() {
       {/* ───────── Curated Paths (full width band) ───────── */}
       <section className="border-b border-line bg-wash">
         <div className="mx-auto max-w-[1400px] px-5 py-10 sm:px-8 lg:px-10 lg:py-12">
-          <h2 className="text-center font-display text-xl sm:text-2xl">
+          <h2 className="text-center font-display text-2xl sm:text-[1.7rem]">
             Curated Paths to Begin Your Collection
           </h2>
 
@@ -206,13 +216,13 @@ export default async function HomePage() {
                     <Icon size={15} strokeWidth={1.3} />
                   </span>
                   <div>
-                    <p className="font-display text-sm leading-snug sm:text-[0.95rem]">
+                    <p className="font-display text-sm leading-snug sm:text-[1.05rem]">
                       {p.title}
                     </p>
-                    <p className="mt-1 text-[10px] leading-snug text-muted">{p.blurb}</p>
+                    <p className="mt-1 text-[14px] leading-snug text-muted">{p.blurb}</p>
                     <Link
                       href={p.href}
-                      className="mt-2 inline-flex items-center gap-1 text-[10px] transition-colors hover:text-signal"
+                      className="mt-2 inline-flex items-center gap-1 text-[14px] transition-colors hover:text-signal"
                     >
                       Explore <ArrowRight size={10} />
                     </Link>
@@ -228,21 +238,26 @@ export default async function HomePage() {
       <Pair
         left={
           <>
-            <h2 className="font-display text-xl leading-none sm:text-2xl">Artist Focus</h2>
-            <p className="mt-1 font-display text-xl italic leading-none text-muted sm:text-2xl">
+            <h2 className="font-display text-2xl leading-none sm:text-[1.7rem]">Artist Focus</h2>
+            <p className="mt-1.5 font-display text-2xl italic leading-none text-muted sm:text-[1.7rem]">
               {focusArtist?.name}
             </p>
 
-            <div className="mt-5 grid grid-cols-[1fr_1.15fr_0.95fr] gap-3">
+            {/* Portrait beside two stacked works. Every tile carries an explicit
+                aspect ratio: `fill` images need a sized parent, and without one
+                the stacked tiles collapse to nothing. */}
+            <div className="mt-6 grid grid-cols-[0.95fr_1.2fr_0.85fr] gap-3.5">
               <div className="self-center">
-                <p className="text-[11px] leading-relaxed text-muted">
-                  {focusArtist?.bio
-                    ? `${focusArtist.bio.slice(0, 96).trim()}…`
-                    : "Exploring memory, landscape and the quiet poetry of everyday moments."}
+                <p className="text-[13px] leading-relaxed text-muted">
+                  {excerpt(
+                    focusArtist?.bio,
+                    120,
+                    "Exploring memory, landscape and the quiet poetry of everyday moments."
+                  )}
                 </p>
                 <Link
                   href={`/artists/${focusArtist?.slug ?? ""}`}
-                  className="mt-4 inline-block border-b border-ink pb-0.5 text-[11px] transition-opacity hover:opacity-60"
+                  className="mt-5 inline-block border-b border-ink pb-0.5 text-[13px] transition-opacity hover:opacity-60"
                 >
                   Discover the artist →
                 </Link>
@@ -254,24 +269,24 @@ export default async function HomePage() {
                     src={focusArtist.image}
                     alt={focusArtist.name}
                     fill
-                    sizes="(max-width: 1024px) 35vw, 16vw"
+                    sizes="(max-width: 1024px) 40vw, 18vw"
                     className="object-cover"
                   />
                 )}
               </div>
 
-              <div className="grid grid-rows-2 gap-3">
+              <div className="flex flex-col gap-3.5">
                 {focusWorks.map((w) => (
                   <Link
                     key={w.slug}
                     href={`/art/${w.slug}`}
-                    className="relative block overflow-hidden bg-wash"
+                    className="relative block aspect-[4/3] flex-1 overflow-hidden bg-wash"
                   >
                     <Image
                       src={w.image}
                       alt={w.title}
                       fill
-                      sizes="(max-width: 1024px) 28vw, 13vw"
+                      sizes="(max-width: 1024px) 30vw, 13vw"
                       className="object-cover"
                     />
                   </Link>
@@ -282,7 +297,7 @@ export default async function HomePage() {
         }
         right={
           <>
-            <h2 className="font-display text-xl leading-none sm:text-2xl">Art Advisory</h2>
+            <h2 className="font-display text-2xl leading-none sm:text-[1.7rem]">Art Advisory</h2>
 
             <div className="mt-5 grid gap-7 sm:grid-cols-[1fr_auto] sm:gap-8">
               <div>
@@ -291,13 +306,13 @@ export default async function HomePage() {
                   <br />
                   <em className="italic">Choosing it should be too.</em>
                 </p>
-                <p className="mt-3.5 max-w-xs text-[11px] leading-relaxed text-muted">
+                <p className="mt-3.5 max-w-xs text-[14px] leading-relaxed text-muted">
                   Share your space, preferences and budget with our curatorial
                   team. We&apos;ll recommend original works suited to you.
                 </p>
                 <Link
                   href="/advisory"
-                  className="mt-4 inline-block border-b border-ink pb-0.5 text-[11px] transition-opacity hover:opacity-60"
+                  className="mt-4 inline-block border-b border-ink pb-0.5 text-[14px] transition-opacity hover:opacity-60"
                 >
                   Book a Consultation →
                 </Link>
@@ -312,8 +327,8 @@ export default async function HomePage() {
                         <Icon size={13} strokeWidth={1.3} />
                       </span>
                       <div>
-                        <p className="text-[10px] text-faint">{s.n}</p>
-                        <p className="max-w-[8.5rem] text-[11px] leading-snug text-muted">
+                        <p className="text-[14px] text-faint">{s.n}</p>
+                        <p className="max-w-[8.5rem] text-[14px] leading-snug text-muted">
                           {s.label}
                         </p>
                       </div>
@@ -333,7 +348,7 @@ export default async function HomePage() {
             <Head title="Art in Real Spaces" href="/art-gallery" cta="View more projects" />
             <div className="rail sm:grid sm:grid-cols-4 sm:gap-3">
               {realSpaces.map((s) => (
-                <div key={s.label} className="w-[40vw] sm:w-auto">
+                <div key={s.label} className="w-[46vw] shrink-0 sm:w-auto">
                   <div className="relative aspect-[4/3] overflow-hidden bg-wash">
                     <Image
                       src={s.image}
@@ -343,8 +358,8 @@ export default async function HomePage() {
                       className="object-cover"
                     />
                   </div>
-                  <p className="mt-2 text-[10px]">{s.label}</p>
-                  <p className="text-[9.5px] leading-snug text-muted">{s.sub}</p>
+                  <p className="mt-2 text-[14px]">{s.label}</p>
+                  <p className="text-[14px] leading-snug text-muted">{s.sub}</p>
                 </div>
               ))}
             </div>
@@ -354,7 +369,7 @@ export default async function HomePage() {
           <>
             <Head title="At the Gallery" href="/exhibitions" cta="View all exhibitions" />
 
-            <div className="grid gap-4 sm:grid-cols-[0.8fr_1.15fr_0.95fr]">
+            <div className="grid gap-5 sm:grid-cols-[0.85fr_1.2fr_1fr]">
               {/* Current exhibition plate */}
               <div className="relative aspect-[3/4] overflow-hidden bg-wash">
                 {current?.image && (
@@ -370,16 +385,18 @@ export default async function HomePage() {
 
               {/* Details */}
               <div className="self-center">
-                <p className="text-[10px] text-muted">Current Exhibition</p>
+                <p className="text-[14px] text-muted">Current Exhibition</p>
                 <p className="mt-0.5 font-display text-lg italic leading-tight">
                   {current?.title}
                 </p>
-                <p className="mt-2 text-[10px] leading-relaxed text-muted">
-                  {current?.blurb
-                    ? `${current.blurb.slice(0, 62).trim()}…`
-                    : "A group show exploring memory, material and mark."}
+                <p className="mt-2 text-[14px] leading-relaxed text-muted">
+                  {excerpt(
+                    current?.blurb,
+                    72,
+                    "A group show exploring memory, material and mark."
+                  )}
                 </p>
-                <p className="mt-2.5 text-[10px] leading-snug text-muted">
+                <p className="mt-2.5 text-[14px] leading-snug text-muted">
                   {current?.end ? `Until ${current.end}` : ""}
                   {current?.venue ? (
                     <>
@@ -390,29 +407,29 @@ export default async function HomePage() {
                 </p>
                 <Link
                   href="/exhibitions"
-                  className="mt-2.5 inline-block border-b border-ink pb-0.5 text-[10px] transition-opacity hover:opacity-60"
+                  className="mt-2.5 inline-block border-b border-ink pb-0.5 text-[14px] transition-opacity hover:opacity-60"
                 >
                   Explore Exhibition →
                 </Link>
               </div>
 
               {/* Upcoming / past cards */}
-              <div className="grid grid-rows-2 gap-3">
+              <div className="flex flex-col gap-3.5">
                 {others.map((e, i) => (
                   <Link
                     key={e.slug}
                     href="/exhibitions"
-                    className="group flex items-center gap-2.5 border border-line p-2"
+                    className="group flex flex-1 items-center gap-3 border border-line p-2.5 transition-colors hover:border-ink"
                   >
-                    <div className="relative h-12 w-10 shrink-0 overflow-hidden bg-wash">
+                    <div className="relative h-14 w-12 shrink-0 overflow-hidden bg-wash">
                       {e.image && (
                         <Image src={e.image} alt={e.title} fill sizes="40px" className="object-cover" />
                       )}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[9px] text-muted">{i === 0 ? "Upcoming" : "Past"}</p>
-                      <p className="truncate font-display text-[13px] leading-tight">{e.title}</p>
-                      <p className="text-[9px] text-muted">
+                      <p className="text-[14px] text-muted">{i === 0 ? "Upcoming" : "Past"}</p>
+                      <p className="truncate font-display text-[14px] leading-tight">{e.title}</p>
+                      <p className="text-[14px] text-muted">
                         {e.start}
                         {e.end ? ` – ${e.end}` : ""}
                       </p>
@@ -439,8 +456,8 @@ export default async function HomePage() {
               >
                 <Icon size={19} strokeWidth={1.2} className="mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-[12px]">{a.title}</p>
-                  <p className="mt-1 text-[10px] leading-snug text-muted">{a.body}</p>
+                  <p className="text-[14px]">{a.title}</p>
+                  <p className="mt-1 text-[14px] leading-snug text-muted">{a.body}</p>
                 </div>
               </div>
             );
@@ -452,7 +469,7 @@ export default async function HomePage() {
       <Pair
         left={
           <>
-            <h2 className="mb-5 font-display text-xl leading-none sm:text-2xl">
+            <h2 className="mb-6 font-display text-2xl leading-none sm:text-[1.7rem]">
               Collectors Say
             </h2>
             <Testimonials />
@@ -475,9 +492,9 @@ export default async function HomePage() {
                       />
                     )}
                   </div>
-                  <p className="mt-2 text-[9.5px] text-muted">{p.category}</p>
-                  <p className="mt-0.5 font-display text-[13px] leading-snug">{p.title}</p>
-                  <span className="mt-1 inline-flex items-center gap-1 text-[9.5px] text-muted transition-colors group-hover:text-ink">
+                  <p className="mt-2 text-[14px] text-muted">{p.category}</p>
+                  <p className="mt-1 font-display text-[15px] leading-snug">{p.title}</p>
+                  <span className="mt-1 inline-flex items-center gap-1 text-[14px] text-muted transition-colors group-hover:text-ink">
                     Read more <ArrowRight size={9} />
                   </span>
                 </Link>
@@ -491,17 +508,17 @@ export default async function HomePage() {
       <section>
         <div className="mx-auto grid max-w-[1400px] items-center gap-6 px-5 py-8 sm:px-8 lg:grid-cols-[0.85fr_1.1fr_1fr] lg:gap-10 lg:px-10">
           <div>
-            <h2 className="font-display text-xl leading-none sm:text-2xl">
+            <h2 className="font-display text-2xl leading-none sm:text-[1.7rem]">
               Visit the Gallery
             </h2>
-            <p className="mt-2.5 text-[11px] leading-relaxed text-muted">
+            <p className="mt-2.5 text-[14px] leading-relaxed text-muted">
               Experience the artwork in person.
               <br />
               We&apos;d love to welcome you.
             </p>
             <Link
               href="/visit"
-              className="mt-3 inline-block border-b border-ink pb-0.5 text-[11px] transition-opacity hover:opacity-60"
+              className="mt-3 inline-block border-b border-ink pb-0.5 text-[14px] transition-opacity hover:opacity-60"
             >
               Plan your visit →
             </Link>
@@ -518,8 +535,8 @@ export default async function HomePage() {
           </div>
 
           <div>
-            <h2 className="font-display text-xl leading-none sm:text-2xl">Stay Inspired</h2>
-            <p className="mt-2.5 text-[11px] leading-relaxed text-muted">
+            <h2 className="font-display text-2xl leading-none sm:text-[1.7rem]">Stay Inspired</h2>
+            <p className="mt-2.5 text-[14px] leading-relaxed text-muted">
               Curated stories, new works
               <br />
               and exhibition updates.
@@ -533,9 +550,9 @@ export default async function HomePage() {
                 type="email"
                 required
                 placeholder="Enter your email"
-                className="min-w-0 flex-1 border border-line bg-card px-3 py-2.5 text-[11px] outline-none focus:border-ink"
+                className="min-w-0 flex-1 border border-line bg-card px-3 py-2.5 text-[14px] outline-none focus:border-ink"
               />
-              <button type="submit" className="btn-accent shrink-0 px-5 py-2.5 text-[11px]">
+              <button type="submit" className="btn-accent shrink-0 px-5 py-2.5 text-[14px]">
                 Subscribe
               </button>
             </form>
