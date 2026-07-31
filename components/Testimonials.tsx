@@ -16,13 +16,13 @@ export default function Testimonials() {
   return (
     <div>
       {/* Desktop: all three */}
-      <div className="hidden gap-8 md:grid md:grid-cols-3">
+      <div className="hidden gap-5 md:grid md:grid-cols-3">
         {testimonials.map((t) => (
           <blockquote key={t.by}>
-            <p className="font-display text-lg italic leading-snug">
+            <p className="font-display text-[13px] italic leading-relaxed">
               &ldquo;{t.quote}&rdquo;
             </p>
-            <footer className="mt-3 text-xs text-muted">— {t.by}</footer>
+            <footer className="mt-2.5 text-[10px] text-muted">— {t.by}</footer>
           </blockquote>
         ))}
       </div>
@@ -30,16 +30,16 @@ export default function Testimonials() {
       {/* Mobile: one at a time */}
       <div className="md:hidden">
         <blockquote>
-          <p className="font-display text-lg italic leading-snug">
+          <p className="font-display text-[13px] italic leading-relaxed">
             &ldquo;{testimonials[i].quote}&rdquo;
           </p>
-          <footer className="mt-3 text-xs text-muted">
+          <footer className="mt-2.5 text-[10px] text-muted">
             — {testimonials[i].by}
           </footer>
         </blockquote>
       </div>
 
-      <div className="mt-6 flex items-center gap-3 md:justify-end">
+      <div className="mt-6 flex items-center gap-3">
         <button
           type="button"
           onClick={() => go(-1)}
