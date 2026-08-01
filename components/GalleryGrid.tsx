@@ -11,7 +11,8 @@ import FilterSidebar, {
   type Filters,
 } from "./FilterSidebar";
 import { styles as allStyles, folkForms as allFolkForms } from "@/lib/data";
-import { SlidersHorizontal, X } from "lucide-react";
+import { SlidersHorizontal, X, SearchX } from "lucide-react";
+import EmptyState from "./ui/EmptyState";
 
 type Sort = "newest" | "price-asc" | "price-desc";
 
@@ -143,7 +144,7 @@ export default function GalleryGrid({
                 <button
                   type="button"
                   onClick={() => setSheetOpen(false)}
-                  className="w-full bg-ink px-5 py-3 text-xs uppercase tracking-[0.28em] text-paper"
+                  className="w-full bg-ink px-5 py-3 text-xs tracking-[0.15em] text-paper"
                 >
                   Show {filtered.length} artwork{filtered.length === 1 ? "" : "s"}
                 </button>
