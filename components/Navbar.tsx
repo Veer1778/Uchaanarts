@@ -35,17 +35,15 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-paper/95 backdrop-blur">
-      <div className="mx-auto flex h-[76px] max-w-[1400px] items-center justify-between gap-6 px-5 sm:px-8 lg:px-10">
-        {/* Wordmark */}
-        <Link href="/" aria-label="Uchaan Arts home" className="shrink-0">
-          <span className="wordmark block text-[1.45rem] leading-none sm:text-[1.6rem]">
-            UCHAAN
-          </span>
-          <span className="wordmark mt-0.5 block text-[0.6rem] text-muted">
-            ARTS
-          </span>
+    <header className="sticky top-0 z-40 bg-paper/95 backdrop-blur">
+      <div className="mx-auto flex h-[76px] max-w-[1400px] items-stretch gap-8 px-5 sm:px-8 lg:px-10">
+        {/* Wordmark — the header rule starts after it, as in the reference */}
+        <Link href="/" aria-label="Uchaan Arts home" className="flex shrink-0 flex-col justify-center">
+          <span className="wordmark block text-[1.5rem] leading-none">UCHAAN</span>
+          <span className="wordmark mt-1 block text-[0.62rem] text-muted">ARTS</span>
         </Link>
+
+        <div className="flex flex-1 items-center justify-between gap-6 border-b border-line">
 
         {/* Nav */}
         <nav className="hidden items-center gap-6 xl:gap-7 lg:flex">
@@ -55,7 +53,7 @@ export default function Navbar() {
               <Link
                 key={l.href}
                 href={l.href}
-                className={`relative whitespace-nowrap py-1 text-[13px] transition-colors ${
+                className={`relative whitespace-nowrap py-1 text-[13.5px] transition-colors ${
                   active ? "text-ink" : "text-muted hover:text-ink"
                 }`}
               >
@@ -112,7 +110,7 @@ export default function Navbar() {
 
           <Link
             href={user ? "/account" : "/login"}
-            className="btn-accent hidden px-5 py-2.5 text-[13px] sm:block"
+            className="btn-accent hidden px-7 py-2.5 text-[13.5px] sm:block"
           >
             {user ? "Account" : "Enquire"}
           </Link>
@@ -126,6 +124,7 @@ export default function Navbar() {
           >
             {menuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
+        </div>
         </div>
       </div>
 
