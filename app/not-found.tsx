@@ -1,21 +1,40 @@
 import Link from "next/link";
 
+/** 404 — offers routes onward rather than a dead end. */
 export default function NotFound() {
   return (
-    <section className="relative mx-auto flex min-h-[50vh] max-w-6xl flex-col items-center justify-center px-5 text-center">
-      <div className="aura left-1/2 top-1/3 h-72 w-72 -translate-x-1/2" />
-      <h1 className="relative font-display text-6xl">
-        4<span className="text-signal">0</span>4
-      </h1>
-      <p className="relative mt-4 text-sm text-muted">
-        This canvas is blank — the page you&apos;re looking for doesn&apos;t exist.
-      </p>
-      <Link
-        href="/"
-        className="relative mt-8 border border-ink px-8 py-3 text-[11px] uppercase tracking-[0.2em] hover:border-signal hover:text-signal"
-      >
-        Back to the gallery
-      </Link>
-    </section>
+    <main className="grid min-h-[70vh] place-items-center px-5 text-center">
+      <div className="max-w-md">
+        <p className="font-display text-[3.5rem] leading-none text-line">404</p>
+        <h1 className="mt-4 font-display text-[2rem] leading-tight">
+          This page isn&apos;t here.
+        </h1>
+        <p className="mt-4 text-[13px] leading-relaxed text-muted">
+          It may have moved, or the work may no longer be available.
+        </p>
+
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <Link href="/art-gallery" className="btn-accent px-7 py-3 text-[13px]">
+            Browse artworks
+          </Link>
+          <Link href="/" className="btn-outline px-7 py-3 text-[13px]">
+            Back to home
+          </Link>
+        </div>
+
+        <div className="mt-10 flex flex-wrap justify-center gap-x-6 gap-y-2 border-t border-line pt-6 text-[12.5px] text-muted">
+          {[
+            { href: "/artists", label: "Artists" },
+            { href: "/exhibitions", label: "Exhibitions" },
+            { href: "/blog", label: "Journal" },
+            { href: "/about", label: "About" },
+          ].map((l) => (
+            <Link key={l.href} href={l.href} className="hover:text-ink">
+              {l.label}
+            </Link>
+          ))}
+        </div>
+      </div>
+    </main>
   );
 }
