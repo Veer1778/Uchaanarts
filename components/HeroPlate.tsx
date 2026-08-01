@@ -5,8 +5,8 @@ import Link from "next/link";
 import type { Artwork } from "@/lib/data";
 
 /**
- * Hero plate — the large artwork beside the masthead copy, with its credit
- * line and dot pagination beneath, as in the reference. Advances on a timer,
+ * Hero plate — the artwork beside the masthead copy, with a credit line and
+ * dot pagination beneath it, as in the reference. Advances on a timer and
  * pauses on hover.
  */
 export default function HeroPlate({
@@ -30,11 +30,13 @@ export default function HeroPlate({
 
   return (
     <div
-      className="flex h-full flex-col"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <Link href={`/art/${w.slug}`} className="relative block flex-1 overflow-hidden bg-wash">
+      <Link
+        href={`/art/${w.slug}`}
+        className="relative block h-[260px] overflow-hidden bg-wash sm:h-[340px] lg:h-[420px]"
+      >
         {works.map((piece, idx) => (
           /* eslint-disable-next-line @next/next/no-img-element */
           <img
@@ -47,14 +49,14 @@ export default function HeroPlate({
         ))}
       </Link>
 
-      <div className="flex items-center justify-between gap-4 px-5 py-2.5 sm:px-8 lg:px-10">
+      <div className="mt-3 flex items-center justify-between gap-4">
         <p className="truncate text-[12px] text-muted">
           {names[w.artist] ? `${names[w.artist]}, ` : ""}
           <span className="italic">{w.title}</span>
           {w.medium ? `, ${w.medium}` : ""}
           {w.size ? `, ${w.size}` : ""}
         </p>
-        <div className="flex shrink-0 items-center gap-1.5">
+        <div className="flex shrink-0 items-center gap-2">
           {works.map((piece, idx) => (
             <button
               key={piece.slug}
