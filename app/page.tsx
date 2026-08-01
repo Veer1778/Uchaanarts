@@ -2,8 +2,6 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   ArrowRight,
-  ChevronLeft,
-  ChevronRight,
   IndianRupee,
   Frame,
   Sprout,
@@ -26,19 +24,17 @@ import { curatedPaths, advisorySteps, realSpaces, assurances } from "@/lib/site"
 import { formatINR } from "@/lib/data";
 
 /**
- * Home — built to the client's desktop reference.
+ * Home — matched to the client's desktop reference.
  *
- * Full-width bands: hero, New & Noteworthy, Curated Paths, the assurance bar,
- * and the Visit / Stay Inspired strip.
- *
- * Everything from Curated Paths downward that isn't a band is PAIRED into two
- * columns with a vertical rule between them:
- *
- *   Artist Focus        │ Art Advisory
- *   Art in Real Spaces  │ At the Gallery
- *   Collectors Say      │ From the Journal
- *
- * Those pairs stack on mobile, where the rule becomes a horizontal divider.
+ * Structure, top to bottom:
+ *   hero (copy + trust strip │ plate with caption)   full width, split
+ *   New & Noteworthy                                  full width
+ *   Curated Paths                                     full-width beige band
+ *   Artist Focus │ Art Advisory                       paired, ruled
+ *   Art in Real Spaces │ At the Gallery               paired, ruled
+ *   assurances                                        full width, 4 divided
+ *   Collectors Say │ From the Journal                 paired, ruled
+ *   Visit │ image │ Stay Inspired                     full width, 3 columns
  */
 
 const pathIcons = { rupee: IndianRupee, frame: Frame, sprout: Sprout, grid: LayoutGrid };
@@ -58,30 +54,29 @@ function excerpt(text: string | undefined, max: number, fallback: string) {
   return `${cut.slice(0, cut.lastIndexOf(" ")).replace(/[,;:.\s]+$/, "")}…`;
 }
 
-/** Section heading with a right-aligned link. */
 function Head({ title, href, cta }: { title: string; href: string; cta: string }) {
   return (
-    <div className="mb-5 flex items-baseline justify-between gap-4">
-      <h2 className="font-display text-2xl leading-none sm:text-[1.7rem]">{title}</h2>
+    <div className="mb-6 flex items-baseline justify-between gap-4">
+      <h2 className="font-display text-[1.6rem] leading-none">{title}</h2>
       <Link
         href={href}
-        className="inline-flex shrink-0 items-center gap-1 text-[14px] text-muted transition-colors hover:text-ink"
+        className="inline-flex shrink-0 items-center gap-1.5 text-[13px] text-muted transition-colors hover:text-ink"
       >
-        {cta} <ArrowRight size={11} />
+        {cta} <ArrowRight size={12} />
       </Link>
     </div>
   );
 }
 
-/** A paired two-column block with a dividing rule. */
+/** Paired two-column block with a dividing rule. */
 function Pair({ left, right }: { left: React.ReactNode; right: React.ReactNode }) {
   return (
     <section className="border-b border-line">
       <div className="mx-auto grid max-w-[1400px] lg:grid-cols-2">
-        <div className="border-b border-line px-5 py-9 sm:px-8 lg:border-b-0 lg:border-r lg:px-10 lg:py-12">
+        <div className="border-b border-line px-5 py-10 sm:px-8 lg:border-b-0 lg:border-r lg:px-10 lg:py-12">
           {left}
         </div>
-        <div className="px-5 py-9 sm:px-8 lg:px-10 lg:py-12">{right}</div>
+        <div className="px-5 py-10 sm:px-8 lg:px-10 lg:py-12">{right}</div>
       </div>
     </section>
   );
@@ -110,40 +105,40 @@ export default async function HomePage() {
     <>
       {/* ───────── Hero ───────── */}
       <section className="border-b border-line">
-        <div className="mx-auto grid max-w-[1400px] items-stretch lg:grid-cols-[0.88fr_1.12fr]">
-          {/* Copy */}
-          <div className="flex flex-col justify-between px-5 pb-7 pt-10 sm:px-8 lg:px-10 lg:pb-8 lg:pt-16">
+        <div className="mx-auto grid max-w-[1400px] lg:grid-cols-[0.86fr_1.14fr]">
+          {/* Copy + trust strip */}
+          <div className="flex flex-col justify-between px-5 pb-8 pt-10 sm:px-8 lg:py-12 lg:pl-10 lg:pr-8">
             <div>
-              <h1 className="font-display text-[2rem] leading-[1.16] sm:text-4xl xl:text-[2.9rem]">
+              <h1 className="font-display text-[2.2rem] leading-[1.18] sm:text-[2.6rem] xl:text-[3rem]">
                 Contemporary Indian art,
                 <br />
                 <em className="italic">thoughtfully curated.</em>
               </h1>
-              <p className="mt-5 max-w-sm text-xs leading-relaxed text-muted sm:text-sm">
+              <p className="mt-6 max-w-md text-[14px] leading-relaxed text-muted">
                 Original works by emerging and established artists,
                 <br className="hidden sm:block" />
                 selected for homes, collections and meaningful spaces.
               </p>
-              <div className="mt-7 flex flex-wrap gap-3">
-                <Link href="/art-gallery" className="btn-accent px-7 py-3 text-xs sm:text-sm">
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link href="/art-gallery" className="btn-accent px-8 py-3.5 text-[14px]">
                   Explore Art
                 </Link>
-                <Link href="/advisory" className="btn-outline px-7 py-3 text-xs sm:text-sm">
+                <Link href="/advisory" className="btn-outline px-8 py-3.5 text-[14px]">
                   Speak to a Curator
                 </Link>
               </div>
             </div>
 
-            {/* Trust strip, sitting at the foot of the copy column */}
-            <ul className="mt-10 flex flex-wrap gap-x-7 gap-y-3 text-[14px] text-muted sm:text-[14px]">
+            {/* Trust strip sits at the foot of the copy column */}
+            <ul className="mt-12 flex flex-wrap gap-x-8 gap-y-3 text-[12.5px] text-muted">
               {[
-                { Icon: Clock, label: "Curating art since 2009" },
+                { Icon: Clock, label: "Curating art since 2010" },
                 { Icon: MapPin, label: "Delhi & Gurugram" },
                 { Icon: Globe, label: "Worldwide delivery" },
               ].map(({ Icon, label }) => (
-                <li key={label} className="flex items-center gap-2">
-                  <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full border border-line">
-                    <Icon size={11} strokeWidth={1.4} />
+                <li key={label} className="flex items-center gap-2.5">
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-line">
+                    <Icon size={12} strokeWidth={1.4} />
                   </span>
                   {label}
                 </li>
@@ -151,80 +146,75 @@ export default async function HomePage() {
             </ul>
           </div>
 
-          {/* Plate */}
-          <div className="min-h-[300px] lg:min-h-[440px]">
+          {/* Plate — flush to the header, inset from the right edge */}
+          <div className="pb-6 pr-5 sm:pr-8 lg:pr-10">
             <HeroPlate works={heroWorks} names={names} />
           </div>
         </div>
       </section>
 
-      {/* ───────── New & Noteworthy (full width) ───────── */}
+      {/* ───────── New & Noteworthy ─────────
+          Uniform HEIGHT with natural widths, so each work keeps its own
+          proportions — a filmstrip rather than a grid of equal boxes. */}
       <section className="border-b border-line">
-        <div className="mx-auto max-w-[1400px] px-5 py-9 sm:px-8 lg:px-10 lg:py-12">
+        <div className="mx-auto max-w-[1400px] px-5 py-10 sm:px-8 lg:px-10 lg:py-12">
           <Head title="New & Noteworthy" href="/art-gallery" cta="View all artworks" />
 
-          {/* First work runs wide, four narrower beside it. */}
-          <div className="rail lg:grid lg:grid-cols-[2.1fr_1fr_1fr_1fr_1fr] lg:gap-5">
-            {noteworthy.map((w, i) => (
-              <Link
-                key={w.slug}
-                href={`/art/${w.slug}`}
-                /* Uniform card width on the mobile rail — mixed widths read as
-                   a mistake rather than a hierarchy at small sizes. */
-                className="group block w-[62vw] shrink-0 sm:w-[34vw] lg:w-auto"
-              >
-                <div className="relative h-[230px] overflow-hidden bg-wash sm:h-[250px] lg:h-[265px]">
-                  <Image
-                    src={w.image}
-                    alt={w.title}
-                    fill
-                    sizes="(max-width: 1024px) 60vw, 25vw"
-                    className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-                  />
+          <div className="flex gap-5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] lg:gap-6 [&::-webkit-scrollbar]:hidden">
+            {noteworthy.map((w) => (
+              <Link key={w.slug} href={`/art/${w.slug}`} className="group block shrink-0">
+                {/* Plain img: fixed height, automatic width preserves aspect. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={w.image}
+                  alt={w.title}
+                  className="h-[190px] w-auto max-w-none bg-wash object-cover transition-opacity duration-300 group-hover:opacity-90 sm:h-[230px] lg:h-[265px]"
+                />
+                <div className="mt-3.5 max-w-[230px]">
+                  <p className="text-[14px] leading-tight">{names[w.artist] ?? ""}</p>
+                  <p className="mt-1 text-[14px] italic leading-tight text-muted">
+                    {w.title}
+                  </p>
+                  <p className="mt-2.5 text-[12.5px] leading-snug text-muted">{w.medium}</p>
+                  <p className="text-[12.5px] leading-snug text-muted">{w.size}</p>
+                  <p className="mt-2.5 text-[14px]">
+                    {w.price > 0 ? formatINR(w.price) : "Price on request"}
+                  </p>
                 </div>
-                <p className="mt-2.5 text-[14px]">{names[w.artist] ?? ""}</p>
-                <p className="text-[14px] italic text-muted">{w.title}</p>
-                <p className="mt-1 text-[14px] leading-snug text-muted">{w.medium}</p>
-                <p className="text-[14px] text-muted">{w.size}</p>
-                <p className="mt-1.5 text-[14px]">
-                  {w.price > 0 ? formatINR(w.price) : "Price on request"}
-                </p>
               </Link>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ───────── Curated Paths (full width band) ───────── */}
+      {/* ───────── Curated Paths ───────── */}
       <section className="border-b border-line bg-wash">
-        <div className="mx-auto max-w-[1400px] px-5 py-10 sm:px-8 lg:px-10 lg:py-12">
-          <h2 className="text-center font-display text-2xl sm:text-[1.7rem]">
+        <div className="mx-auto max-w-[1400px] px-5 py-11 sm:px-8 lg:px-10">
+          <h2 className="text-center font-display text-[1.6rem]">
             Curated Paths to Begin Your Collection
           </h2>
 
-          <div className="mt-8 grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-4 sm:gap-0">
+          <div className="mt-9 grid grid-cols-2 gap-x-6 gap-y-9 sm:grid-cols-4 sm:gap-0">
             {curatedPaths.map((p, i) => {
               const Icon = pathIcons[p.icon];
               return (
                 <div
                   key={p.slug}
-                  className={`flex items-start gap-3 sm:px-6 ${
+                  className={`flex items-start gap-4 sm:px-7 ${
                     i > 0 ? "sm:border-l sm:border-line" : ""
                   }`}
                 >
-                  <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line bg-paper">
-                    <Icon size={15} strokeWidth={1.3} />
+                  <span className="mt-0.5 grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line bg-paper">
+                    <Icon size={17} strokeWidth={1.3} />
                   </span>
                   <div>
-                    <p className="font-display text-sm leading-snug sm:text-[1.05rem]">
-                      {p.title}
-                    </p>
-                    <p className="mt-1 text-[14px] leading-snug text-muted">{p.blurb}</p>
+                    <p className="font-display text-[15px] leading-snug">{p.title}</p>
+                    <p className="mt-1.5 text-[12.5px] leading-snug text-muted">{p.blurb}</p>
                     <Link
                       href={p.href}
-                      className="mt-2 inline-flex items-center gap-1 text-[14px] transition-colors hover:text-signal"
+                      className="mt-2.5 inline-flex items-center gap-1.5 text-[12.5px] transition-colors hover:text-signal"
                     >
-                      Explore <ArrowRight size={10} />
+                      Explore <ArrowRight size={11} />
                     </Link>
                   </div>
                 </div>
@@ -238,20 +228,18 @@ export default async function HomePage() {
       <Pair
         left={
           <>
-            <h2 className="font-display text-2xl leading-none sm:text-[1.7rem]">Artist Focus</h2>
-            <p className="mt-1.5 font-display text-2xl italic leading-none text-muted sm:text-[1.7rem]">
+            <h2 className="font-display text-[1.6rem] leading-none">Artist Focus</h2>
+            <p className="mt-2 font-display text-[1.6rem] italic leading-none text-muted">
               {focusArtist?.name}
             </p>
 
-            {/* Portrait beside two stacked works. Every tile carries an explicit
-                aspect ratio: `fill` images need a sized parent, and without one
-                the stacked tiles collapse to nothing. */}
-            <div className="mt-6 grid grid-cols-[0.95fr_1.2fr_0.85fr] gap-3.5">
+            {/* copy · portrait · two stacked works */}
+            <div className="mt-7 grid grid-cols-[0.9fr_1.15fr_0.85fr] gap-4">
               <div className="self-center">
                 <p className="text-[13px] leading-relaxed text-muted">
                   {excerpt(
                     focusArtist?.bio,
-                    120,
+                    110,
                     "Exploring memory, landscape and the quiet poetry of everyday moments."
                   )}
                 </p>
@@ -269,24 +257,24 @@ export default async function HomePage() {
                     src={focusArtist.image}
                     alt={focusArtist.name}
                     fill
-                    sizes="(max-width: 1024px) 40vw, 18vw"
+                    sizes="(max-width: 1024px) 40vw, 17vw"
                     className="object-cover"
                   />
                 )}
               </div>
 
-              <div className="flex flex-col gap-3.5">
+              <div className="flex flex-col gap-4">
                 {focusWorks.map((w) => (
                   <Link
                     key={w.slug}
                     href={`/art/${w.slug}`}
-                    className="relative block aspect-[4/3] flex-1 overflow-hidden bg-wash"
+                    className="relative block aspect-[5/4] overflow-hidden bg-wash"
                   >
                     <Image
                       src={w.image}
                       alt={w.title}
                       fill
-                      sizes="(max-width: 1024px) 30vw, 13vw"
+                      sizes="(max-width: 1024px) 30vw, 12vw"
                       className="object-cover"
                     />
                   </Link>
@@ -297,38 +285,38 @@ export default async function HomePage() {
         }
         right={
           <>
-            <h2 className="font-display text-2xl leading-none sm:text-[1.7rem]">Art Advisory</h2>
+            <h2 className="font-display text-[1.6rem] leading-none">Art Advisory</h2>
 
-            <div className="mt-5 grid gap-7 sm:grid-cols-[1fr_auto] sm:gap-8">
+            <div className="mt-7 grid gap-8 sm:grid-cols-[1fr_auto]">
               <div>
-                <p className="font-display text-lg leading-snug sm:text-xl">
+                <p className="font-display text-[1.3rem] leading-snug">
                   Art can be personal.
                   <br />
                   <em className="italic">Choosing it should be too.</em>
                 </p>
-                <p className="mt-3.5 max-w-xs text-[14px] leading-relaxed text-muted">
+                <p className="mt-4 max-w-sm text-[13px] leading-relaxed text-muted">
                   Share your space, preferences and budget with our curatorial
                   team. We&apos;ll recommend original works suited to you.
                 </p>
                 <Link
                   href="/advisory"
-                  className="mt-4 inline-block border-b border-ink pb-0.5 text-[14px] transition-opacity hover:opacity-60"
+                  className="mt-5 inline-block border-b border-ink pb-0.5 text-[13px] transition-opacity hover:opacity-60"
                 >
                   Book a Consultation →
                 </Link>
               </div>
 
-              <ol className="space-y-4 sm:border-l sm:border-line sm:pl-7">
+              <ol className="space-y-5 sm:border-l sm:border-line sm:pl-8">
                 {advisorySteps.map((s, i) => {
                   const Icon = stepIcons[i];
                   return (
-                    <li key={s.n} className="flex items-start gap-3">
-                      <span className="grid h-8 w-8 shrink-0 place-items-center border border-line">
-                        <Icon size={13} strokeWidth={1.3} />
+                    <li key={s.n} className="flex items-start gap-3.5">
+                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded border border-line">
+                        <Icon size={15} strokeWidth={1.3} />
                       </span>
                       <div>
-                        <p className="text-[14px] text-faint">{s.n}</p>
-                        <p className="max-w-[8.5rem] text-[14px] leading-snug text-muted">
+                        <p className="text-[12px] text-faint">{s.n}</p>
+                        <p className="max-w-[9.5rem] text-[12.5px] leading-snug text-muted">
                           {s.label}
                         </p>
                       </div>
@@ -346,20 +334,20 @@ export default async function HomePage() {
         left={
           <>
             <Head title="Art in Real Spaces" href="/art-gallery" cta="View more projects" />
-            <div className="rail sm:grid sm:grid-cols-4 sm:gap-3">
+            <div className="flex gap-3.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:grid sm:grid-cols-4 [&::-webkit-scrollbar]:hidden">
               {realSpaces.map((s) => (
-                <div key={s.label} className="w-[46vw] shrink-0 sm:w-auto">
+                <div key={s.label} className="w-[44vw] shrink-0 sm:w-auto">
                   <div className="relative aspect-[4/3] overflow-hidden bg-wash">
                     <Image
                       src={s.image}
                       alt={s.label}
                       fill
-                      sizes="(max-width: 640px) 40vw, 12vw"
+                      sizes="(max-width: 640px) 44vw, 12vw"
                       className="object-cover"
                     />
                   </div>
-                  <p className="mt-2 text-[14px]">{s.label}</p>
-                  <p className="text-[14px] leading-snug text-muted">{s.sub}</p>
+                  <p className="mt-2.5 text-[12.5px]">{s.label}</p>
+                  <p className="text-[11.5px] leading-snug text-muted">{s.sub}</p>
                 </div>
               ))}
             </div>
@@ -369,7 +357,7 @@ export default async function HomePage() {
           <>
             <Head title="At the Gallery" href="/exhibitions" cta="View all exhibitions" />
 
-            <div className="grid gap-5 sm:grid-cols-[0.85fr_1.2fr_1fr]">
+            <div className="grid gap-5 sm:grid-cols-[0.8fr_1.15fr_1.05fr]">
               {/* Current exhibition plate */}
               <div className="relative aspect-[3/4] overflow-hidden bg-wash">
                 {current?.image && (
@@ -377,7 +365,7 @@ export default async function HomePage() {
                     src={current.image}
                     alt={current.title}
                     fill
-                    sizes="(max-width: 640px) 100vw, 14vw"
+                    sizes="(max-width: 640px) 100vw, 13vw"
                     className="object-cover"
                   />
                 )}
@@ -385,18 +373,18 @@ export default async function HomePage() {
 
               {/* Details */}
               <div className="self-center">
-                <p className="text-[14px] text-muted">Current Exhibition</p>
-                <p className="mt-0.5 font-display text-lg italic leading-tight">
+                <p className="text-[12px] text-muted">Current Exhibition</p>
+                <p className="mt-1 font-display text-[1.25rem] italic leading-tight">
                   {current?.title}
                 </p>
-                <p className="mt-2 text-[14px] leading-relaxed text-muted">
+                <p className="mt-2.5 text-[12.5px] leading-relaxed text-muted">
                   {excerpt(
                     current?.blurb,
-                    72,
+                    62,
                     "A group show exploring memory, material and mark."
                   )}
                 </p>
-                <p className="mt-2.5 text-[14px] leading-snug text-muted">
+                <p className="mt-3 text-[12px] leading-snug text-muted">
                   {current?.end ? `Until ${current.end}` : ""}
                   {current?.venue ? (
                     <>
@@ -407,29 +395,29 @@ export default async function HomePage() {
                 </p>
                 <Link
                   href="/exhibitions"
-                  className="mt-2.5 inline-block border-b border-ink pb-0.5 text-[14px] transition-opacity hover:opacity-60"
+                  className="mt-3 inline-block border-b border-ink pb-0.5 text-[12.5px] transition-opacity hover:opacity-60"
                 >
                   Explore Exhibition →
                 </Link>
               </div>
 
-              {/* Upcoming / past cards */}
-              <div className="flex flex-col gap-3.5">
+              {/* Upcoming / past, as bordered cards */}
+              <div className="flex flex-col gap-4">
                 {others.map((e, i) => (
                   <Link
                     key={e.slug}
                     href="/exhibitions"
-                    className="group flex flex-1 items-center gap-3 border border-line p-2.5 transition-colors hover:border-ink"
+                    className="flex flex-1 items-center gap-3 border border-line p-3 transition-colors hover:border-ink"
                   >
                     <div className="relative h-14 w-12 shrink-0 overflow-hidden bg-wash">
                       {e.image && (
-                        <Image src={e.image} alt={e.title} fill sizes="40px" className="object-cover" />
+                        <Image src={e.image} alt={e.title} fill sizes="48px" className="object-cover" />
                       )}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[14px] text-muted">{i === 0 ? "Upcoming" : "Past"}</p>
+                      <p className="text-[11px] text-muted">{i === 0 ? "Upcoming" : "Past"}</p>
                       <p className="truncate font-display text-[14px] leading-tight">{e.title}</p>
-                      <p className="text-[14px] text-muted">
+                      <p className="mt-0.5 text-[11px] text-muted">
                         {e.start}
                         {e.end ? ` – ${e.end}` : ""}
                       </p>
@@ -442,22 +430,22 @@ export default async function HomePage() {
         }
       />
 
-      {/* ───────── Assurances (full width) ───────── */}
+      {/* ───────── Assurances ───────── */}
       <section className="border-b border-line">
-        <div className="mx-auto grid max-w-[1400px] grid-cols-2 gap-x-5 gap-y-7 px-5 py-8 sm:px-8 lg:grid-cols-4 lg:gap-0 lg:px-10">
+        <div className="mx-auto grid max-w-[1400px] grid-cols-2 gap-x-6 gap-y-8 px-5 py-9 sm:px-8 lg:grid-cols-4 lg:gap-0 lg:px-10">
           {assurances.map((a, i) => {
             const Icon = assuranceIcons[a.icon];
             return (
               <div
                 key={a.title}
-                className={`flex items-start gap-3 lg:px-8 ${
+                className={`flex items-start gap-3.5 lg:px-8 ${
                   i > 0 ? "lg:border-l lg:border-line" : ""
                 }`}
               >
-                <Icon size={19} strokeWidth={1.2} className="mt-0.5 shrink-0" />
+                <Icon size={21} strokeWidth={1.2} className="mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-[14px]">{a.title}</p>
-                  <p className="mt-1 text-[14px] leading-snug text-muted">{a.body}</p>
+                  <p className="text-[13.5px]">{a.title}</p>
+                  <p className="mt-1.5 text-[12px] leading-snug text-muted">{a.body}</p>
                 </div>
               </div>
             );
@@ -469,16 +457,14 @@ export default async function HomePage() {
       <Pair
         left={
           <>
-            <h2 className="mb-6 font-display text-2xl leading-none sm:text-[1.7rem]">
-              Collectors Say
-            </h2>
+            <h2 className="mb-7 font-display text-[1.6rem] leading-none">Collectors Say</h2>
             <Testimonials />
           </>
         }
         right={
           <>
             <Head title="From the Journal" href="/blog" cta="View all articles" />
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-5 sm:grid-cols-3">
               {journal.map((p) => (
                 <Link key={p.slug} href={`/blog/${p.slug}`} className="group block">
                   <div className="relative aspect-[4/3] overflow-hidden bg-wash">
@@ -492,10 +478,10 @@ export default async function HomePage() {
                       />
                     )}
                   </div>
-                  <p className="mt-2 text-[14px] text-muted">{p.category}</p>
-                  <p className="mt-1 font-display text-[15px] leading-snug">{p.title}</p>
-                  <span className="mt-1 inline-flex items-center gap-1 text-[14px] text-muted transition-colors group-hover:text-ink">
-                    Read more <ArrowRight size={9} />
+                  <p className="mt-2.5 text-[11.5px] text-muted">{p.category}</p>
+                  <p className="mt-1 font-display text-[14px] leading-snug">{p.title}</p>
+                  <span className="mt-2 inline-flex items-center gap-1.5 text-[11.5px] text-muted transition-colors group-hover:text-ink">
+                    Read more <ArrowRight size={10} />
                   </span>
                 </Link>
               ))}
@@ -506,42 +492,40 @@ export default async function HomePage() {
 
       {/* ───────── Visit │ image │ Stay Inspired ───────── */}
       <section>
-        <div className="mx-auto grid max-w-[1400px] items-center gap-6 px-5 py-8 sm:px-8 lg:grid-cols-[0.85fr_1.1fr_1fr] lg:gap-10 lg:px-10">
+        <div className="mx-auto grid max-w-[1400px] items-center gap-7 px-5 py-10 sm:px-8 lg:grid-cols-[0.8fr_1.15fr_0.95fr] lg:gap-12 lg:px-10">
           <div>
-            <h2 className="font-display text-2xl leading-none sm:text-[1.7rem]">
-              Visit the Gallery
-            </h2>
-            <p className="mt-2.5 text-[14px] leading-relaxed text-muted">
+            <h2 className="font-display text-[1.6rem] leading-none">Visit the Gallery</h2>
+            <p className="mt-3 text-[13px] leading-relaxed text-muted">
               Experience the artwork in person.
               <br />
               We&apos;d love to welcome you.
             </p>
             <Link
               href="/visit"
-              className="mt-3 inline-block border-b border-ink pb-0.5 text-[14px] transition-opacity hover:opacity-60"
+              className="mt-4 inline-block border-b border-ink pb-0.5 text-[13px] transition-opacity hover:opacity-60"
             >
               Plan your visit →
             </Link>
           </div>
 
-          <div className="relative aspect-[16/7] overflow-hidden bg-wash">
+          <div className="relative aspect-[16/8] overflow-hidden bg-wash">
             <Image
               src="https://www.uchaanarts.com/uploaded_files/slider/1728130444_ganesha_series_36x54_oil_on_linen_canvas_300000_-_copy.jpg"
               alt="Inside the Uchaan gallery"
               fill
-              sizes="(max-width: 1024px) 100vw, 30vw"
+              sizes="(max-width: 1024px) 100vw, 32vw"
               className="object-cover"
             />
           </div>
 
           <div>
-            <h2 className="font-display text-2xl leading-none sm:text-[1.7rem]">Stay Inspired</h2>
-            <p className="mt-2.5 text-[14px] leading-relaxed text-muted">
+            <h2 className="font-display text-[1.6rem] leading-none">Stay Inspired</h2>
+            <p className="mt-3 text-[13px] leading-relaxed text-muted">
               Curated stories, new works
               <br />
               and exhibition updates.
             </p>
-            <form className="mt-3.5 flex max-w-sm">
+            <form className="mt-4 flex max-w-sm">
               <label htmlFor="subscribe" className="sr-only">
                 Email address
               </label>
@@ -550,9 +534,9 @@ export default async function HomePage() {
                 type="email"
                 required
                 placeholder="Enter your email"
-                className="min-w-0 flex-1 border border-line bg-card px-3 py-2.5 text-[14px] outline-none focus:border-ink"
+                className="min-w-0 flex-1 border border-line bg-card px-3.5 py-3 text-[13px] outline-none focus:border-ink"
               />
-              <button type="submit" className="btn-accent shrink-0 px-5 py-2.5 text-[14px]">
+              <button type="submit" className="btn-accent shrink-0 px-6 py-3 text-[13px]">
                 Subscribe
               </button>
             </form>
