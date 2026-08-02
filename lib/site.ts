@@ -8,7 +8,7 @@ export const curatedPaths = [
   {
     slug: "under-50k",
     title: "Art Under ₹50,000",
-    blurb: "Thoughtful works for every space",
+    blurb: "Original works for first-time buyers and growing collections.",
     href: "/art-gallery?price=0",
     icon: "rupee" as const,
   },
@@ -22,14 +22,14 @@ export const curatedPaths = [
   {
     slug: "emerging",
     title: "Emerging Artists",
-    blurb: "Discover new voices and perspectives",
+    blurb: "Discover distinctive practices shaping the next chapter of Indian art.",
     href: "/artists",
     icon: "sprout" as const,
   },
   {
     slug: "abstract",
     title: "Abstract & Minimal",
-    blurb: "Quiet, timeless and considered",
+    blurb: "Works defined by form, texture, rhythm and restraint.",
     href: "/art-gallery?category=Abstract",
     icon: "grid" as const,
   },
