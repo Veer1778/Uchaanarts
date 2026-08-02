@@ -132,9 +132,9 @@ export default async function HomePage() {
             {/* Trust strip sits at the foot of the copy column */}
             <ul className="mt-12 flex flex-wrap gap-x-8 gap-y-3 text-[12.5px] text-muted">
               {[
-                { Icon: Clock, label: "Curating art since 2010" },
+                { Icon: Clock, label: "15+ Years of Curatorial Experience" },
                 { Icon: MapPin, label: "Delhi & Gurugram" },
-                { Icon: Globe, label: "Worldwide delivery" },
+                { Icon: Globe, label: "Secure Delivery Pan India & Worldwide" },
               ].map(({ Icon, label }) => (
                 <li key={label} className="flex items-center gap-2.5">
                   <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-line">
