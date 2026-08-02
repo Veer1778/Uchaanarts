@@ -290,13 +290,12 @@ export default async function HomePage() {
             <div className="mt-7 grid gap-8 sm:grid-cols-[1fr_auto]">
               <div>
                 <p className="font-display text-[1.3rem] leading-snug">
-                  Art can be personal.
+                  The right work of art should feel personal.
                   <br />
-                  <em className="italic">Choosing it should be too.</em>
+                  <em className="italic">Finding it can be too.</em>
                 </p>
                 <p className="mt-4 max-w-sm text-[13px] leading-relaxed text-muted">
-                  Share your space, preferences and budget with our curatorial
-                  team. We&apos;ll recommend original works suited to you.
+                  Tell us about your space, your taste and your budget. Our curatorial team will create a considered shortlist of original works for you.
                 </p>
                 <Link
                   href="/advisory"
