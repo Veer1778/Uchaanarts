@@ -117,7 +117,7 @@ export default async function HomePage() {
               <p className="mt-6 max-w-md text-[14px] leading-relaxed text-muted">
                 Explore original works by emerging and established Indian artists,
                 <br className="hidden sm:block" />
-                thoughtfully selected for private collections, homes and distinctive spaces.
+                 thoughtfully selected for private collections, homes and distinctive spaces.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link href="/art-gallery" className="btn-accent px-8 py-3.5 text-[14px]">
