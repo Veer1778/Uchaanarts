@@ -336,7 +336,7 @@ export default async function HomePage() {
              <p className="mt-4 max-w-sm text-[13px] leading-relaxed text-muted">
                   See how original art transforms private homes, hospitality spaces, workplaces and public environments.
                 </p>
-            
+            <div className="mt-8 flex flex-wrap gap-3">
             <div className="flex gap-3.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:grid sm:grid-cols-4 [&::-webkit-scrollbar]:hidden">
               {realSpaces.map((s) => (
                 <div key={s.label} className="w-[44vw] shrink-0 sm:w-auto">
