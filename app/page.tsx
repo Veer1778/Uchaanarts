@@ -501,11 +501,11 @@ export default async function HomePage() {
       <section>
         <div className="mx-auto grid max-w-[1400px] items-center gap-7 px-5 py-10 sm:px-8 lg:grid-cols-[0.8fr_1.15fr_0.95fr] lg:gap-12 lg:px-10">
           <div>
-            <h2 className="font-display text-[1.6rem] leading-none">Visit the Gallery</h2>
+            <h2 className="font-display text-[1.6rem] leading-none">Experience the Art in Person</h2>
             <p className="mt-3 text-[13px] leading-relaxed text-muted">
-              Experience the artwork in person.
+              Spend time with the art, speak with our team 
               <br />
-              We&apos;d love to welcome you.
+              and discover works beyond the screen.
             </p>
             <Link
               href="/visit"
@@ -528,9 +528,9 @@ export default async function HomePage() {
           <div>
             <h2 className="font-display text-[1.6rem] leading-none">Stay Inspired</h2>
             <p className="mt-3 text-[13px] leading-relaxed text-muted">
-              Curated stories, new works
+              Be the first to discover new works,
               <br />
-              and exhibition updates.
+             upcoming exhibitions and stories from our artists.
             </p>
             <form className="mt-4 flex max-w-sm">
               <label htmlFor="subscribe" className="sr-only">
