@@ -36,9 +36,9 @@ export const curatedPaths = [
 ];
 
 export const advisorySteps = [
-  { n: "01", label: "Tell us about your space" },
-  { n: "02", label: "Receive a curated shortlist" },
-  { n: "03", label: "Finalise delivery and installation" },
+  { n: "01", label: "Share Your Space and Preferences" },
+  { n: "02", label: "Receive a Personalised Selection" },
+  { n: "03", label: "Choose Your Work and Leave the Details to Us" },
 ];
 
 export const realSpaces = [
@@ -71,23 +71,23 @@ export const realSpaces = [
 export const assurances = [
   {
     icon: "certificate" as const,
-    title: "Original Works",
-    body: "Every artwork is an original or a clearly identified edition.",
+    title: "Originality Assured",
+    body: "Every work is an original or a clearly documented limited edition.",
   },
   {
     icon: "guidance" as const,
-    title: "Curatorial Guidance",
-    body: "Personal recommendations for collectors and spaces.",
+    title: "Personal Curatorial Guidance",
+    body: "Thoughtful recommendations shaped around your taste, space and budget.",
   },
   {
     icon: "relationships" as const,
-    title: "Artist Relationships",
-    body: "A growing programme of established and emerging artists.",
+    title: "Rooted in Artist Relationships",
+    body: "We work closely with established names and compelling new voices.",
   },
   {
     icon: "delivery" as const,
-    title: "Safe Delivery",
-    body: "Professional packing and worldwide shipping.",
+    title: "Handled with Care",
+    body: "Secure packing and coordinated delivery across India and internationally.",
   },
 ];
 
