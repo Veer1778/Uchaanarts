@@ -191,7 +191,7 @@ export default async function HomePage() {
       <section className="border-b border-line bg-wash">
         <div className="mx-auto max-w-[1400px] px-5 py-11 sm:px-8 lg:px-10">
           <h2 className="text-center font-display text-[1.6rem]">
-            Curated Paths to Begin Your Collection
+           Find the Art That Speaks to You
           </h2>
 
           <div className="mt-9 grid grid-cols-2 gap-x-6 gap-y-9 sm:grid-cols-4 sm:gap-0">
@@ -228,7 +228,7 @@ export default async function HomePage() {
       <Pair
         left={
           <>
-            <h2 className="font-display text-[1.6rem] leading-none">Artist Focus</h2>
+            <h2 className="font-display text-[1.6rem] leading-none">Meet the Artist</h2>
             <p className="mt-2 font-display text-[1.6rem] italic leading-none text-muted">
               {focusArtist?.name}
             </p>
@@ -333,6 +333,10 @@ export default async function HomePage() {
         left={
           <>
             <Head title="Art in Real Spaces" href="/art-gallery" cta="View more projects" />
+             <p className="mt-4 max-w-sm text-[13px] leading-relaxed text-muted">
+                  See how original art transforms private homes, hospitality spaces, workplaces and public environments.
+                </p>
+            
             <div className="flex gap-3.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:grid sm:grid-cols-4 [&::-webkit-scrollbar]:hidden">
               {realSpaces.map((s) => (
                 <div key={s.label} className="w-[44vw] shrink-0 sm:w-auto">
