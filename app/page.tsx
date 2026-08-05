@@ -333,20 +333,15 @@ export default async function HomePage() {
         left={
           <>
             <Head title="Art in Real Spaces" href="/art-gallery" cta="View more projects" />
-             <p className="mt-4 max-w-sm text-[13px] leading-relaxed text-muted">
-               See how original art transforms private homes, hospitality spaces,
-               workplaces and public environments.
+             <p className="mt-4 mb-5 max-w-sm text-[13px] leading-relaxed text-muted">
+  See how original art transforms private homes, hospitality spaces,
+  workplaces and public environments.
 </p>
 
-<div className="mt-5 flex gap-3.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:grid sm:grid-cols-4 [&::-webkit-scrollbar]:hidden">
+<div className="flex gap-3.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:grid sm:grid-cols-4 [&::-webkit-scrollbar]:hidden">
   {realSpaces.map((s) => (
-    ...
-  ))}
-</div>
-            <div className="flex gap-3.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:grid sm:grid-cols-4 [&::-webkit-scrollbar]:hidden">
-              {realSpaces.map((s) => (
-                <div key={s.label} className="w-[44vw] shrink-0 sm:w-auto">
-                  <div className="relative aspect-[4/3] overflow-hidden bg-wash">
+    <div key={s.label} className="w-[44vw] shrink-0 sm:w-auto">
+      <div className="relative aspect-[4/3] overflow-hidden bg-wash">
                     <Image
                       src={s.image}
                       alt={s.label}
