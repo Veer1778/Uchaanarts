@@ -158,7 +158,7 @@ export default async function HomePage() {
           proportions — a filmstrip rather than a grid of equal boxes. */}
       <section className="border-b border-line">
         <div className="mx-auto max-w-[1400px] px-5 py-10 sm:px-8 lg:px-10 lg:py-12">
-          <Head title="New & Noteworthy" href="/art-gallery" cta="View all artworks" />
+          <Head title="Fresh from the Studios" href="/art-gallery" cta="View all artworks" />
           <p className="mt-4 mb-6 max-w-md text-[13px] leading-relaxed text-muted">
   Recent works selected by our curatorial team, from familiar names and
   compelling new voices.
