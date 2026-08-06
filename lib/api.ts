@@ -2,8 +2,12 @@
  * Uchaan Arts API client
  *
  * Drop at: src/lib/api.ts
- * Set VITE_API_URL=https://uchaanarts.com/api in your .env
- * (or NEXT_PUBLIC_API_URL if this is Next.js, and swap the import.meta line).
+ * Set VITE_API_URL=https://uchaanarts.com/api in your .env, and add the same
+ * value in Vercel under Settings -> Environment Variables for Production,
+ * Preview, and Development. Vite only exposes vars prefixed with VITE_.
+ *
+ * If this is Next.js, use NEXT_PUBLIC_API_URL and swap the import.meta line
+ * below for process.env.NEXT_PUBLIC_API_URL.
  *
  * Every component should import from here. Nothing else should call fetch().
  * When you delete the demo data, this file is the only thing that changes.
