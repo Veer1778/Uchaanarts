@@ -1,11 +1,12 @@
 // ---------------------------------------------------------------------------
 // Demo content layer.
 //
-// This file mirrors the shape of what WordPress/WooCommerce returns (see
-// lib/cms.ts and lib/wordpress.ts). It uses real artworks and artists from
-// uchaanarts.com so the site is fully browsable before the CMS is connected.
-// Once NEXT_PUBLIC_WP_URL is set, lib/cms.ts pulls from WordPress instead
-// and this file is ignored.
+// This is now a FALLBACK only. lib/cms.ts reads from the CodeIgniter API at
+// NEXT_PUBLIC_API_URL; if that call fails, these arrays render instead so the
+// site degrades to something browsable rather than a 500.
+//
+// The type definitions here are still the canonical shapes every component
+// uses, so keep this file even after the API is fully live.
 // ---------------------------------------------------------------------------
 
 export type Artist = {
@@ -23,18 +24,42 @@ export type Artwork = {
   artist: string; // artist slug
   image: string;
   medium: string;
-  category: "Painting" | "Sculpture" | "Serigraph" | "Photography" | "Digital Art" | "Folk Art";
+  /**
+   * Known demo values, plus any category name coming from the CMS.
+   * `(string & {})` keeps autocomplete on the six below while still
+   * accepting arbitrary strings from tbl_gstcat.
+   */
+  category:
+    | "Painting"
+    | "Sculpture"
+    | "Serigraph"
+    | "Photography"
+    | "Digital Art"
+    | "Folk Art"
+    | (string & {});
   size: string;
   price: number; // INR
   featured?: boolean;
   tag?: "Latest" | "Popular" | "Curated";
-  /** WooCommerce product ID — used for headless checkout */
+  /** WooCommerce product ID — unused now, kept so old demo rows still typecheck */
   wooId?: number;
   /** Style / theme, matching the taxonomy on uchaanarts.com */
   style?: string;
   /** Traditional folk-art form, where applicable */
   folkForm?: string;
   description: string;
+
+  // -- fields populated from the live CMS API ------------------------------
+  /** CMS says price_on_request = 'Y'. When true, `price` is 0 and meaningless. */
+  priceOnRequest?: boolean;
+  /** tbl_item.current_qty = 1 */
+  available?: boolean;
+  /** tbl_item.item_id — needed for enquiries and checkout */
+  itemId?: number;
+  /** Full image set, detail pages only */
+  gallery?: string[];
+  /** Resolved artist display name, saves a lookup in card components */
+  artistName?: string;
 };
 
 export type Exhibition = {
@@ -51,7 +76,12 @@ export type Exhibition = {
 export type Post = {
   slug: string;
   title: string;
-  category: "Art Insights" | "Events & Workshops" | "Artist Spotlight";
+  /** Known demo values, plus any category name from tbl_blog_category. */
+  category:
+    | "Art Insights"
+    | "Events & Workshops"
+    | "Artist Spotlight"
+    | (string & {});
   date: string;
   image: string;
   excerpt: string;
@@ -453,6 +483,20 @@ export const posts: Post[] = [
 
 export const formatINR = (n: number) =>
   "\u20B9" + n.toLocaleString("en-IN");
+
+/**
+ * Use this instead of formatINR wherever an artwork price is displayed.
+ * Roughly a fifth of the catalogue is price-on-request; those come back from
+ * the API with price 0, and formatINR would render them as free.
+ */
+export const formatArtworkPrice = (
+  w: Pick<Artwork, "price" | "priceOnRequest">
+) => (w.priceOnRequest || !w.price ? "Price on request" : formatINR(w.price));
+
+/** True when the piece can be added to the cart rather than enquired about. */
+export const isPurchasable = (
+  w: Pick<Artwork, "price" | "priceOnRequest" | "available">
+) => !w.priceOnRequest && w.price > 0 && w.available !== false;
 
 export const artistBySlug = (slug: string) => artists.find((a) => a.slug === slug);
 
