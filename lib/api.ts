@@ -55,6 +55,12 @@ export interface Artwork {
   code: string | null;
   artist_id: number;
   artist_name: string | null;
+  /** Matches the slug /api/artists returns, so links resolve without a lookup. */
+  artist_slug: string | null;
+  /** First style label from tbl_artwork_style, for client-side filtering. */
+  style: string | null;
+  /** First theme label from tbl_artwork_theme. */
+  theme: string | null;
   image: string | null;
   available: boolean;
   price_on_request: boolean;
