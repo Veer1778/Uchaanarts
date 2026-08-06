@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Heart, ShoppingCart } from "lucide-react";
+import { Heart, ShoppingCart, Mail } from "lucide-react";
 import type { Artwork } from "@/lib/data";
-import { formatINR, artistBySlug } from "@/lib/data";
+import { formatArtworkPrice, isPurchasable, artistBySlug } from "@/lib/data";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 
@@ -15,12 +15,21 @@ export default function ArtworkCard({
   artwork: Artwork;
   artistName?: string;
 }) {
-  const name = artistName ?? artistBySlug(artwork.artist)?.name ?? artwork.artist;
+  // Prefer the explicit prop, then the name the API resolved, then the demo
+  // lookup. Without the middle case, live artworks fall back to showing the
+  // raw slug because they are not in the demo artists array.
+  const name =
+    artistName ??
+    artwork.artistName ??
+    artistBySlug(artwork.artist)?.name ??
+    artwork.artist;
+
   const router = useRouter();
   const { add } = useCart();
   const { has, toggle } = useWishlist();
   const wished = has(artwork.slug);
   const href = `/art/${artwork.slug}`;
+  const buyable = isPurchasable(artwork);
 
   const stop = (fn: () => void) => (e: React.MouseEvent) => {
     e.preventDefault();
@@ -68,8 +77,12 @@ export default function ArtworkCard({
 
         <div className="mt-2 flex items-end justify-between gap-2">
           <p className="text-[11px] text-muted sm:text-xs">{artwork.size}</p>
-          <p className="whitespace-nowrap text-xs font-semibold text-signal sm:text-sm">
-            {formatINR(artwork.price)}
+          <p
+            className={`whitespace-nowrap text-xs font-semibold sm:text-sm ${
+              buyable ? "text-signal" : "text-muted"
+            }`}
+          >
+            {formatArtworkPrice(artwork)}
           </p>
         </div>
 
@@ -98,22 +111,34 @@ export default function ArtworkCard({
           >
             <Heart size={16} fill={wished ? "currentColor" : "none"} />
           </button>
-          <button
-            onClick={stop(() =>
-              add({
-                slug: artwork.slug,
-                title: artwork.title,
-                artistName: name,
-                image: artwork.image,
-                price: artwork.price,
-                wooId: artwork.wooId,
-              })
-            )}
-            aria-label={`Add ${artwork.title} to cart`}
-            className="flex flex-1 items-center justify-center border border-line py-2.5 text-muted transition-colors hover:border-signal hover:bg-signal hover:text-white"
-          >
-            <ShoppingCart size={16} />
-          </button>
+          {buyable ? (
+            <button
+              onClick={stop(() =>
+                add({
+                  slug: artwork.slug,
+                  title: artwork.title,
+                  artistName: name,
+                  image: artwork.image,
+                  price: artwork.price,
+                  wooId: artwork.wooId,
+                })
+              )}
+              aria-label={`Add ${artwork.title} to cart`}
+              className="flex flex-1 items-center justify-center border border-line py-2.5 text-muted transition-colors hover:border-signal hover:bg-signal hover:text-white"
+            >
+              <ShoppingCart size={16} />
+            </button>
+          ) : (
+            // Price-on-request or sold. Adding it to the cart would create a
+            // zero-rupee line item, so send the buyer to the enquiry form.
+            <button
+              onClick={stop(() => router.push(href))}
+              aria-label={`Enquire about ${artwork.title}`}
+              className="flex flex-1 items-center justify-center border border-line py-2.5 text-muted transition-colors hover:border-signal hover:bg-signal hover:text-white"
+            >
+              <Mail size={16} />
+            </button>
+          )}
         </div>
       </div>
     </div>
