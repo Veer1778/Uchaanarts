@@ -246,21 +246,53 @@ function qs<T extends object>(params: T): string {
   return parts.length ? `?${parts.join('&')}` : '';
 }
 
+/** Seconds Next.js caches a GET response. Override per call if needed. */
+export const REVALIDATE = 300;
+
 async function request<T>(path: string, init?: RequestInit): Promise<Envelope<T>> {
-  const res = await fetch(`${BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-    ...init,
-  });
+  const url = `${BASE}${path}`;
+
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        // Some shared hosts run a WAF that 403s requests with no User-Agent,
+        // which is what bare server-side fetch sends. Cheap insurance.
+        'User-Agent': 'uchaanarts-frontend/1.0',
+      },
+      // GETs are cached and revalidated; POSTs always hit the origin.
+      next: init?.method === 'POST' ? undefined : { revalidate: REVALIDATE },
+      ...init,
+    });
+  } catch (e) {
+    // Network-level: TLS chain, DNS, timeout, refused. The original message
+    // is preserved because it is the only thing that identifies the cause.
+    const err = e as Error & { cause?: { code?: string } };
+    throw new ApiError(
+      `Network failure calling ${url}: ${err.message}` +
+        (err.cause?.code ? ` (${err.cause.code})` : ''),
+      0
+    );
+  }
+
+  const text = await res.text();
 
   let body: Envelope<T>;
   try {
-    body = await res.json();
+    body = JSON.parse(text);
   } catch {
-    throw new ApiError(`Bad JSON from ${path} (HTTP ${res.status})`, res.status);
+    // Include a slice of the body: an HTML error page or WAF block reads
+    // very differently from a truncated JSON response.
+    throw new ApiError(
+      `Non-JSON from ${url} (HTTP ${res.status}): ${text.slice(0, 200)}`,
+      res.status
+    );
   }
 
   if (!res.ok || !body.success) {
-    throw new ApiError(body?.error?.message ?? `Request failed: ${path}`, res.status);
+    throw new ApiError(body?.error?.message ?? `Request failed: ${url}`, res.status);
   }
   return body;
 }
