@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { motion } from "motion/react";
-import { Frame, Heart, Eye, Share2, ShoppingCart } from "lucide-react";
+import { Frame, Heart, Eye, Share2, ShoppingCart, Mail } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import type { Artwork } from "@/lib/data";
+import { formatArtworkPrice, isPurchasable } from "@/lib/data";
 import ArtOnWall from "./ArtOnWall";
 
 export default function ProductBuyBar({
@@ -22,6 +23,7 @@ export default function ProductBuyBar({
   const [shared, setShared] = useState(false);
   const [wallOpen, setWallOpen] = useState(false);
   const wished = has(artwork.slug);
+  const buyable = isPurchasable(artwork);
 
   const cartItem = {
     slug: artwork.slug,
@@ -90,25 +92,47 @@ export default function ProductBuyBar({
         <Share2 size={15} /> {shared ? "Copied" : ""}
       </button>
 
-      <button
-        onClick={() => add(cartItem)}
-        aria-label="Add to cart"
-        className={iconBtn}
-      >
-        <ShoppingCart size={15} />
-      </button>
+      {buyable ? (
+        <>
+          <button
+            onClick={() => add(cartItem)}
+            aria-label="Add to cart"
+            className={iconBtn}
+          >
+            <ShoppingCart size={15} />
+          </button>
 
-      <motion.button
-        whileTap={{ scale: 0.98 }}
-        onClick={async () => {
-          add(cartItem);
-          await checkout();
-        }}
-        disabled={checkingOut}
-        className="flex items-center gap-2 bg-signal px-7 py-2.5 text-xs font-semibold tracking-[0.16em] text-white transition-colors hover:bg-signal-dark disabled:opacity-60"
-      >
-        {checkingOut ? "…" : "Buy Now"}
-      </motion.button>
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            onClick={async () => {
+              add(cartItem);
+              await checkout();
+            }}
+            disabled={checkingOut}
+            className="flex items-center gap-2 bg-signal px-7 py-2.5 text-xs font-semibold tracking-[0.16em] text-white transition-colors hover:bg-signal-dark disabled:opacity-60"
+          >
+            {checkingOut ? "…" : "Buy Now"}
+          </motion.button>
+        </>
+      ) : (
+        // Price-on-request or already sold. Checkout would produce a
+        // zero-rupee order, so route the buyer to an enquiry instead.
+        <>
+          <span className="px-1 text-xs font-semibold tracking-[0.1em] text-muted">
+            {formatArtworkPrice(artwork)}
+          </span>
+          <a
+            href={`mailto:info@uchaanarts.com?subject=${encodeURIComponent(
+              `Enquiry: ${artwork.title}`
+            )}&body=${encodeURIComponent(
+              `I'd like to enquire about "${artwork.title}" by ${artistName}.`
+            )}`}
+            className="flex items-center gap-2 bg-signal px-7 py-2.5 text-xs font-semibold tracking-[0.16em] text-white transition-colors hover:bg-signal-dark"
+          >
+            <Mail size={15} /> Enquire
+          </a>
+        </>
+      )}
     </div>
 
       <ArtOnWall
