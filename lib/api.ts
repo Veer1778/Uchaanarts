@@ -2,20 +2,17 @@
  * Uchaan Arts API client
  *
  * Drop at: src/lib/api.ts
- * Set VITE_API_URL=https://uchaanarts.com/api in your .env, and add the same
- * value in Vercel under Settings -> Environment Variables for Production,
- * Preview, and Development. Vite only exposes vars prefixed with VITE_.
  *
- * If this is Next.js, use NEXT_PUBLIC_API_URL and swap the import.meta line
- * below for process.env.NEXT_PUBLIC_API_URL.
+ * Set NEXT_PUBLIC_API_URL=https://uchaanarts.com/api in .env.local, and add
+ * the same value in Vercel under Settings -> Environment Variables for
+ * Production, Preview, and Development. Next.js only exposes vars prefixed
+ * with NEXT_PUBLIC_ to the browser.
  *
  * Every component should import from here. Nothing else should call fetch().
  * When you delete the demo data, this file is the only thing that changes.
  */
 
-const BASE =
-  (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL) ||
-  'https://uchaanarts.com/api';
+const BASE = process.env.NEXT_PUBLIC_API_URL || 'https://uchaanarts.com/api';
 
 // ---------------------------------------------------------------
 // Response envelope
@@ -221,9 +218,14 @@ export class ApiError extends Error {
   }
 }
 
-function qs(params: Record<string, unknown>): string {
+/**
+ * Generic rather than Record<string, unknown>: interfaces like ArtworkQuery
+ * have no implicit index signature, so they are not assignable to Record.
+ * Object.entries accepts any object, so a generic constraint is enough.
+ */
+function qs<T extends object>(params: T): string {
   const parts: string[] = [];
-  for (const [key, value] of Object.entries(params)) {
+  for (const [key, value] of Object.entries(params) as [string, unknown][]) {
     if (value === undefined || value === null || value === '') continue;
     if (Array.isArray(value)) {
       if (value.length === 0) continue;
