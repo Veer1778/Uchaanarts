@@ -1,80 +1,75 @@
-// app/api/debug/route.ts
+// app/debug/route.ts   (or app/api/debug/route.ts — wherever yours lives)
 //
-// Temporary diagnostic. Visit https://uchaanarts.vercel.app/api/debug
+// v2: calls lib/cms.ts, not the API directly. The previous version proved the
+// API is reachable; this proves whether cms.ts is the new code and whether its
+// mappers work.
 //
-// This runs on Vercel's server, which is what actually calls the CMS during
-// rendering. If the browser can reach the API but this cannot, the answer
-// will be in `error` below.
-//
-// DELETE THIS FILE once the integration works.
+// DELETE once resolved.
+
+import { getArtworks, getArtists, getPosts, getExhibitions } from "@/lib/cms";
+import {
+  artworks as demoArtworks,
+  posts as demoPosts,
+  exhibitions as demoExhibitions,
+} from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
-const BASE = process.env.NEXT_PUBLIC_API_URL || "https://uchaanarts.com/api";
+/**
+ * The demo dataset uses real uchaanarts titles, so "looks plausible" proves
+ * nothing. Compare against the actual demo slugs instead.
+ */
+const demoArtworkSlugs = new Set(demoArtworks.map((w) => w.slug));
+const demoPostSlugs = new Set(demoPosts.map((p) => p.slug));
+const demoExhibitionSlugs = new Set(demoExhibitions.map((e) => e.slug));
 
-async function probe(path: string) {
-  const url = `${BASE}${path}`;
+async function check<T extends { slug: string }>(
+  name: string,
+  fn: () => Promise<T[]>,
+  demoSlugs: Set<string>,
+  demoCount: number
+) {
   const started = Date.now();
   try {
-    const res = await fetch(url, {
-      cache: "no-store",
-      headers: { Accept: "application/json" },
-    });
-    const text = await res.text();
-    let parsed: unknown = null;
-    let parseError: string | null = null;
-    try {
-      parsed = JSON.parse(text);
-    } catch (e) {
-      parseError = e instanceof Error ? e.message : String(e);
-    }
+    const items = await fn();
+    const fromDemo = items.length > 0 && items.every((i) => demoSlugs.has(i.slug));
     return {
-      url,
-      ok: res.ok,
-      status: res.status,
-      contentType: res.headers.get("content-type"),
+      name,
       ms: Date.now() - started,
-      bodyLength: text.length,
-      // First 300 chars, so an HTML error page or WAF block is visible
-      bodyPreview: text.slice(0, 300),
-      parseError,
-      itemCount: Array.isArray((parsed as any)?.data)
-        ? (parsed as any).data.length
-        : null,
-      meta: (parsed as any)?.meta ?? null,
+      count: items.length,
+      demoCount,
+      source: fromDemo ? "DEMO FALLBACK" : "LIVE API",
+      firstThree: items.slice(0, 3).map((i) => ({
+        slug: i.slug,
+        title: (i as any).title ?? (i as any).name,
+      })),
     };
   } catch (e) {
-    // Network-level failure: TLS, DNS, timeout, connection refused
-    const err = e as Error & { cause?: { code?: string; message?: string } };
     return {
-      url,
-      ok: false,
+      name,
       ms: Date.now() - started,
-      error: err.message,
-      errorName: err.name,
-      causeCode: err.cause?.code ?? null,
-      causeMessage: err.cause?.message ?? null,
+      source: "THREW",
+      error: e instanceof Error ? e.message : String(e),
+      stack: e instanceof Error ? e.stack?.split("\n").slice(0, 5) : null,
     };
   }
 }
 
 export async function GET() {
   const results = await Promise.all([
-    probe("/artworks?per_page=3"),
-    probe("/blogs?per_page=3"),
-    probe("/exhibitions?type=upcoming&per_page=3"),
-    probe("/artists?per_page=3"),
-    probe("/categories"),
+    check("getArtworks", getArtworks, demoArtworkSlugs, demoArtworks.length),
+    check("getPosts", getPosts, demoPostSlugs, demoPosts.length),
+    check("getExhibitions", getExhibitions, demoExhibitionSlugs, demoExhibitions.length),
+    check("getArtists", getArtists, new Set(), 0),
   ]);
 
   return Response.json(
     {
-      note: "Delete app/api/debug/route.ts once this is resolved.",
+      note: "source LIVE API = working. DEMO FALLBACK = the catch fired. THREW = error leaked.",
+      hint: "If every source is DEMO FALLBACK with no error logged, lib/cms.ts is still the old WordPress version.",
       env: {
-        NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL ?? "(not set, using fallback)",
-        resolvedBase: BASE,
-        nodeVersion: process.version,
-        vercelEnv: process.env.VERCEL_ENV ?? "(not on Vercel)",
+        NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL ?? "(not set)",
+        NEXT_PUBLIC_WP_URL: process.env.NEXT_PUBLIC_WP_URL ?? "(not set)",
       },
       results,
     },
