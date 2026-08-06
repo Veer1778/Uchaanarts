@@ -161,16 +161,17 @@ export interface EventItem {
 }
 
 export interface Slide {
-  slider_id?: number;
-  slider_title?: string;
-  slider_image_name?: string;
-  slider_link?: string;
+  id: number;
+  title: string | null;
+  image: string | null;
+  link: string | null;
+  label: string | null;
 }
 
 export interface HomePayload {
-  sliders: any[];
-  banners: any[];
-  shop_by_category: any[];
+  sliders: Slide[];
+  banners: Slide[];
+  shop_by_category: Slide[];
   featured_artworks: Artwork[];
   featured_artists: Artist[];
   categories: Category[];
