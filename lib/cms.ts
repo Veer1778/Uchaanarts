@@ -91,8 +91,11 @@ function toArtwork(w: ApiArtwork, cats: Map<number, string>): Artwork {
     available: w.available,
     featured: w.featured,
     style: w.style ?? undefined,
+    theme: w.theme ?? undefined,
+    mediumTerm: w.medium_label ?? undefined,
+    material: w.material_label ?? undefined,
     artistName: w.artist_name ?? undefined,
-    description: w.description ?? w.short_description ?? "",
+    description: stripHtml(w.description ?? w.short_description ?? ""),
     itemId: w.id,
   };
 }
@@ -108,22 +111,25 @@ function toArtist(a: ApiArtist, location = ""): Artist {
     slug: a.slug,
     name: a.name,
     location,
-    bio: a.bio ?? "",
+    // CKEditor stores markup, so <p> tags leak straight into the page.
+    bio: stripHtml(a.bio ?? ""),
     image: a.image ?? PLACEHOLDER,
     featured: a.featured,
   };
 }
 
-function toExhibition(e: ApiExhibition): Exhibition {
+function toExhibition(e: ApiExhibition, status: "upcoming" | "past"): Exhibition {
   return {
     slug: e.slug,
-    title: e.title,
+    title: e.title.trim(),
     artistLine: "",
     venue: e.venue ?? "",
     start: e.start_date ?? "",
     end: e.end_date ?? "",
     image: e.image ?? e.flyer ?? PLACEHOLDER,
     blurb: stripHtml(e.description ?? "").slice(0, 240),
+    status,
+    dateText: e.date_text ?? undefined,
   };
 }
 
@@ -171,7 +177,9 @@ function splitParagraphs(html: string): string[] {
 export async function getArtworks(): Promise<Artwork[]> {
   try {
     const [{ items }, cats] = await Promise.all([
-      api.artworks({ per_page: 100, sort: "new_old" }),
+      // light=1 trims each row and lifts the page cap to 3000, so the whole
+      // catalogue arrives in one request and the grid can filter instantly.
+      api.artworks({ light: true, per_page: 3000, sort: "new_old" }),
       categoryNames(),
     ]);
     if (items.length) return items.map((w) => toArtwork(w, cats));
@@ -241,8 +249,11 @@ export async function getExhibitions(): Promise<Exhibition[]> {
       api.exhibitions({ type: "upcoming", per_page: 30 }),
       api.exhibitions({ type: "past", per_page: 30 }),
     ]);
-    const all = [...upcoming.items, ...past.items];
-    if (all.length) return all.map(toExhibition);
+    const all = [
+      ...upcoming.items.map((e) => toExhibition(e, "upcoming")),
+      ...past.items.map((e) => toExhibition(e, "past")),
+    ];
+    if (all.length) return all;
   } catch (e) {
     console.error("[cms] getExhibitions failed:", e);
   }
