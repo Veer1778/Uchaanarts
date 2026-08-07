@@ -14,9 +14,21 @@ const fmt = (d: string) =>
 
 export default async function ExhibitionsPage() {
   const all = await getExhibitions();
+
+  // The CMS classifies exhibitions itself, and most rows have no machine
+  // readable start/end date at all — only free text like "23rd to 26th April,
+  // 2026". Comparing new Date("") produces Invalid Date, which is neither
+  // >= nor < now, so date maths silently dropped every exhibition from both
+  // lists. Trust `status`, and fall back to dates only when it is missing.
   const now = new Date();
-  const upcoming = all.filter((e) => new Date(e.end) >= now);
-  const past = all.filter((e) => new Date(e.end) < now);
+  const isPast = (e: (typeof all)[number]) => {
+    if (e.status) return e.status === "past";
+    const end = new Date(e.end);
+    return !Number.isNaN(end.getTime()) && end < now;
+  };
+
+  const upcoming = all.filter((e) => !isPast(e));
+  const past = all.filter(isPast);
 
   const Card = ({ e, index }: { e: (typeof all)[number]; index: number }) => (
     <Reveal delay={index * 0.06}>
