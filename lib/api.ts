@@ -61,6 +61,10 @@ export interface Artwork {
   style: string | null;
   /** First theme label from tbl_artwork_theme. */
   theme: string | null;
+  /** Label from tbl_artwork_medium (distinct from the free-text `medium`). */
+  medium_label: string | null;
+  /** Label from tbl_artwork_material. */
+  material_label: string | null;
   image: string | null;
   available: boolean;
   price_on_request: boolean;
@@ -210,6 +214,8 @@ export interface ArtworkQuery {
   q?: string;
   featured?: boolean;
   include_sold?: boolean;
+  /** Trimmed payload + page sizes up to 3000. Use for the full catalogue. */
+  light?: boolean;
 }
 
 // ---------------------------------------------------------------
