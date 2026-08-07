@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Search, Bookmark, Menu, X, ShoppingBag } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { useAuthOptional } from "@/context/AuthContext";
+import SearchOverlay from "./SearchOverlay";
 
 /**
  * Header — letterspaced UCHAAN / ARTS wordmark on the left, editorial nav
@@ -33,8 +34,23 @@ export default function Navbar() {
   const auth = useAuthOptional();
   const user = auth?.user ?? null;
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  // Cmd/Ctrl+K opens search from anywhere, the convention people expect.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   return (
+    <>
+    <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
     <header className="sticky top-0 z-40 bg-paper/95 backdrop-blur">
       <div className="mx-auto flex h-[76px] max-w-[1400px] items-stretch gap-8 px-5 sm:px-8 lg:px-10">
         {/* Wordmark — the header rule starts after it, as in the reference */}
@@ -73,13 +89,14 @@ export default function Navbar() {
 
         {/* Utilities */}
         <div className="flex shrink-0 items-center gap-4">
-          <Link
-            href="/art-gallery"
+          <button
+            type="button"
+            onClick={() => setSearchOpen(true)}
             aria-label="Search artworks"
-            className="hidden text-ink transition-colors hover:text-signal sm:block"
+            className="text-ink transition-colors hover:text-signal"
           >
             <Search size={18} strokeWidth={1.5} />
-          </Link>
+          </button>
 
           <Link
             href="/wishlist"
@@ -161,5 +178,6 @@ export default function Navbar() {
         )}
       </AnimatePresence>
     </header>
+    </>
   );
 }
