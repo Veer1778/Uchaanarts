@@ -49,8 +49,14 @@ export type Filters = {
   priceMax: number;
   size: "" | "S" | "M" | "L";
   orientation: "" | "Portrait" | "Landscape" | "Square";
-  /** Style / theme taxonomy from uchaanarts.com */
+  /** Style taxonomy from uchaanarts.com */
   style: string;
+  /** Theme taxonomy (Spiritual, Floral, Architectural, ...) */
+  theme: string;
+  /** Medium taxonomy (Oil, Acrylic, Watercolors, ...) */
+  mediumTerm: string;
+  /** Material taxonomy (Canvas, Paper, Wood, ...) */
+  material: string;
   /** Traditional folk-art form */
   folkForm: string;
 };
@@ -63,6 +69,9 @@ export const defaultFilters: Filters = {
   size: "",
   orientation: "",
   style: "All",
+  theme: "All",
+  mediumTerm: "All",
+  material: "All",
   folkForm: "All",
 };
 
@@ -72,6 +81,9 @@ export function activeFilterCount(f: Filters): number {
   if (f.category !== "All") n++;
   if (f.artist !== "All") n++;
   if (f.style !== "All") n++;
+  if (f.theme !== "All") n++;
+  if (f.mediumTerm !== "All") n++;
+  if (f.material !== "All") n++;
   if (f.folkForm !== "All") n++;
   if (f.size) n++;
   if (f.orientation) n++;
@@ -85,6 +97,9 @@ export default function FilterSidebar({
   categories,
   artists,
   styles,
+  themes = [],
+  mediums = [],
+  materials = [],
   folkForms,
   onReset,
 }: {
@@ -93,12 +108,58 @@ export default function FilterSidebar({
   categories: string[];
   artists: { slug: string; name: string }[];
   styles: string[];
+  themes?: string[];
+  mediums?: string[];
+  materials?: string[];
   folkForms: string[];
   onReset: () => void;
 }) {
   const [styleQuery, setStyleQuery] = useState("");
   const setField = <K extends keyof Filters>(k: K, v: Filters[K]) =>
     setFilters({ ...filters, [k]: v });
+
+  /**
+   * Theme, Medium and Material all render the same way: a scrollable radio
+   * list capped in height so one long taxonomy cannot push the rest of the
+   * sidebar out of reach.
+   */
+  const TermSection = ({
+    title,
+    field,
+    options,
+  }: {
+    title: string;
+    field: "theme" | "mediumTerm" | "material";
+    options: string[];
+  }) =>
+    options.length === 0 ? null : (
+      <Section title={title}>
+        <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
+          <label className="flex cursor-pointer items-center gap-2 text-sm">
+            <input
+              type="radio"
+              name={field}
+              checked={filters[field] === "All"}
+              onChange={() => setField(field, "All")}
+              className="accent-signal"
+            />
+            <span>All</span>
+          </label>
+          {options.map((o) => (
+            <label key={o} className="flex cursor-pointer items-center gap-2 text-sm">
+              <input
+                type="radio"
+                name={field}
+                checked={filters[field] === o}
+                onChange={() => setField(field, o)}
+                className="accent-signal"
+              />
+              <span>{o}</span>
+            </label>
+          ))}
+        </div>
+      </Section>
+    );
 
   return (
     <aside aria-label="Filter artworks" className="w-full">
@@ -274,6 +335,10 @@ export default function FilterSidebar({
           </div>
         </div>
       </Section>
+
+      <TermSection title="Theme" field="theme" options={themes} />
+      <TermSection title="Medium" field="mediumTerm" options={mediums} />
+      <TermSection title="Material" field="material" options={materials} />
 
       <Section title="Folk Art Form">
         <div className="space-y-2">
