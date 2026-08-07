@@ -7,7 +7,7 @@ import Reveal from "@/components/Reveal";
 import MasonryCards from "@/components/MasonryCards";
 import ProductBuyBar from "@/components/ProductBuyBar";
 import { getArtwork, getArtworks, getArtist, getArtists } from "@/lib/cms";
-import { formatINR, namesMap } from "@/lib/data";
+import { formatArtworkPrice, namesMap } from "@/lib/data";
 
 export async function generateMetadata({
   params,
@@ -112,7 +112,7 @@ export default async function ArtworkPage({
           <Reveal>
             <div>
               <h1 className="font-display text-3xl leading-tight sm:text-4xl">{artwork.title}</h1>
-              <p className="mt-2 text-2xl text-signal">{formatINR(artwork.price)}</p>
+              <p className="mt-2 text-2xl text-signal">{formatArtworkPrice(artwork)}</p>
 
               <div className="mt-5">
                 <ProductBuyBar artwork={artwork} artistName={artistName} views={viewsFor(slug)} />
