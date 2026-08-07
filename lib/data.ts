@@ -45,6 +45,12 @@ export type Artwork = {
   wooId?: number;
   /** Style / theme, matching the taxonomy on uchaanarts.com */
   style?: string;
+  /** Theme taxonomy (Spiritual, Floral, Architectural, ...) */
+  theme?: string;
+  /** Medium taxonomy (Oil, Acrylic, Watercolors, ...) */
+  mediumTerm?: string;
+  /** Material taxonomy (Canvas, Paper, Wood, ...) */
+  material?: string;
   /** Traditional folk-art form, where applicable */
   folkForm?: string;
   description: string;
@@ -67,10 +73,17 @@ export type Exhibition = {
   title: string;
   artistLine: string;
   venue: string;
-  start: string; // ISO date
+  start: string; // ISO date, may be empty when the CMS only has free text
   end: string;
   image: string;
   blurb: string;
+  /**
+   * The CMS classifies exhibitions explicitly. Trust this over date maths:
+   * most rows have null start/end and only a human-written date string.
+   */
+  status?: "upcoming" | "past";
+  /** Free-text date from the CMS, e.g. "23rd to 26th April, 2026" */
+  dateText?: string;
 };
 
 export type Post = {
