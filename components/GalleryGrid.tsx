@@ -3,14 +3,12 @@
 import { useMemo, useState, useEffect } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import type { Artwork, Artist } from "@/lib/data";
-import { categories } from "@/lib/data";
 import MasonryCards from "./MasonryCards";
 import FilterSidebar, {
   defaultFilters,
   activeFilterCount,
   type Filters,
 } from "./FilterSidebar";
-import { styles as allStyles, folkForms as allFolkForms } from "@/lib/data";
 import { SlidersHorizontal, X, SearchX } from "lucide-react";
 import EmptyState from "./ui/EmptyState";
 
@@ -72,14 +70,51 @@ export default function GalleryGrid({
 
   const names = Object.fromEntries(artists.map((a) => [a.slug, a.name]));
 
+  // Filter options come from what is actually in the catalogue. The old
+  // hardcoded lists in lib/data.ts were seeded from the demo set, so several
+  // options matched nothing and returned an empty grid.
+  const uniq = (vals: (string | undefined)[]) =>
+    Array.from(new Set(vals.filter((v): v is string => !!v && v.trim() !== "")))
+      .sort((a, b) => a.localeCompare(b));
+
+  const options = useMemo(
+    () => ({
+      categories: uniq(artworks.map((w) => w.category as string)),
+      styles: uniq(artworks.map((w) => w.style)),
+      themes: uniq(artworks.map((w) => w.theme)),
+      mediums: uniq(artworks.map((w) => w.mediumTerm)),
+      materials: uniq(artworks.map((w) => w.material)),
+      folkForms: uniq(artworks.map((w) => w.folkForm)),
+    }),
+    [artworks]
+  );
+
+  // Only artists who actually have work in the catalogue.
+  const artistsWithWork = useMemo(() => {
+    const present = new Set(artworks.map((w) => w.artist));
+    return artists.filter((a) => present.has(a.slug));
+  }, [artworks, artists]);
+
   const filtered = useMemo(() => {
     let list = artworks.filter((w) => {
       if (filters.category !== "All" && w.category !== filters.category) return false;
       if (filters.artist !== "All" && w.artist !== filters.artist) return false;
-      if (w.price < filters.priceMin || w.price > filters.priceMax) return false;
+      // Price-on-request pieces have price 0. Only exclude them once the
+      // buyer has actually narrowed the price range, otherwise a fifth of
+      // the catalogue vanishes by default.
+      const priceFiltered =
+        filters.priceMin !== defaultFilters.priceMin ||
+        filters.priceMax !== defaultFilters.priceMax;
+      if (priceFiltered) {
+        if (w.priceOnRequest) return false;
+        if (w.price < filters.priceMin || w.price > filters.priceMax) return false;
+      }
       if (filters.size && sizeBucket(w) !== filters.size) return false;
       if (filters.orientation && orientationOf(w) !== filters.orientation) return false;
       if (filters.style !== "All" && w.style !== filters.style) return false;
+      if (filters.theme !== "All" && w.theme !== filters.theme) return false;
+      if (filters.mediumTerm !== "All" && w.mediumTerm !== filters.mediumTerm) return false;
+      if (filters.material !== "All" && w.material !== filters.material) return false;
       if (filters.folkForm !== "All" && w.folkForm !== filters.folkForm) return false;
       return true;
     });
@@ -92,18 +127,26 @@ export default function GalleryGrid({
     <FilterSidebar
       filters={filters}
       setFilters={setFilters}
-      categories={[...categories]}
-      artists={artists.map((a) => ({ slug: a.slug, name: a.name }))}
-      styles={[...allStyles]}
-      folkForms={[...allFolkForms]}
+      categories={options.categories}
+      artists={artistsWithWork.map((a) => ({ slug: a.slug, name: a.name }))}
+      styles={options.styles}
+      themes={options.themes}
+      mediums={options.mediums}
+      materials={options.materials}
+      folkForms={options.folkForms}
       onReset={() => setFilters(defaultFilters)}
     />
   );
 
   return (
     <div className="grid gap-10 lg:grid-cols-[240px_1fr]">
-      {/* Desktop sidebar */}
-      <div className="hidden lg:block">{sidebar}</div>
+      {/* Desktop sidebar. Sticks to the viewport and scrolls internally, so
+          the artwork grid is the only thing that moves with the page. */}
+      <div className="hidden lg:block">
+        <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto pr-2">
+          {sidebar}
+        </div>
+      </div>
 
       {/* Mobile slide-over */}
       <AnimatePresence>
