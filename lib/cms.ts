@@ -83,7 +83,7 @@ function toArtwork(w: ApiArtwork, cats: Map<number, string>): Artwork {
     image: w.image ?? PLACEHOLDER,
     medium: w.medium ?? "",
     category: categoryName as Artwork["category"],
-    size: w.size_label ?? formatSize(w),
+    size: cleanSize(w),
     // Price-on-request pieces get 0. Components should check
     // priceOnRequest before rendering a number.
     price: w.price ?? 0,
@@ -100,16 +100,46 @@ function toArtwork(w: ApiArtwork, cats: Map<number, string>): Artwork {
   };
 }
 
-function formatSize(w: ApiArtwork): string {
-  const { width, height } = w.dimensions;
-  if (!width && !height) return "";
-  return `${width ?? "?"} x ${height ?? "?"} in`;
+/**
+ * Artwork dimensions, or "" when the CMS has nothing usable.
+ *
+ * The CMS stores blanks, "0", and stray units in these columns, so the naive
+ * version produced strings like "22 x  in" and "46 x  in" on the live site.
+ * Anything that isn't a real measurement on BOTH axes is dropped rather than
+ * half-rendered.
+ */
+function cleanSize(w: ApiArtwork): string {
+  // A human-entered label wins, but only if it isn't itself a broken fragment.
+  const label = (w.size_label ?? "").trim();
+  if (label && !/^[\s x×·in\-]*$/i.test(label) && !/\bx\s*(in)?\s*$/i.test(label)) {
+    return label;
+  }
+
+  const num = (v: string | null) => {
+    if (!v) return null;
+    const n = parseFloat(String(v).replace(/[^0-9.]/g, ""));
+    return Number.isFinite(n) && n > 0 ? String(n) : null;
+  };
+
+  const width = num(w.dimensions.width);
+  const height = num(w.dimensions.height);
+  const depth = num(w.dimensions.depth);
+
+  // One dimension alone is meaningless for a painting, so require both.
+  if (!width || !height) return "";
+
+  const unit = w.dimensions.unit || "in";
+  return depth
+    ? `${width} × ${height} × ${depth} ${unit}`
+    : `${width} × ${height} ${unit}`;
 }
 
 function toArtist(a: ApiArtist, location = ""): Artist {
   return {
     slug: a.slug,
-    name: a.name,
+    // CMS names carry leading spaces and doubled inner spaces from the admin
+    // forms, e.g. " Aashima  Mehrotra".
+    name: a.name.replace(/\s+/g, " ").trim(),
     location,
     // CKEditor stores markup, so <p> tags leak straight into the page.
     bio: stripHtml(a.bio ?? ""),
@@ -221,8 +251,17 @@ export async function getArtwork(slug: string): Promise<Artwork | undefined> {
 
 export async function getArtists(): Promise<Artist[]> {
   try {
-    const { items } = await api.artists({ per_page: 200 });
-    if (items.length) return items.map((a) => toArtist(a));
+    const { items } = await api.artists({ per_page: 300 });
+    if (items.length) {
+      const mapped = items.map((a) => toArtist(a));
+      // Featured first, then alphabetical. The CMS returns creation order,
+      // which puts the gallery's headline artists arbitrarily deep in a
+      // 257-name list.
+      return mapped.sort((a, b) => {
+        if (a.featured !== b.featured) return a.featured ? -1 : 1;
+        return a.name.localeCompare(b.name);
+      });
+    }
   } catch (e) {
     console.error("[cms] getArtists failed:", e);
   }
