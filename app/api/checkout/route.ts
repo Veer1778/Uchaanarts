@@ -1,27 +1,48 @@
+// app/api/checkout/route.ts
+//
+// Rewritten off WooCommerce.
+//
+// Razorpay is not wired up yet, so this falls back to the gallery's existing
+// sales channel: a prefilled WhatsApp enquiry. That keeps the buy path working
+// rather than dead-ending, and it is what the client uses today anyway.
+//
+// When Razorpay lands, this becomes: POST the line items to the CMS, let it
+// price them server-side and create the order, then return the Razorpay order
+// id for the browser to open. Prices must never come from the client.
+
 import { NextResponse } from "next/server";
-import { buildCheckoutUrl, wooEnabled } from "@/lib/woocommerce";
 
-// POST /api/checkout
-// body: { lines: [{ wooId?, quantity, title }] }
+const WHATSAPP_NUMBER = "918860277388";
+
+type Line = {
+  /** tbl_item.item_id. Named itemId now that wooId is gone. */
+  itemId?: number;
+  quantity: number;
+  title: string;
+};
+
 export async function POST(req: Request) {
-  const body = await req.json();
-  const lines: { wooId?: number; quantity: number; title: string }[] = body.lines ?? [];
-
-  const ids = lines.map((l) => l.wooId).filter((id): id is number => typeof id === "number");
-
-  // WooCommerce configured and every line maps to a product -> hosted checkout.
-  if (wooEnabled && ids.length === lines.length && lines.length > 0) {
-    const url = buildCheckoutUrl(ids);
-    if (url) return NextResponse.json({ checkoutUrl: url });
+  let lines: Line[] = [];
+  try {
+    const body = await req.json();
+    lines = Array.isArray(body?.lines) ? body.lines : [];
+  } catch {
+    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  // Fallback: WhatsApp enquiry (the gallery's current sales channel).
+  if (lines.length === 0) {
+    return NextResponse.json({ error: "Your cart is empty." }, { status: 400 });
+  }
+
   const message = encodeURIComponent(
     "Hi, I would like to purchase the following artwork(s) from Uchaan Arts:\n" +
-      lines.map((l) => `• ${l.title} x${l.quantity}`).join("\n")
+      lines
+        .map((l) => `• ${l.title}${l.quantity > 1 ? ` x${l.quantity}` : ""}`)
+        .join("\n")
   );
+
   return NextResponse.json({
-    checkoutUrl: `https://api.whatsapp.com/send?phone=918860277388&text=${message}`,
+    checkoutUrl: `https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER}&text=${message}`,
     fallback: true,
   });
 }
