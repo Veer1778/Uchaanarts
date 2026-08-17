@@ -147,6 +147,48 @@ export async function apiGoogle(credential: string): Promise<AuthResult> {
   );
 }
 
+export async function apiSignup(
+  name: string,
+  email: string,
+  password: string,
+  phone?: string
+): Promise<AuthResult> {
+  return toAuthResult(
+    await callApi<{ token: string; user: SessionUser }>("/auth/signup", {
+      method: "POST",
+      body: JSON.stringify({ name, email, password, phone }),
+    })
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Password reset
+// ---------------------------------------------------------------------------
+
+export async function apiForgotPassword(
+  email: string
+): Promise<{ ok: true; message: string } | { ok: false; error: string; status: number }> {
+  const res = await callApi<{ message: string }>("/auth/forgot", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+  if (!res.ok) return res;
+  return { ok: true, message: res.data.message };
+}
+
+export async function apiResetPassword(
+  userId: number,
+  token: string,
+  password: string
+): Promise<AuthResult> {
+  return toAuthResult(
+    await callApi<{ token: string; user: SessionUser }>("/auth/reset", {
+      method: "POST",
+      body: JSON.stringify({ user_id: userId, token, password }),
+    })
+  );
+}
+
 export async function apiFacebook(accessToken: string): Promise<AuthResult> {
   return toAuthResult(
     await callApi<{ token: string; user: SessionUser }>("/auth/facebook", {
