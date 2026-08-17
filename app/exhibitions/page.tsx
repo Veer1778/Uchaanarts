@@ -1,88 +1,324 @@
-import Image from "next/image";
-import type { Metadata } from "next";
-import Reveal from "@/components/Reveal";
-import { getExhibitions } from "@/lib/cms";
+// ---------------------------------------------------------------------------
+// Content access layer.
+//
+// Every page reads through these functions. They now pull from the CodeIgniter
+// API at NEXT_PUBLIC_API_URL and map its responses onto the types in
+// lib/data.ts, so no component or page had to change.
+//
+// If the API is unreachable, each function falls back to the demo dataset so
+// the site still renders rather than throwing a 500.
+//
+// lib/wordpress.ts, lib/wpgraphql.ts and lib/woocommerce.ts are now dead and
+// can be deleted once you've confirmed this works.
+// ---------------------------------------------------------------------------
 
-export const metadata: Metadata = {
-  title: "Exhibitions",
-  description:
-    "Upcoming and past exhibitions at Uchaan Arts galleries in Delhi and Gurgaon.",
-};
+import {
+  artworks as demoArtworks,
+  artists as demoArtists,
+  exhibitions as demoExhibitions,
+  posts as demoPosts,
+  type Artwork,
+  type Artist,
+  type Exhibition,
+  type Post,
+} from "./data";
+import {
+  api,
+  type Artwork as ApiArtwork,
+  type Artist as ApiArtist,
+  type Exhibition as ApiExhibition,
+  type BlogPost as ApiBlogPost,
+  type Category as ApiCategory,
+} from "./api";
 
-const fmt = (d: string) =>
-  new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+const PLACEHOLDER = "/placeholder.svg";
 
-export default async function ExhibitionsPage() {
-  const all = await getExhibitions();
+/** How long Next.js caches an API response, in seconds. */
+export const REVALIDATE = 300;
 
-  // The CMS classifies exhibitions itself, and most rows have no machine
-  // readable start/end date at all — only free text like "23rd to 26th April,
-  // 2026". Comparing new Date("") produces Invalid Date, which is neither
-  // >= nor < now, so date maths silently dropped every exhibition from both
-  // lists. Trust `status`, and fall back to dates only when it is missing.
-  const now = new Date();
-  const isPast = (e: (typeof all)[number]) => {
-    if (e.status) return e.status === "past";
-    const end = new Date(e.end);
-    return !Number.isNaN(end.getTime()) && end < now;
+// ---------------------------------------------------------------------------
+// Lookup caches. Module scope, so a single render pass fetches each once.
+// ---------------------------------------------------------------------------
+
+let categoryCache: Map<number, string> | null = null;
+
+async function categoryNames(): Promise<Map<number, string>> {
+  if (categoryCache) return categoryCache;
+  try {
+    const cats: ApiCategory[] = await api.categories();
+    categoryCache = new Map(cats.map((c) => [c.id, c.name]));
+  } catch {
+    categoryCache = new Map();
+  }
+  return categoryCache;
+}
+
+let blogCategoryCache: Map<number, string> | null = null;
+
+async function blogCategoryNames(): Promise<Map<number, string>> {
+  if (blogCategoryCache) return blogCategoryCache;
+  try {
+    const cats = await api.blogCategories();
+    blogCategoryCache = new Map(cats.map((c) => [c.id, c.name ?? ""]));
+  } catch {
+    blogCategoryCache = new Map();
+  }
+  return blogCategoryCache;
+}
+
+// ---------------------------------------------------------------------------
+// Mappers: API shape -> lib/data.ts shape
+// ---------------------------------------------------------------------------
+
+function toArtwork(w: ApiArtwork, cats: Map<number, string>): Artwork {
+  const categoryName =
+    w.category_ids.map((id) => cats.get(id)).find(Boolean) ?? "Painting";
+
+  return {
+    slug: w.slug,
+    title: w.name,
+    // data.ts stores the artist as a slug; the API now returns artist_slug
+    // computed with the same rule /api/artists uses, so links line up.
+    artist: w.artist_slug ?? "",
+    image: w.image ?? PLACEHOLDER,
+    medium: w.medium ?? "",
+    category: categoryName as Artwork["category"],
+    size: cleanSize(w),
+    // Price-on-request pieces get 0. Components should check
+    // priceOnRequest before rendering a number.
+    price: w.price ?? 0,
+    priceOnRequest: w.price_on_request,
+    available: w.available,
+    featured: w.featured,
+    style: w.style ?? undefined,
+    theme: w.theme ?? undefined,
+    mediumTerm: w.medium_label ?? undefined,
+    material: w.material_label ?? undefined,
+    artistName: w.artist_name ?? undefined,
+    description: stripHtml(w.description ?? w.short_description ?? ""),
+    itemId: w.id,
+  };
+}
+
+/**
+ * Artwork dimensions, or "" when the CMS has nothing usable.
+ *
+ * The CMS stores blanks, "0", and stray units in these columns, so the naive
+ * version produced strings like "22 x  in" and "46 x  in" on the live site.
+ * Anything that isn't a real measurement on BOTH axes is dropped rather than
+ * half-rendered.
+ */
+function cleanSize(w: ApiArtwork): string {
+  // A human-entered label wins, but only if it isn't itself a broken fragment.
+  const label = (w.size_label ?? "").trim();
+  if (label && !/^[\s x×·in\-]*$/i.test(label) && !/\bx\s*(in)?\s*$/i.test(label)) {
+    return label;
+  }
+
+  const num = (v: string | null) => {
+    if (!v) return null;
+    const n = parseFloat(String(v).replace(/[^0-9.]/g, ""));
+    return Number.isFinite(n) && n > 0 ? String(n) : null;
   };
 
-  const upcoming = all.filter((e) => !isPast(e));
-  const past = all.filter(isPast);
+  const width = num(w.dimensions.width);
+  const height = num(w.dimensions.height);
+  const depth = num(w.dimensions.depth);
 
-  const Card = ({ e, index }: { e: (typeof all)[number]; index: number }) => (
-    <Reveal delay={index * 0.06}>
-      <article className="group grid gap-6 border border-line md:grid-cols-[1.1fr_1fr]">
-        <div className="relative aspect-[16/10] overflow-hidden md:aspect-auto">
-          <Image
-            src={e.image}
-            alt={e.title}
-            fill
-            sizes="(max-width: 768px) 100vw, 50vw"
-            className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-          />
-        </div>
-        <div className="flex flex-col justify-center p-6 md:py-10">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-signal">
-            {fmt(e.start)} — {fmt(e.end)}
-          </p>
-          <h2 className="mt-3 font-display text-3xl">{e.title}</h2>
-          <p className="mt-1 text-sm text-muted">{e.artistLine}</p>
-          <p className="mt-4 text-sm leading-relaxed text-muted">{e.blurb}</p>
-          <p className="mt-5 text-xs uppercase tracking-[0.16em] text-ink">{e.venue}</p>
-        </div>
-      </article>
-    </Reveal>
-  );
+  // One dimension alone is meaningless for a painting, so require both.
+  if (!width || !height) return "";
 
-  return (
-    <section className="relative mx-auto max-w-6xl px-5 pt-14">
-      <div className="aura -right-40 top-0 h-80 w-80" />
-      <Reveal>
-        <h1 className="mb-12 font-display text-5xl sm:text-6xl">
-          Exhibi<span className="text-signal">tions</span>
-        </h1>
-      </Reveal>
+  const unit = w.dimensions.unit || "in";
+  return depth
+    ? `${width} × ${height} × ${depth} ${unit}`
+    : `${width} × ${height} ${unit}`;
+}
 
-      <h2 className="mb-6 text-[11px] uppercase tracking-[0.3em] text-muted">Upcoming</h2>
-      <div className="space-y-8">
-        {upcoming.length === 0 ? (
-          <p className="text-sm text-muted">New shows are being planned — check back soon.</p>
-        ) : (
-          upcoming.map((e, i) => <Card key={e.slug} e={e} index={i} />)
-        )}
-      </div>
+function toArtist(a: ApiArtist, location = ""): Artist {
+  return {
+    slug: a.slug,
+    // CMS names carry leading spaces and doubled inner spaces from the admin
+    // forms, e.g. " Aashima  Mehrotra".
+    name: a.name.replace(/\s+/g, " ").trim(),
+    location,
+    // CKEditor stores markup, so <p> tags leak straight into the page.
+    bio: stripHtml(a.bio ?? ""),
+    image: a.image ?? PLACEHOLDER,
+    featured: a.featured,
+  };
+}
 
-      {past.length > 0 && (
-        <>
-          <h2 className="mb-6 mt-20 text-[11px] uppercase tracking-[0.3em] text-muted">Past</h2>
-          <div className="space-y-8 opacity-90">
-            {past.map((e, i) => (
-              <Card key={e.slug} e={e} index={i} />
-            ))}
-          </div>
-        </>
-      )}
-    </section>
-  );
+function toExhibition(e: ApiExhibition, status: "upcoming" | "past"): Exhibition {
+  return {
+    slug: e.slug,
+    title: e.title.trim(),
+    artistLine: "",
+    venue: e.venue ?? "",
+    start: e.start_date ?? "",
+    end: e.end_date ?? "",
+    image: e.image ?? e.flyer ?? PLACEHOLDER,
+    blurb: stripHtml(e.description ?? "").slice(0, 240),
+    status,
+    dateText: e.date_text ?? undefined,
+  };
+}
+
+function toPost(p: ApiBlogPost, cats: Map<number, string>): Post {
+  return {
+    slug: p.slug,
+    title: p.title,
+    category: (cats.get(p.category_id) ?? "Art Insights") as Post["category"],
+    date: p.published_date ?? "",
+    image: p.image ?? PLACEHOLDER,
+    excerpt: stripHtml(p.short_description ?? "").slice(0, 200),
+    body: p.details ? splitParagraphs(p.details) : [],
+  };
+}
+
+function stripHtml(html: string): string {
+  return html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function splitParagraphs(html: string): string[] {
+  const blocks = html
+    .split(/<\/p>|<br\s*\/?>|\n{2,}/i)
+    .map(stripHtml)
+    .filter((s) => s.length > 0);
+  return blocks.length ? blocks : [stripHtml(html)];
+}
+
+// ---------------------------------------------------------------------------
+// Public API. Same eight exports the pages already import.
+// ---------------------------------------------------------------------------
+
+/**
+ * The gallery grid filters client-side, so it needs the full catalogue.
+ * That is ~4,800 rows, so this is capped and cached. If you later want true
+ * server-side filtering, call api.artworks() directly from the page and pass
+ * filters through instead of pulling everything.
+ */
+export async function getArtworks(): Promise<Artwork[]> {
+  try {
+    const [{ items }, cats] = await Promise.all([
+      // light=1 trims each row and lifts the page cap to 3000, so the whole
+      // catalogue arrives in one request and the grid can filter instantly.
+      api.artworks({ light: true, per_page: 3000, sort: "new_old" }),
+      categoryNames(),
+    ]);
+    if (items.length) return items.map((w) => toArtwork(w, cats));
+  } catch (e) {
+    console.error("[cms] getArtworks failed, using demo data:", e);
+  }
+  return demoArtworks;
+}
+
+export async function getFeaturedArtworks(): Promise<Artwork[]> {
+  try {
+    const [{ items }, cats] = await Promise.all([
+      api.artworks({ featured: true, per_page: 12 }),
+      categoryNames(),
+    ]);
+    if (items.length) return items.map((w) => toArtwork(w, cats));
+  } catch (e) {
+    console.error("[cms] getFeaturedArtworks failed:", e);
+  }
+  const all = await getArtworks();
+  const featured = all.filter((w) => w.featured);
+  return featured.length ? featured : all.slice(0, 8);
+}
+
+export async function getArtwork(slug: string): Promise<Artwork | undefined> {
+  try {
+    const [detail, cats] = await Promise.all([api.artwork(slug), categoryNames()]);
+    const mapped = toArtwork(detail, cats);
+    // Detail-only extras the product page can use.
+    mapped.gallery = detail.gallery;
+    mapped.description = detail.description ?? mapped.description;
+    if (detail.artist) mapped.artistName = detail.artist.name;
+    return mapped;
+  } catch (e) {
+    console.error("[cms] getArtwork failed:", e);
+  }
+  return demoArtworks.find((w) => w.slug === slug);
+}
+
+export async function getArtists(): Promise<Artist[]> {
+  try {
+    const { items } = await api.artists({ per_page: 300 });
+    if (items.length) {
+      const mapped = items.map((a) => toArtist(a));
+      // Featured first, then alphabetical. The CMS returns creation order,
+      // which puts the gallery's headline artists arbitrarily deep in a
+      // 257-name list.
+      return mapped.sort((a, b) => {
+        if (a.featured !== b.featured) return a.featured ? -1 : 1;
+        return a.name.localeCompare(b.name);
+      });
+    }
+  } catch (e) {
+    console.error("[cms] getArtists failed:", e);
+  }
+  return demoArtists;
+}
+
+export async function getArtist(slug: string): Promise<Artist | undefined> {
+  try {
+    const detail = await api.artist(slug);
+    return toArtist(
+      detail,
+      [detail.city, detail.country].filter(Boolean).join(", ")
+    );
+  } catch (e) {
+    console.error("[cms] getArtist failed:", e);
+  }
+  const all = await getArtists();
+  return all.find((a) => a.slug === slug);
+}
+
+export async function getExhibitions(): Promise<Exhibition[]> {
+  try {
+    const [upcoming, past] = await Promise.all([
+      api.exhibitions({ type: "upcoming", per_page: 30 }),
+      api.exhibitions({ type: "past", per_page: 30 }),
+    ]);
+    const all = [
+      ...upcoming.items.map((e) => toExhibition(e, "upcoming")),
+      ...past.items.map((e) => toExhibition(e, "past")),
+    ];
+    if (all.length) return all;
+  } catch (e) {
+    console.error("[cms] getExhibitions failed:", e);
+  }
+  return demoExhibitions;
+}
+
+export async function getPosts(): Promise<Post[]> {
+  try {
+    const [{ items }, cats] = await Promise.all([
+      api.blogs({ per_page: 50 }),
+      blogCategoryNames(),
+    ]);
+    if (items.length) return items.map((p) => toPost(p, cats));
+  } catch (e) {
+    console.error("[cms] getPosts failed:", e);
+  }
+  return demoPosts;
+}
+
+export async function getPost(slug: string): Promise<Post | undefined> {
+  try {
+    const [post, cats] = await Promise.all([api.blog(slug), blogCategoryNames()]);
+    return toPost(post, cats);
+  } catch (e) {
+    console.error("[cms] getPost failed:", e);
+  }
+  const all = await getPosts();
+  return all.find((p) => p.slug === slug);
 }
