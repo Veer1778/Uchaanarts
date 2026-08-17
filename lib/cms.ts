@@ -313,6 +313,9 @@ export async function getArtworkPage(slug: string): Promise<{
       if (themes?.length) artwork.theme = themes.join(", ");
       if (attrs.medium?.name) artwork.mediumTerm = attrs.medium.name;
       if (attrs.material?.name) artwork.material = attrs.material.name;
+      // Many works have no numeric dimensions but do carry a size taxonomy
+      // term, which is why the Size row was missing entirely.
+      if (attrs.size?.name && !artwork.size) artwork.size = attrs.size.name;
     }
 
     const byArtist = (detail.more_by_artist ?? []).map((w) => toArtwork(w, cats));
