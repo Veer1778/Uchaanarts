@@ -54,7 +54,9 @@ type AuthState = {
   loading: boolean;
   /** `identity` may be an email address or a registered mobile number. */
   login: (identity: string, password: string) => Promise<string | null>;
+  register: (name: string, email: string, password: string) => Promise<string | null>;
   loginWithGoogle: (credential: string) => Promise<string | null>;
+  requestPasswordReset: (email: string) => Promise<{ error?: string; message?: string }>;
   updateProfile: (patch: Partial<User>) => Promise<string | null>;
   refresh: () => Promise<void>;
   logout: () => Promise<void>;
@@ -121,6 +123,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const register = useCallback(async (name: string, email: string, password: string) => {
+    try {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
+      if (!res.ok) return await readError(res, "Could not create your account.");
+      const data = await res.json();
+      setUser(data.user ?? null);
+      return null;
+    } catch {
+      return "Could not reach the server. Check your connection.";
+    }
+  }, []);
+
+  const requestPasswordReset = useCallback(async (email: string) => {
+    try {
+      const res = await fetch("/api/auth/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) return { error: (data?.error as string) || "Could not send the reset link." };
+      return { message: (data?.message as string) || "Check your inbox for a reset link." };
+    } catch {
+      return { error: "Could not reach the server. Check your connection." };
+    }
+  }, []);
+
   const updateProfile = useCallback(async (patch: Partial<User>) => {
     try {
       const res = await fetch("/api/account/profile", {
@@ -148,8 +181,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, login, loginWithGoogle, updateProfile, refresh, logout }),
-    [user, loading, login, loginWithGoogle, updateProfile, refresh, logout]
+    () => ({
+      user,
+      loading,
+      login,
+      register,
+      loginWithGoogle,
+      requestPasswordReset,
+      updateProfile,
+      refresh,
+      logout,
+    }),
+    [
+      user,
+      loading,
+      login,
+      register,
+      loginWithGoogle,
+      requestPasswordReset,
+      updateProfile,
+      refresh,
+      logout,
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
