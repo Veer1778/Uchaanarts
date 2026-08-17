@@ -62,11 +62,6 @@ export default function AccountView() {
             Hello, <span className="text-signal">{user.name || "collector"}</span>
           </h1>
           <p className="mt-2 text-sm text-muted">{user.email}</p>
-          {user.demo && (
-            <p className="mt-2 text-xs text-faint">
-              Demo session — connects to real customer accounts once WordPress is live.
-            </p>
-          )}
         </div>
         <button
           onClick={async () => {
