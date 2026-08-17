@@ -66,6 +66,12 @@ export type Artwork = {
   gallery?: string[];
   /** Resolved artist display name, saves a lookup in card components */
   artistName?: string;
+  /** Year the work was created, from the CMS */
+  year?: number;
+  /** Surface / support note, e.g. "Shipped rolled unless rolling not possible" */
+  surface?: string;
+  /** Gallery's own reference, tbl_item.item_code */
+  code?: string;
 };
 
 export type Exhibition = {
