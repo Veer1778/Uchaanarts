@@ -7,8 +7,8 @@ import Reveal from "@/components/Reveal";
 import MasonryCards from "@/components/MasonryCards";
 import ProductBuyBar from "@/components/ProductBuyBar";
 import EnquireBar from "@/components/EnquireBar";
-import { getArtwork, getArtworks, getArtist, getArtists } from "@/lib/cms";
-import { formatArtworkPrice, namesMap } from "@/lib/data";
+import { getArtworkPage, getArtist } from "@/lib/cms";
+import { formatArtworkPrice } from "@/lib/data";
 
 export async function generateMetadata({
   params,
@@ -16,8 +16,9 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const artwork = await getArtwork(slug);
-  if (!artwork) return {};
+  const page = await getArtworkPage(slug);
+  if (!page) return {};
+  const artwork = page.artwork;
   return {
     title: artwork.title,
     description: artwork.description,
@@ -47,25 +48,15 @@ export default async function ArtworkPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const artwork = await getArtwork(slug);
-  if (!artwork) notFound();
+  const page = await getArtworkPage(slug);
+  if (!page) notFound();
 
-  const [artist, all, artists] = await Promise.all([
-    getArtist(artwork.artist),
-    getArtworks(),
-    getArtists(),
-  ]);
+  const { artwork, related, relatedHeading, names } = page;
+
+  // One extra call, only for the artist card's bio and location. Related works
+  // and their artist names already arrived with the artwork.
+  const artist = await getArtist(artwork.artist);
   const artistName = artist?.name ?? artwork.artistName ?? artwork.artist;
-  const names = namesMap(artists);
-
-  const fromArtist = all.filter(
-    (w) => w.artist === artwork.artist && w.slug !== artwork.slug
-  );
-  const related = (
-    fromArtist.length >= 3
-      ? fromArtist
-      : all.filter((w) => w.slug !== artwork.slug && w.category === artwork.category)
-  ).slice(0, 6);
 
   /**
    * Specifications, built only from values the CMS actually holds.
@@ -276,7 +267,7 @@ export default async function ArtworkPage({
         <section className="mx-auto max-w-6xl px-5 pt-16" aria-labelledby="more">
           <Reveal>
             <h2 id="more" className="mb-8 font-display text-2xl sm:text-3xl">
-              {fromArtist.length >= 3 ? "More from " + artistName : "You may also love"}
+              {relatedHeading}
             </h2>
           </Reveal>
           <Reveal delay={0.1}>
