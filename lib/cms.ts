@@ -92,6 +92,9 @@ function toArtwork(w: ApiArtwork, cats: Map<number, string>): Artwork {
     featured: w.featured,
     style: w.style ?? undefined,
     theme: w.theme ?? undefined,
+    year: w.year ?? undefined,
+    surface: w.surface ?? undefined,
+    code: w.code ?? undefined,
     mediumTerm: w.medium_label ?? undefined,
     material: w.material_label ?? undefined,
     artistName: w.artist_name ?? undefined,
@@ -238,10 +241,25 @@ export async function getArtwork(slug: string): Promise<Artwork | undefined> {
   try {
     const [detail, cats] = await Promise.all([api.artwork(slug), categoryNames()]);
     const mapped = toArtwork(detail, cats);
-    // Detail-only extras the product page can use.
+
+    // Detail-only extras. The listing endpoint returns a trimmed object, so
+    // these are only available here.
     mapped.gallery = detail.gallery;
-    mapped.description = detail.description ?? mapped.description;
+    mapped.description = stripHtml(detail.description ?? "") || mapped.description;
     if (detail.artist) mapped.artistName = detail.artist.name;
+
+    // The detail endpoint resolves taxonomy ids to labels, which the listing
+    // endpoint cannot. Prefer them over the single-label fallbacks.
+    const attrs = detail.attributes;
+    if (attrs) {
+      const styles = attrs.styles?.map((t) => t.name).filter(Boolean);
+      const themes = attrs.themes?.map((t) => t.name).filter(Boolean);
+      if (styles?.length) mapped.style = styles.join(", ");
+      if (themes?.length) mapped.theme = themes.join(", ");
+      if (attrs.medium?.name) mapped.mediumTerm = attrs.medium.name;
+      if (attrs.material?.name) mapped.material = attrs.material.name;
+    }
+
     return mapped;
   } catch (e) {
     console.error("[cms] getArtwork failed:", e);
