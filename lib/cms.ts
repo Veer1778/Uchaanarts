@@ -112,14 +112,10 @@ function toArtwork(w: ApiArtwork, cats: Map<number, string>): Artwork {
  * half-rendered.
  */
 function cleanSize(w: ApiArtwork): string {
-  // A human-entered label wins, but only if it isn't itself a broken fragment.
-  const label = (w.size_label ?? "").trim();
-  if (label && !/^[\s x×·in\-]*$/i.test(label) && !/\bx\s*(in)?\s*$/i.test(label)) {
-    return label;
-  }
+  const unit = w.dimensions.unit || "in";
 
-  const num = (v: string | null) => {
-    if (!v) return null;
+  const num = (v: string | null | undefined) => {
+    if (v === null || v === undefined) return null;
     const n = parseFloat(String(v).replace(/[^0-9.]/g, ""));
     return Number.isFinite(n) && n > 0 ? String(n) : null;
   };
@@ -128,13 +124,33 @@ function cleanSize(w: ApiArtwork): string {
   const height = num(w.dimensions.height);
   const depth = num(w.dimensions.depth);
 
-  // One dimension alone is meaningless for a painting, so require both.
-  if (!width || !height) return "";
+  // Both axes present: build it ourselves, which is the most reliable path.
+  if (width && height) {
+    return depth
+      ? `${width} × ${height} × ${depth} ${unit}`
+      : `${width} × ${height} ${unit}`;
+  }
 
-  const unit = w.dimensions.unit || "in";
-  return depth
-    ? `${width} × ${height} × ${depth} ${unit}`
-    : `${width} × ${height} ${unit}`;
+  // Otherwise fall back to the CMS's own text, which is often complete even
+  // when the numeric columns are not.
+  const label = (w.size_label ?? "").replace(/\s+/g, " ").trim();
+  if (label) {
+    // Repair dangling separators from partial data entry: the live site shows
+    // "48 x  in" because one axis was left blank. Strip the orphan operator
+    // rather than printing it.
+    const repaired = label
+      .replace(/\s*[x×]\s*(?=(in|cm|inch|inches)?\s*$)/i, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    // Keep only if something numeric survived.
+    if (/\d/.test(repaired)) return repaired;
+  }
+
+  // Single usable axis: better than nothing, but say which one it is.
+  if (width) return `${width} ${unit} wide`;
+  if (height) return `${height} ${unit} high`;
+
+  return "";
 }
 
 function toArtist(a: ApiArtist, location = ""): Artist {
@@ -265,6 +281,72 @@ export async function getArtwork(slug: string): Promise<Artwork | undefined> {
     console.error("[cms] getArtwork failed:", e);
   }
   return demoArtworks.find((w) => w.slug === slug);
+}
+
+/**
+ * Everything the artwork detail page needs, in a single API call.
+ *
+ * The page previously called getArtworks() and getArtists(), pulling all 2,500
+ * artworks and 300 artists just to render six related works and resolve one
+ * name. The detail endpoint already returns `similar` and `more_by_artist`
+ * with artist names attached, so none of that traffic is necessary.
+ */
+export async function getArtworkPage(slug: string): Promise<{
+  artwork: Artwork;
+  related: Artwork[];
+  relatedHeading: string;
+  names: Record<string, string>;
+} | null> {
+  try {
+    const [detail, cats] = await Promise.all([api.artwork(slug), categoryNames()]);
+
+    const artwork = toArtwork(detail, cats);
+    artwork.gallery = detail.gallery;
+    artwork.description = stripHtml(detail.description ?? "") || artwork.description;
+    if (detail.artist) artwork.artistName = detail.artist.name;
+
+    const attrs = detail.attributes;
+    if (attrs) {
+      const styles = attrs.styles?.map((t) => t.name).filter(Boolean);
+      const themes = attrs.themes?.map((t) => t.name).filter(Boolean);
+      if (styles?.length) artwork.style = styles.join(", ");
+      if (themes?.length) artwork.theme = themes.join(", ");
+      if (attrs.medium?.name) artwork.mediumTerm = attrs.medium.name;
+      if (attrs.material?.name) artwork.material = attrs.material.name;
+    }
+
+    const byArtist = (detail.more_by_artist ?? []).map((w) => toArtwork(w, cats));
+    const similar = (detail.similar ?? []).map((w) => toArtwork(w, cats));
+
+    const useArtist = byArtist.length >= 3;
+    const related = (useArtist ? byArtist : similar).slice(0, 6);
+
+    const names: Record<string, string> = {};
+    for (const w of [...byArtist, ...similar]) {
+      if (w.artist && w.artistName) names[w.artist] = w.artistName;
+    }
+
+    return {
+      artwork,
+      related,
+      relatedHeading: useArtist
+        ? `More from ${detail.artist?.name ?? artwork.artistName ?? "this artist"}`
+        : "You may also love",
+      names,
+    };
+  } catch (e) {
+    console.error("[cms] getArtworkPage failed:", e);
+  }
+
+  // Demo fallback keeps the page renderable if the API is unreachable.
+  const demo = demoArtworks.find((w) => w.slug === slug);
+  if (!demo) return null;
+  return {
+    artwork: demo,
+    related: demoArtworks.filter((w) => w.slug !== slug).slice(0, 6),
+    relatedHeading: "You may also love",
+    names: {},
+  };
 }
 
 export async function getArtists(): Promise<Artist[]> {
