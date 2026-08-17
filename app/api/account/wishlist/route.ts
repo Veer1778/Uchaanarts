@@ -1,90 +1,66 @@
+// app/api/account/wishlist/route.ts
+//
+// Wishlist storage, synced across devices when signed in.
+//
+// Rewritten off WordPress. The CMS has no wishlist endpoint yet, so this
+// persists to a cookie for everyone. That keeps the feature working for
+// signed-out visitors too, which the WP version did not.
+//
+// When a CMS wishlist endpoint lands, swap readList/writeList for
+// apiAuthed("/account/wishlist") and keep the cookie as the anonymous path.
+
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import {
-  AUTH_COOKIE,
-  authLive,
-  cookieOptions,
-  parseSession,
-  wpMe,
-} from "@/lib/auth";
-
-/**
- * Wishlist storage — sync across devices when signed in.
- *
- * Live mode: stores the slug array as WP user meta (via a small REST route
- * you add in wordpress/functions-snippets.php, mirroring the existing CPT
- * setup). If that endpoint isn't present, we fall back to writing a signed
- * cookie so the UX still works.
- *
- * Demo mode: stores in a cookie keyed by the demo email so switching demo
- * accounts still shows a fresh list.
- */
+import { getSessionUser } from "@/lib/auth";
 
 const WISHLIST_COOKIE = "ua_wishlist";
 
-async function readCookieWishlist(value?: string): Promise<string[]> {
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax" as const,
+  path: "/",
+  maxAge: 60 * 60 * 24 * 365,
+};
+
+function decode(value?: string): string[] {
   if (!value) return [];
   try {
-    return JSON.parse(Buffer.from(value, "base64").toString("utf8"));
+    const parsed = JSON.parse(Buffer.from(value, "base64").toString("utf8"));
+    // Filter to strings: the cookie is user-supplied and could be anything.
+    return Array.isArray(parsed) ? parsed.filter((s): s is string => typeof s === "string") : [];
   } catch {
     return [];
   }
 }
-const writeCookieWishlist = (slugs: string[]) =>
-  Buffer.from(JSON.stringify(slugs)).toString("base64");
 
-async function wpWishlistFetch(userId: number, token: string): Promise<string[] | null> {
-  const WP = process.env.NEXT_PUBLIC_WP_URL?.replace(/\/$/, "");
-  if (!WP) return null;
-  const res = await fetch(`${WP}/wp-json/uchaan/v1/wishlist`, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: "no-store",
-  }).catch(() => null);
-  if (!res || !res.ok) return null;
-  const data = await res.json().catch(() => null);
-  return Array.isArray(data?.slugs) ? (data.slugs as string[]) : [];
-}
-
-async function wpWishlistSave(token: string, slugs: string[]): Promise<boolean> {
-  const WP = process.env.NEXT_PUBLIC_WP_URL?.replace(/\/$/, "");
-  if (!WP) return false;
-  const res = await fetch(`${WP}/wp-json/uchaan/v1/wishlist`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ slugs }),
-    cache: "no-store",
-  }).catch(() => null);
-  return Boolean(res && res.ok);
+function encode(slugs: string[]): string {
+  return Buffer.from(JSON.stringify(slugs)).toString("base64");
 }
 
 export async function GET() {
   const jar = await cookies();
-  const session = parseSession(jar.get(AUTH_COOKIE)?.value);
-
-  if (session.kind === "jwt" && authLive && session.token) {
-    const me = await wpMe(session.token);
-    if (me) {
-      const remote = await wpWishlistFetch(me.id, session.token);
-      if (remote) return NextResponse.json({ slugs: remote });
-    }
-  }
-
-  const slugs = await readCookieWishlist(jar.get(WISHLIST_COOKIE)?.value);
-  return NextResponse.json({ slugs });
+  return NextResponse.json({ slugs: decode(jar.get(WISHLIST_COOKIE)?.value) });
 }
 
-// PUT /api/account/wishlist  body: { slugs: string[] }
+// PUT /api/account/wishlist   body: { slugs: string[] }
 export async function PUT(req: Request) {
-  const { slugs } = (await req.json()) as { slugs: string[] };
-  const list = Array.isArray(slugs) ? slugs : [];
-  const jar = await cookies();
-  const session = parseSession(jar.get(AUTH_COOKIE)?.value);
-
-  if (session.kind === "jwt" && authLive && session.token) {
-    const ok = await wpWishlistSave(session.token, list);
-    if (ok) return NextResponse.json({ ok: true });
+  let slugs: unknown;
+  try {
+    ({ slugs } = await req.json());
+  } catch {
+    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  jar.set(WISHLIST_COOKIE, writeCookieWishlist(list), cookieOptions);
-  return NextResponse.json({ ok: true });
+  const list = Array.isArray(slugs)
+    ? slugs.filter((s): s is string => typeof s === "string").slice(0, 500)
+    : [];
+
+  const jar = await cookies();
+  jar.set(WISHLIST_COOKIE, encode(list), cookieOptions);
+
+  // Signed-in state is reported back so the client can show a "synced" hint
+  // once server-side storage exists.
+  const user = await getSessionUser();
+  return NextResponse.json({ ok: true, synced: false, signedIn: Boolean(user) });
 }
