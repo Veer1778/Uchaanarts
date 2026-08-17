@@ -1,65 +1,32 @@
+// app/api/auth/google/route.ts
+//
+// Exchanges a Google ID token for a session. The credential comes from the
+// Google Identity Services button in the browser; the CI3 API verifies it
+// against Google and checks the aud claim before trusting it.
+
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import {
-  AUTH_COOKIE,
-  authLive,
-  cookieOptions,
-  demoSession,
-  verifyGoogleIdToken,
-  wpMe,
-} from "@/lib/auth";
+import { AUTH_COOKIE, apiGoogle, cookieOptions } from "@/lib/auth";
 
-// POST /api/auth/google  body: { credential }
-// Verifies the Google ID token, then signs the user in.
-// - Live mode: attempts to log the WP user in by finding a customer with the
-//   same email. If your WP has a Google-Auth plugin, it may already accept
-//   the token directly; we call that endpoint first when present.
-// - Demo mode: creates a demo session with the Google-verified name/email.
 export async function POST(req: Request) {
-  const { credential } = await req.json();
-  if (!credential) {
-    return NextResponse.json({ error: "Missing credential." }, { status: 400 });
+  let credential: string | undefined;
+  try {
+    ({ credential } = await req.json());
+  } catch {
+    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  const verified = await verifyGoogleIdToken(credential);
-  if ("error" in verified) {
-    return NextResponse.json({ error: verified.error }, { status: 401 });
+  if (!credential) {
+    return NextResponse.json({ error: "Missing Google credential." }, { status: 400 });
+  }
+
+  const result = await apiGoogle(credential);
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: result.status || 401 });
   }
 
   const jar = await cookies();
+  jar.set(AUTH_COOKIE, result.token, cookieOptions);
 
-  if (authLive) {
-    // Preferred path: a WP endpoint that swaps a Google ID token for a JWT.
-    // (Common plugins: nextend-social-login, wp-rest-google-auth.)
-    const WP = process.env.NEXT_PUBLIC_WP_URL?.replace(/\/$/, "");
-    const swap = await fetch(`${WP}/wp-json/jwt-auth/v1/token/google`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id_token: credential }),
-      cache: "no-store",
-    }).catch(() => null);
-
-    if (swap && swap.ok) {
-      const data = await swap.json();
-      if (data?.token) {
-        jar.set(AUTH_COOKIE, data.token, cookieOptions);
-        const me = await wpMe(data.token);
-        return NextResponse.json({ user: me });
-      }
-    }
-
-    return NextResponse.json(
-      {
-        error:
-          "Google sign-in isn't fully wired on the store yet. Please use email + password.",
-      },
-      { status: 501 }
-    );
-  }
-
-  // Demo mode
-  jar.set(AUTH_COOKIE, demoSession(verified.email), cookieOptions);
-  return NextResponse.json({
-    user: { id: 0, email: verified.email, name: verified.name, demo: true },
-  });
+  return NextResponse.json({ user: result.user });
 }
