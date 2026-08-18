@@ -19,7 +19,13 @@ import {
 } from "lucide-react";
 import HeroPlate from "@/components/HeroPlate";
 import Testimonials from "@/components/Testimonials";
-import { getArtworks, getArtists, getPosts, getExhibitions } from "@/lib/cms";
+import {
+  getArtworks,
+  getArtists,
+  getPosts,
+  getExhibitions,
+  getTestimonials,
+} from "@/lib/cms";
 import { curatedPaths, advisorySteps, realSpaces, assurances } from "@/lib/site";
 import { formatINR } from "@/lib/data";
 
@@ -83,12 +89,20 @@ function Pair({ left, right }: { left: React.ReactNode; right: React.ReactNode }
 }
 
 export default async function HomePage() {
-  const [artworks, artists, posts, exhibitions] = await Promise.all([
+  const [artworks, artists, posts, exhibitions, testimonialRows] = await Promise.all([
     getArtworks(),
     getArtists(),
     getPosts(),
     getExhibitions(),
+    getTestimonials(),
   ]);
+
+  // Shape CMS testimonials for the carousel. Falls back to the built-in set
+  // inside the component when the CMS has none active.
+  const collectorQuotes = testimonialRows.map((t) => ({
+    quote: t.quote,
+    by: t.name,
+  }));
 
   const names: Record<string, string> = {};
   artists.forEach((a) => (names[a.slug] = a.name));
@@ -465,7 +479,7 @@ export default async function HomePage() {
         left={
           <>
             <h2 className="mb-7 font-display text-[1.6rem] leading-none">Collectors Say</h2>
-            <Testimonials />
+            <Testimonials items={collectorQuotes} />
           </>
         }
         right={
