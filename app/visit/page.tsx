@@ -48,7 +48,7 @@ const galleries = [
     lat: 28.5050164,
     lng: 77.0965475,
     placeId: "ChIJVZUBq-cYDTkRz5laZKp5KGE",
-    photo: "", // e.g. "/visit/gurugram-gallery.jpg"
+    photo: "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnrP4ykcvPHScov-4JF4Z_XsHkQRMnRct_TJTrLZehHX-Hu_RTP_cZ7wGJBbe9V2AwJm6ewcutNqgcxgz-I3u9rcEp0Q5HeTw8qF7hwTCYEoYTIiMkYzpZzLJLAfv1v5DYUHNCz=s680-w680-h510-rw", // e.g. "/visit/gurugram-gallery.jpg"
   },
 ];
 
