@@ -3,11 +3,12 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import Reveal from "@/components/Reveal";
 import { getExhibitions } from "@/lib/cms";
+import type { Exhibition } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "Exhibitions",
   description:
-    "Exhibitions and art fairs featuring Uchaan Arts, in India and internationally.",
+    "Current, upcoming and past exhibitions and art fairs featuring Uchaan Arts, in India and internationally.",
 };
 
 const fmt = (d: string) =>
@@ -27,15 +28,15 @@ const isRealDate = (d?: string) => {
 /**
  * One display string for an exhibition's dates.
  *
- * Structured start/end dates are preferred, but several rows only carry the
+ * Structured start/end dates are preferred, but several rows carry only the
  * CMS's free-text field ("23rd to 26th April, 2026"). Formatting those
  * directly is what produced "Invalid Date — Invalid Date".
  */
-function dateLine(e: { start?: string; end?: string; dateText?: string }): string {
+function dateLine(e: Exhibition): string {
   if (isRealDate(e.start) && isRealDate(e.end)) {
-    return `${fmt(e.start!)} — ${fmt(e.end!)}`;
+    return `${fmt(e.start)} — ${fmt(e.end)}`;
   }
-  if (isRealDate(e.start)) return fmt(e.start!);
+  if (isRealDate(e.start)) return fmt(e.start);
   if (e.dateText?.trim()) return e.dateText.trim();
   return "";
 }
@@ -43,29 +44,43 @@ function dateLine(e: { start?: string; end?: string; dateText?: string }): strin
 export default async function ExhibitionsPage() {
   const all = await getExhibitions();
 
+  // Three groups, taken from the CMS's own status. An exhibition can be marked
+  // complete before its end date, and most rows have no structured dates at
+  // all, so date arithmetic is only a fallback.
   const now = new Date();
-  const isPast = (e: (typeof all)[number]) => {
-    // The CMS's own classification wins: an exhibition can be marked complete
-    // before its end date, and several rows have no structured dates at all.
-    if (e.status) return e.status === "past";
-    return isRealDate(e.end) && new Date(e.end) < now;
+  const bucket = (e: Exhibition) => {
+    if (e.status) return e.status;
+    if (isRealDate(e.end) && new Date(e.end) < now) return "past";
+    return "upcoming";
   };
 
-  const upcoming = all.filter((e) => !isPast(e));
-
-  // Most recent first. Rows without a real date fall to the end rather than
-  // being sorted against NaN.
-  const past = all.filter(isPast).sort((a, b) => {
+  const newestFirst = (a: Exhibition, b: Exhibition) => {
     const at = isRealDate(a.start) ? new Date(a.start).getTime() : -Infinity;
     const bt = isRealDate(b.start) ? new Date(b.start).getTime() : -Infinity;
     return bt - at;
-  });
+  };
 
-  const Card = ({ e, index }: { e: (typeof all)[number]; index: number }) => {
+  const current = all.filter((e) => bucket(e) === "current").sort(newestFirst);
+  const upcoming = all.filter((e) => bucket(e) === "upcoming").sort(newestFirst);
+  const past = all.filter((e) => bucket(e) === "past").sort(newestFirst);
+
+  const Card = ({
+    e,
+    index,
+    highlight = false,
+  }: {
+    e: Exhibition;
+    index: number;
+    highlight?: boolean;
+  }) => {
     const dates = dateLine(e);
     return (
       <Reveal delay={index * 0.06}>
-        <article className="group grid gap-6 border border-line md:grid-cols-[1.1fr_1fr]">
+        <article
+          className={`group grid gap-6 border md:grid-cols-[1.1fr_1fr] ${
+            highlight ? "border-signal" : "border-line"
+          }`}
+        >
           <div className="relative aspect-[16/10] overflow-hidden md:aspect-auto">
             <Image
               src={e.image}
@@ -74,6 +89,11 @@ export default async function ExhibitionsPage() {
               sizes="(max-width: 768px) 100vw, 50vw"
               className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
             />
+            {highlight && (
+              <span className="absolute left-4 top-4 bg-signal px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white">
+                On now
+              </span>
+            )}
           </div>
           <div className="flex flex-col justify-center p-6 md:py-10">
             {dates && (
@@ -99,6 +119,30 @@ export default async function ExhibitionsPage() {
     );
   };
 
+  const Section = ({
+    title,
+    items,
+    highlight = false,
+  }: {
+    title: string;
+    items: Exhibition[];
+    highlight?: boolean;
+  }) =>
+    items.length === 0 ? null : (
+      <>
+        <h2 className="mb-6 mt-4 text-[11px] uppercase tracking-[0.3em] text-muted">
+          {title}
+        </h2>
+        <div className="mb-16 space-y-8">
+          {items.map((e, i) => (
+            <Card key={e.slug} e={e} index={i} highlight={highlight} />
+          ))}
+        </div>
+      </>
+    );
+
+  const nothingScheduled = current.length === 0 && upcoming.length === 0;
+
   return (
     <section className="relative mx-auto max-w-6xl px-5 pt-14">
       <div className="aura -right-40 top-0 h-80 w-80" />
@@ -112,23 +156,12 @@ export default async function ExhibitionsPage() {
         </p>
       </Reveal>
 
-      {upcoming.length > 0 && (
-        <>
-          <h2 className="mb-6 text-[11px] uppercase tracking-[0.3em] text-muted">
-            Upcoming
-          </h2>
-          <div className="space-y-8">
-            {upcoming.map((e, i) => (
-              <Card key={e.slug} e={e} index={i} />
-            ))}
-          </div>
-        </>
-      )}
+      <Section title="Current shows" items={current} highlight />
+      <Section title="Upcoming" items={upcoming} />
 
-      {/* With nothing upcoming, an empty "Upcoming" heading reads as a dormant
-          gallery. Show an invitation to get in touch instead, and only render
-          the heading when there is something under it. */}
-      {upcoming.length === 0 && (
+      {/* An empty "Upcoming" heading reads as a dormant gallery, so when
+          nothing is scheduled we invite contact instead. */}
+      {nothingScheduled && (
         <Reveal>
           <div className="mb-16 border border-line p-8 text-center">
             <p className="text-sm text-muted">
@@ -145,18 +178,7 @@ export default async function ExhibitionsPage() {
         </Reveal>
       )}
 
-      {past.length > 0 && (
-        <>
-          <h2 className="mb-6 mt-4 text-[11px] uppercase tracking-[0.3em] text-muted">
-            {upcoming.length > 0 ? "Past" : "Recent exhibitions"}
-          </h2>
-          <div className="space-y-8">
-            {past.map((e, i) => (
-              <Card key={e.slug} e={e} index={i} />
-            ))}
-          </div>
-        </>
-      )}
+      <Section title={nothingScheduled ? "Recent exhibitions" : "Past"} items={past} />
     </section>
   );
 }
