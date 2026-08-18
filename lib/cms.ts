@@ -352,6 +352,41 @@ export async function getArtworkPage(slug: string): Promise<{
   };
 }
 
+export type Testimonial = {
+  id: number;
+  name: string;
+  quote: string;
+  image: string | null;
+  artworkImage: string | null;
+  artworkLink: string | null;
+};
+
+/**
+ * Collector testimonials from the CMS.
+ *
+ * These were previously hardcoded in lib/site.ts, which is why testimonials
+ * added in the admin panel never appeared. Only rows with status = 1 are
+ * returned by the API, so anything saved as inactive stays hidden.
+ */
+export async function getTestimonials(): Promise<Testimonial[]> {
+  try {
+    const rows = await api.testimonials();
+    return (rows ?? [])
+      .map((t: Record<string, unknown>) => ({
+        id: Number(t.id),
+        name: String(t.name ?? "").trim(),
+        quote: stripHtml(String(t.text ?? "")),
+        image: (t.image as string) ?? null,
+        artworkImage: (t.artwork_image as string) ?? null,
+        artworkLink: (t.artwork_link as string) ?? null,
+      }))
+      .filter((t) => t.quote.length > 0);
+  } catch (e) {
+    console.error("[cms] getTestimonials failed:", e);
+    return [];
+  }
+}
+
 export async function getArtists(): Promise<Artist[]> {
   try {
     const { items } = await api.artists({ per_page: 300 });
