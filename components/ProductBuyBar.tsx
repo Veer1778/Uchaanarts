@@ -42,6 +42,19 @@ export default function ProductBuyBar({
     itemId: artwork.itemId,
   };
 
+  // The wishlist stores a full record rather than a slug, so saved works can
+  // render without another lookup.
+  const wishItem = {
+    slug: artwork.slug,
+    title: artwork.title,
+    artistName,
+    image: artwork.image,
+    price: artwork.price,
+    medium: artwork.medium,
+    category: artwork.category,
+    size: artwork.size,
+  };
+
   const share = async () => {
     const url = typeof window !== "undefined" ? window.location.href : "";
     try {
@@ -63,7 +76,7 @@ export default function ProductBuyBar({
   return (
     <div className="flex flex-wrap items-center gap-2">
       <button
-        onClick={() => toggle(artwork.slug)}
+        onClick={() => toggle(wishItem)}
         aria-label={wished ? "Remove from saved works" : "Save this work"}
         aria-pressed={wished}
         className={iconBtn}
