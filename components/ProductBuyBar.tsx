@@ -2,13 +2,22 @@
 
 import { useState } from "react";
 import { motion } from "motion/react";
-import { Frame, Heart, Eye, Share2, ShoppingCart, Mail } from "lucide-react";
+import { Heart, Eye, Share2, ShoppingCart, Mail } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import type { Artwork } from "@/lib/data";
 import { formatArtworkPrice, isPurchasable } from "@/lib/data";
-import ArtOnWall from "./ArtOnWall";
 
+/**
+ * Purchase and save actions for a single artwork.
+ *
+ * The "Art on Wall" preview has been removed at the client's request.
+ *
+ * Action hierarchy: one primary button (Buy Now, or the price for
+ * price-on-request works), then quiet secondary icons. The enquiry actions sit
+ * below this bar in EnquireBar, so this component deliberately does not
+ * compete with them.
+ */
 export default function ProductBuyBar({
   artwork,
   artistName,
@@ -21,7 +30,6 @@ export default function ProductBuyBar({
   const { add, checkout, checkingOut } = useCart();
   const { has, toggle } = useWishlist();
   const [shared, setShared] = useState(false);
-  const [wallOpen, setWallOpen] = useState(false);
   const wished = has(artwork.slug);
   const buyable = isPurchasable(artwork);
 
@@ -31,66 +39,51 @@ export default function ProductBuyBar({
     artistName,
     image: artwork.image,
     price: artwork.price,
-    wooId: artwork.wooId,
+    itemId: artwork.itemId,
   };
 
-  const wishItem = {
-    slug: artwork.slug,
-    title: artwork.title,
-    artistName,
-    image: artwork.image,
-    price: artwork.price,
-    medium: artwork.medium,
-    category: artwork.category,
-    size: artwork.size,
-    wooId: artwork.wooId,
-  };
-
-  const onShare = async () => {
+  const share = async () => {
     const url = typeof window !== "undefined" ? window.location.href : "";
     try {
-      if (navigator.share) await navigator.share({ title: artwork.title, url });
-      else {
-        await navigator.clipboard.writeText(url);
-        setShared(true);
-        setTimeout(() => setShared(false), 1500);
+      if (navigator.share) {
+        await navigator.share({ title: artwork.title, url });
+        return;
       }
+      await navigator.clipboard.writeText(url);
+      setShared(true);
+      setTimeout(() => setShared(false), 1800);
     } catch {
-      /* user dismissed */
+      /* dismissed by the user, nothing to report */
     }
   };
 
   const iconBtn =
-    "flex items-center gap-1.5 border border-line px-3 py-2.5 text-sm text-muted transition-colors hover:border-signal hover:text-signal";
+    "grid h-11 w-11 place-items-center border border-line text-muted transition-colors hover:border-signal hover:text-signal";
 
   return (
-    <>
-    <div className="flex flex-wrap items-center gap-2.5">
+    <div className="flex flex-wrap items-center gap-2">
       <button
-        type="button"
-        onClick={() => setWallOpen(true)}
+        onClick={() => toggle(artwork.slug)}
+        aria-label={wished ? "Remove from saved works" : "Save this work"}
+        aria-pressed={wished}
         className={iconBtn}
       >
-        <Frame size={15} /> Art on Wall
+        <Heart size={15} className={wished ? "fill-signal text-signal" : ""} />
       </button>
 
-      <button
-        onClick={() => toggle(wishItem)}
-        aria-pressed={wished}
-        aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
-        className={`${iconBtn} ${wished ? "border-signal text-signal" : ""}`}
+      <span
+        className="grid h-11 place-items-center gap-1.5 border border-line px-3 text-xs text-muted"
+        title={`${views} people viewed this work`}
       >
-        <Heart size={15} fill={wished ? "currentColor" : "none"} />
-        {views + (wished ? 1 : 0)}
-      </button>
-
-      <span className={`${iconBtn} cursor-default hover:border-line hover:text-muted`}>
-        <Eye size={15} /> {views}
+        <span className="flex items-center gap-1.5">
+          <Eye size={14} /> {views}
+        </span>
       </span>
 
-      <button onClick={onShare} className={iconBtn} aria-label="Share">
-        <Share2 size={15} /> {shared ? "Copied" : ""}
+      <button onClick={share} aria-label="Share this work" className={iconBtn}>
+        <Share2 size={15} />
       </button>
+      {shared && <span className="text-xs text-muted">Link copied</span>}
 
       {buyable ? (
         <>
@@ -109,40 +102,19 @@ export default function ProductBuyBar({
               await checkout();
             }}
             disabled={checkingOut}
-            className="flex items-center gap-2 bg-signal px-7 py-2.5 text-xs font-semibold tracking-[0.16em] text-white transition-colors hover:bg-signal-dark disabled:opacity-60"
+            className="flex items-center gap-2 bg-signal px-8 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-signal-dark disabled:opacity-60"
           >
             {checkingOut ? "…" : "Buy Now"}
           </motion.button>
         </>
       ) : (
-        // Price-on-request or already sold. Checkout would produce a
-        // zero-rupee order, so route the buyer to an enquiry instead.
-        <>
-          <span className="px-1 text-xs font-semibold tracking-[0.1em] text-muted">
-            {formatArtworkPrice(artwork)}
-          </span>
-          <a
-            href={`mailto:info@uchaanarts.com?subject=${encodeURIComponent(
-              `Enquiry: ${artwork.title}`
-            )}&body=${encodeURIComponent(
-              `I'd like to enquire about "${artwork.title}" by ${artistName}.`
-            )}`}
-            className="flex items-center gap-2 bg-signal px-7 py-2.5 text-xs font-semibold tracking-[0.16em] text-white transition-colors hover:bg-signal-dark"
-          >
-            <Mail size={15} /> Enquire
-          </a>
-        </>
+        // Price-on-request or sold. Checkout would create a zero-rupee order,
+        // so the enquiry path below is the only sensible action.
+        <span className="flex items-center gap-2 border border-line px-5 py-3 text-xs uppercase tracking-[0.14em] text-muted">
+          <Mail size={14} />
+          {formatArtworkPrice(artwork)}
+        </span>
       )}
     </div>
-
-      <ArtOnWall
-        open={wallOpen}
-        onClose={() => setWallOpen(false)}
-        image={artwork.image}
-        title={artwork.title}
-        artistName={artistName}
-        size={artwork.size}
-      />
-    </>
   );
 }
