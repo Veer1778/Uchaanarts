@@ -36,7 +36,7 @@ const columns = [
     title: "Services",
     links: [
       { href: "/advisory", label: "Art Advisory" },
-      { href: "/trade", label: "Trade & Corporate" },
+      { href: "/trade", label: "Corporate & Hospitality" },
       { href: "/advisory", label: "Commissions" },
     ],
   },
