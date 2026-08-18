@@ -21,7 +21,7 @@ const links = [
   { href: "/artists", label: "Artists" },
   { href: "/exhibitions", label: "Exhibitions" },
   { href: "/advisory", label: "Art Advisory" },
-  { href: "/trade", label: "Trade & Corporate" },
+  { href: "/trade", label: "Corporate & Hospitality" },
   { href: "/blog", label: "Journal" },
   { href: "/about", label: "About" },
   { href: "/visit", label: "Visit" },
