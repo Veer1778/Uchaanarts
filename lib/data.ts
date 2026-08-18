@@ -74,6 +74,9 @@ export type Artwork = {
   code?: string;
 };
 
+/** Currently running, opening soon, or finished. */
+export type ExhibitionStatus = "current" | "upcoming" | "past";
+
 export type Exhibition = {
   slug: string;
   title: string;
@@ -87,7 +90,7 @@ export type Exhibition = {
    * The CMS classifies exhibitions explicitly. Trust this over date maths:
    * most rows have null start/end and only a human-written date string.
    */
-  status?: "upcoming" | "past";
+  status?: ExhibitionStatus;
   /** Free-text date from the CMS, e.g. "23rd to 26th April, 2026" */
   dateText?: string;
 };
