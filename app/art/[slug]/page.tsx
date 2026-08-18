@@ -7,6 +7,7 @@ import Reveal from "@/components/Reveal";
 import MasonryCards from "@/components/MasonryCards";
 import ProductBuyBar from "@/components/ProductBuyBar";
 import EnquireBar from "@/components/EnquireBar";
+import ExpandableBio from "@/components/ExpandableBio";
 import { getArtworkPage, getArtist } from "@/lib/cms";
 import { formatArtworkPrice } from "@/lib/data";
 
@@ -233,9 +234,7 @@ export default async function ArtworkPage({
                 {artist.bio && (
                   <>
                     <h3 className="mt-5 text-sm font-medium">About the artist</h3>
-                    <p className="mt-2 line-clamp-[10] text-[13px] leading-relaxed text-muted">
-                      {artist.bio}
-                    </p>
+                    <ExpandableBio text={artist.bio} />
                   </>
                 )}
 
