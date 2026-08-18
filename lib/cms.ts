@@ -21,6 +21,7 @@ import {
   type Artist,
   type Exhibition,
   type Post,
+  type ExhibitionStatus,
 } from "./data";
 import {
   api,
@@ -167,7 +168,24 @@ function toArtist(a: ApiArtist, location = ""): Artist {
   };
 }
 
-function toExhibition(e: ApiExhibition, status: "upcoming" | "past"): Exhibition {
+/**
+ * The CMS's own classification, mapped to the three groups the site shows.
+ *
+ * ACTIVE means a show is running right now, which the API returns in the
+ * "upcoming" bucket. Reading the raw type here is what separates Current from
+ * Upcoming without another request.
+ */
+function statusOf(rawType: string | undefined, fallback: ExhibitionStatus): ExhibitionStatus {
+  const t = (rawType ?? "").trim().toUpperCase();
+  if (t === "ACTIVE" || t === "CURRENT" || t === "ONGOING" || t === "RUNNING") {
+    return "current";
+  }
+  if (t === "UPCOMING") return "upcoming";
+  if (t === "COMPLETED" || t === "PAST") return "past";
+  return fallback;
+}
+
+function toExhibition(e: ApiExhibition, fallback: ExhibitionStatus): Exhibition {
   return {
     slug: e.slug,
     title: e.title.trim(),
@@ -177,7 +195,7 @@ function toExhibition(e: ApiExhibition, status: "upcoming" | "past"): Exhibition
     end: e.end_date ?? "",
     image: e.image ?? e.flyer ?? PLACEHOLDER,
     blurb: stripHtml(e.description ?? "").slice(0, 240),
-    status,
+    status: statusOf(e.type, fallback),
     dateText: e.date_text ?? undefined,
   };
 }
