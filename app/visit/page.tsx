@@ -32,7 +32,7 @@ const galleries = [
     lat: 28.4915444,
     lng: 77.1431426,
     placeId: "ChIJYVWKG2MZDTkRPkigiK8yos4",
-    photo: "", // e.g. "/visit/delhi-gallery.jpg"
+    photo: "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlfL8A_Mr5Vw-UuO-yARm_859MtDjAWDB25nfSjvQkOdnSveYLYyvyzmQai8f99SYeUUAXJbWuYGM5KekTDriAf9kV6zgyVxUqDzhQP3VqVkv3_YTsZWSp5WBl6QQyADyHyq1KP=s680-w680-h510-rw", // e.g. "/visit/delhi-gallery.jpg"
   },
   {
     id: "gurugram",
