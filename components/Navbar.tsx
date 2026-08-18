@@ -128,16 +128,12 @@ export default function Navbar() {
           {/* Two distinct actions. These were previously one button that read
               "Enquire" when signed out and "Account" when signed in, so a
               visitor wanting to contact the gallery was sent to a login form. */}
-          <a
-            href={`https://api.whatsapp.com/send?phone=918860277388&text=${encodeURIComponent(
-              "Hello Uchaan Arts, I'd like to make an enquiry."
-            )}`}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/enquire"
             className="hidden border border-line px-5 py-2.5 text-[13.5px] transition-colors hover:border-signal hover:text-signal sm:block"
           >
             Enquire
-          </a>
+          </Link>
 
           <Link
             href={user ? "/account" : "/login"}
