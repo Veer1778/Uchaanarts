@@ -76,9 +76,13 @@ export default function ArtworkCard({
         </div>
 
         <div className="mt-2 flex items-end justify-between gap-2">
-          <p className="text-[11px] text-muted sm:text-xs">{artwork.size}</p>
+          {/* Size can be empty when the CMS has no dimensions, so the row
+              collapses rather than leaving a stray gap before the price. */}
+          {artwork.size && (
+            <p className="text-[11px] text-muted sm:text-xs">{artwork.size}</p>
+          )}
           <p
-            className={`whitespace-nowrap text-xs font-semibold sm:text-sm ${
+            className={`ml-auto whitespace-nowrap text-xs font-semibold sm:text-sm ${
               buyable ? "text-signal" : "text-muted"
             }`}
           >
@@ -98,7 +102,6 @@ export default function ArtworkCard({
                 medium: artwork.medium,
                 category: artwork.category,
                 size: artwork.size,
-                wooId: artwork.wooId,
               })
             )}
             aria-pressed={wished}
@@ -120,7 +123,10 @@ export default function ArtworkCard({
                   artistName: name,
                   image: artwork.image,
                   price: artwork.price,
-                  wooId: artwork.wooId,
+                  // tbl_item.item_id. Checkout sends this to the server, which
+                  // then prices the order itself — the price above is display
+                  // only and is never trusted.
+                  itemId: artwork.itemId,
                 })
               )}
               aria-label={`Add ${artwork.title} to cart`}
