@@ -12,6 +12,7 @@ import {
 } from "react";
 import { useAuthOptional } from "./AuthContext";
 import { artworks as allArtworks, artists as allArtists } from "@/lib/data";
+import { api } from "@/lib/api";
 
 export type WishItem = {
   slug: string;
@@ -22,7 +23,8 @@ export type WishItem = {
   medium: string;
   category: string;
   size: string;
-  wooId?: number;
+  /** tbl_item.item_id. Required to add the work to the cart. */
+  itemId?: number;
 };
 
 type WishlistState = {
@@ -44,8 +46,8 @@ const STORAGE_KEY = "uchaan-wishlist";
  * snappy, and every mutation writes through to the server and localStorage.
  *
  * When signed out, we use localStorage only. Signing in triggers a merge:
- * any local slugs are pushed up, then the server list is pulled down and
- * overrides local. Signing out keeps the local copy.
+ * any local slugs are pushed up, then the server list is pulled down.
+ * Signing out keeps the local copy.
  */
 export function WishlistProvider({ children }: { children: ReactNode }) {
   // Optional: this provider is mounted on every page including 404s that
@@ -57,28 +59,86 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   const hydrated = useRef(false);
   const syncing = useRef(false);
 
-  // Look up a full WishItem from a slug, using the local dataset. Server
-  // storage only holds slugs, since the catalog can change independently.
-  const rehydrate = useCallback((slugs: string[]): WishItem[] => {
-    const out: WishItem[] = [];
-    for (const slug of slugs) {
-      const w = allArtworks.find((a) => a.slug === slug);
-      if (!w) continue;
-      const artist = allArtists.find((a) => a.slug === w.artist);
-      out.push({
-        slug: w.slug,
-        title: w.title,
-        artistName: artist?.name ?? "",
-        image: w.image,
-        price: w.price,
-        medium: w.medium,
-        category: w.category,
-        size: w.size,
-        wooId: w.wooId,
-      });
-    }
-    return out;
-  }, []);
+  /**
+   * Turns a list of slugs into full items.
+   *
+   * Server storage only holds slugs, so the details have to be recovered from
+   * somewhere. In order of preference:
+   *
+   *   1. what is already in local state, which is the fastest and covers
+   *      anything saved on this device
+   *   2. the live API, for slugs saved on another device
+   *   3. the demo dataset, as a last resort
+   *
+   * The previous version consulted only the demo dataset, so every live
+   * artwork failed the lookup and was silently dropped — signing in wiped the
+   * wishlist.
+   */
+  const rehydrate = useCallback(
+    async (slugs: string[], known: WishItem[]): Promise<WishItem[]> => {
+      const byLocal = new Map(known.map((i) => [i.slug, i]));
+      const out: WishItem[] = [];
+      const missing: string[] = [];
+
+      for (const slug of slugs) {
+        const local = byLocal.get(slug);
+        if (local) {
+          out.push(local);
+          continue;
+        }
+
+        const demo = allArtworks.find((a) => a.slug === slug);
+        if (demo) {
+          const artist = allArtists.find((a) => a.slug === demo.artist);
+          out.push({
+            slug: demo.slug,
+            title: demo.title,
+            artistName: artist?.name ?? "",
+            image: demo.image,
+            price: demo.price,
+            medium: demo.medium,
+            category: demo.category,
+            size: demo.size,
+            itemId: demo.itemId,
+          });
+          continue;
+        }
+
+        missing.push(slug);
+      }
+
+      // Anything left was saved on another device. Fetch in parallel, and
+      // simply skip a work that has since been removed from the catalogue.
+      if (missing.length > 0) {
+        const fetched = await Promise.all(
+          missing.slice(0, 40).map(async (slug) => {
+            try {
+              const w = await api.artwork(slug);
+              return {
+                slug: w.slug,
+                title: w.name,
+                artistName: w.artist_name ?? "",
+                image: w.image ?? "/placeholder.svg",
+                price: w.price ?? 0,
+                medium: w.medium ?? "",
+                category: "",
+                size: w.size_label ?? "",
+                itemId: w.id,
+              } as WishItem;
+            } catch {
+              return null;
+            }
+          })
+        );
+        for (const w of fetched) {
+          if (w) out.push(w);
+        }
+      }
+
+      return out;
+    },
+    []
+  );
 
   // Local restore on mount.
   useEffect(() => {
@@ -109,12 +169,15 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
 
     (async () => {
       try {
-        const localSlugs = items.map((i) => i.slug);
+        const localItems = items;
+        const localSlugs = localItems.map((i) => i.slug);
+
         const remoteRes = await fetch("/api/account/wishlist");
         const remoteData = await remoteRes.json();
         const remoteSlugs: string[] = Array.isArray(remoteData.slugs)
           ? remoteData.slugs
           : [];
+
         const merged = Array.from(new Set([...remoteSlugs, ...localSlugs]));
 
         if (merged.length !== remoteSlugs.length) {
@@ -124,7 +187,14 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
             body: JSON.stringify({ slugs: merged }),
           });
         }
-        setItems(rehydrate(merged));
+
+        const restored = await rehydrate(merged, localItems);
+
+        // Never let a sync replace a populated wishlist with an empty one.
+        // A failed lookup should lose nothing.
+        if (restored.length > 0 || merged.length === 0) {
+          setItems(restored);
+        }
       } catch {
         /* keep local */
       } finally {
