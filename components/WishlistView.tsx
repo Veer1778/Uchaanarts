@@ -60,21 +60,35 @@ export default function WishlistView() {
               <p className="text-xs text-muted">By {w.artistName}</p>
               <div className="mt-3 flex items-center justify-between">
                 <p className="text-sm font-semibold text-signal">{formatINR(w.price)}</p>
-                <button
-                  onClick={() =>
-                    add({
-                      slug: w.slug,
-                      title: w.title,
-                      artistName: w.artistName,
-                      image: w.image,
-                      price: w.price,
-                      wooId: w.wooId,
-                    })
-                  }
-                  className="flex items-center gap-2 border border-line px-3 py-2 text-xs text-muted transition-colors hover:border-signal hover:bg-signal hover:text-white"
-                >
-                  <ShoppingCart size={14} /> Add
-                </button>
+                {w.itemId ? (
+                  <button
+                    onClick={() =>
+                      add({
+                        slug: w.slug,
+                        title: w.title,
+                        artistName: w.artistName,
+                        image: w.image,
+                        price: w.price,
+                        // Required by checkout: the server prices the order
+                        // from this id, never from the price above.
+                        itemId: w.itemId,
+                      })
+                    }
+                    className="flex items-center gap-2 border border-line px-3 py-2 text-xs text-muted transition-colors hover:border-signal hover:bg-signal hover:text-white"
+                  >
+                    <ShoppingCart size={14} /> Add
+                  </button>
+                ) : (
+                  // Saved before itemId was stored, so checkout could not price
+                  // it. Send the buyer to the artwork page rather than adding
+                  // something that cannot be bought.
+                  <Link
+                    href={`/art/${w.slug}`}
+                    className="flex items-center gap-2 border border-line px-3 py-2 text-xs text-muted transition-colors hover:border-signal hover:bg-signal hover:text-white"
+                  >
+                    <ShoppingCart size={14} /> View
+                  </Link>
+                )}
               </div>
             </div>
           </motion.div>
