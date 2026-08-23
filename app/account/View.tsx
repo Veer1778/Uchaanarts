@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut, Package, Heart, UserRound, MapPin } from "lucide-react";
+import { LogOut, Package, Heart, UserRound, MapPin, Palette } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { formatINR } from "@/lib/data";
@@ -73,6 +73,26 @@ export default function AccountView() {
           <LogOut size={14} /> Sign out
         </button>
       </div>
+
+      {/* Artists reach their portal from here. The account page is the buyer
+          view, and without this there is no route to /artist at all. */}
+      {user.isArtist && (
+        <Link
+          href="/artist"
+          className="mt-10 flex items-center justify-between gap-4 border border-signal bg-signal/5 p-6 transition-colors hover:bg-signal/10"
+        >
+          <div className="flex items-center gap-4">
+            <Palette size={20} className="shrink-0 text-signal" />
+            <div>
+              <p className="font-display text-lg">Artist portal</p>
+              <p className="text-sm text-muted">
+                View the works the gallery has listed for you
+              </p>
+            </div>
+          </div>
+          <span className="shrink-0 text-signal">&rarr;</span>
+        </Link>
+      )}
 
       {/* Quick stats + shortcuts */}
       <div className="mt-10 grid gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
