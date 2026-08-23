@@ -118,29 +118,11 @@ export default function AboutPage() {
       {/* Practical detail */}
       <Reveal>
         <section className="border-t border-line py-14">
-          <div className="grid gap-12 md:grid-cols-2 lg:gap-20">
-            <div>
-              <h2 className="font-display text-2xl sm:text-3xl">
-                Visit the galleries
-              </h2>
-              <p className="mt-4 text-sm leading-relaxed text-muted">
-                Open daily, 7 am – 10 pm IST. Walk-ins welcome; private viewings
-                by appointment.
-              </p>
-              <ul className="mt-6 space-y-2 text-sm">
-                <li>
-                  <a href="tel:+918860277388" className="hover:opacity-60">
-                    +91 88602 77388
-                  </a>
-                </li>
-                <li>
-                  <a href="mailto:info@uchaanarts.com" className="hover:opacity-60">
-                    info@uchaanarts.com
-                  </a>
-                </li>
-              </ul>
-            </div>
-
+          {/* "Visit the galleries" removed: the Visit page owns opening hours
+              and addresses, and the copy here was stale (it still claimed
+              7 am – 10 pm, which is wrong for both locations). One source of
+              truth rather than two that drift apart. */}
+          <div className="max-w-2xl">
             <div>
               <h2 className="font-display text-2xl sm:text-3xl">
                 Collect with confidence
@@ -154,6 +136,12 @@ export default function AboutPage() {
                 </Link>
                 .
               </p>
+              <Link
+                href="/visit"
+                className="mt-6 inline-block border-b border-ink pb-0.5 text-sm transition-opacity hover:opacity-60"
+              >
+                Plan a visit to the galleries →
+              </Link>
             </div>
           </div>
         </section>
