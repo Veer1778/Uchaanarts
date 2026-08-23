@@ -100,10 +100,10 @@ function Pair({ left, right }: { left: React.ReactNode; right: React.ReactNode }
   return (
     <section className="border-b border-line">
       <div className="mx-auto grid max-w-[1400px] lg:grid-cols-2">
-        <div className="border-b border-line px-5 py-10 sm:px-8 lg:border-b-0 lg:border-r lg:px-10 lg:py-12">
+        <div className="min-w-0 border-b border-line px-5 py-10 sm:px-8 lg:border-b-0 lg:border-r lg:px-10 lg:py-12">
           {left}
         </div>
-        <div className="px-5 py-10 sm:px-8 lg:px-10 lg:py-12">{right}</div>
+        <div className="min-w-0 px-5 py-10 sm:px-8 lg:px-10 lg:py-12">{right}</div>
       </div>
     </section>
   );
@@ -276,7 +276,7 @@ export default async function HomePage() {
           Uniform HEIGHT with natural widths, so each work keeps its own
           proportions — a filmstrip rather than a grid of equal boxes. */}
       <section className="border-b border-line">
-        <div className="mx-auto max-w-[1400px] px-5 py-10 sm:px-8 lg:px-10 lg:py-12">
+        <div className="mx-auto min-w-0 max-w-[1400px] px-5 py-10 sm:px-8 lg:px-10 lg:py-12">
           <Head title="Fresh from the Studios" href="/art-gallery" cta="View all artworks" />
           <p className="mt-4 mb-6 max-w-md text-[13px] leading-relaxed text-muted">
   Recent works selected by our curatorial team, from familiar names and
@@ -488,8 +488,10 @@ export default async function HomePage() {
             <Head title="At the Gallery" href="/exhibitions" cta="View all exhibitions" />
 
             <div className="grid gap-5 sm:grid-cols-[0.8fr_1.15fr_1.05fr]">
-              {/* Current exhibition plate */}
-              <div className="relative aspect-[3/4] overflow-hidden bg-wash">
+              {/* Current exhibition plate. Fixed height on mobile: this grid
+                  collapses to one column there, so a full-width 3:4 plate was
+                  taller than the phone screen. */}
+              <div className="relative h-[170px] w-full overflow-hidden bg-wash sm:aspect-[3/4] sm:h-auto">
                 {current?.image && (
                   <Image
                     src={current.image}
