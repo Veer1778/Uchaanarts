@@ -52,14 +52,17 @@ export default function Navbar() {
     <>
     <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
     <header className="sticky top-0 z-40 bg-paper/95 backdrop-blur">
-      <div className="mx-auto flex h-[76px] max-w-[1400px] items-stretch gap-8 px-5 sm:px-8 lg:px-10">
+      <div className="mx-auto flex h-[68px] max-w-[1400px] items-stretch gap-4 px-5 sm:h-[76px] sm:gap-8 sm:px-8 lg:px-10">
         {/* Wordmark — the header rule starts after it, as in the reference */}
         <Link href="/" aria-label="Uchaan Arts home" className="flex shrink-0 flex-col justify-center">
           <span className="wordmark block text-[1.5rem] leading-none">UCHAAN</span>
           <span className="wordmark mt-1 block text-[0.62rem] text-muted">ARTS</span>
         </Link>
 
-        <div className="flex flex-1 items-center justify-between gap-6 border-b border-line">
+        {/* justify-end below lg: the nav is hidden there, so justify-between
+            left-aligned the utilities and stranded whitespace to the right of
+            the hamburger. */}
+        <div className="flex flex-1 items-center justify-end gap-6 border-b border-line lg:justify-between">
 
         {/* Nav */}
         <nav className="hidden items-center gap-6 xl:gap-7 lg:flex">
@@ -88,7 +91,7 @@ export default function Navbar() {
         </nav>
 
         {/* Utilities */}
-        <div className="flex shrink-0 items-center gap-4">
+        <div className="flex shrink-0 items-center gap-3.5 sm:gap-4">
           <button
             type="button"
             onClick={() => setSearchOpen(true)}
