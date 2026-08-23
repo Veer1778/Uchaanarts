@@ -35,7 +35,7 @@ export default function HeroPlate({
     >
       <Link
         href={`/art/${w.slug}`}
-        className="relative block h-[260px] overflow-hidden bg-wash sm:h-[340px] lg:h-[420px]"
+        className="relative block h-[210px] overflow-hidden bg-wash sm:h-[340px] lg:h-[420px]"
       >
         {works.map((piece, idx) => (
           /* eslint-disable-next-line @next/next/no-img-element */
@@ -47,6 +47,17 @@ export default function HeroPlate({
             style={{ opacity: idx === i ? 1 : 0 }}
           />
         ))}
+
+        {/* Soft fade into the page colour, so the plate reads as part of the
+            layout rather than a pasted-in rectangle. */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-paper to-transparent"
+        />
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-paper/70 to-transparent sm:w-24"
+        />
       </Link>
 
       <div className="mt-3 flex items-center justify-between gap-4">
