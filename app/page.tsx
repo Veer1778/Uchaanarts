@@ -18,6 +18,7 @@ import {
   PackageCheck,
 } from "lucide-react";
 import HeroPlate from "@/components/HeroPlate";
+import NewsletterForm from "@/components/NewsletterForm";
 import Testimonials from "@/components/Testimonials";
 import {
   getArtworks,
@@ -656,21 +657,7 @@ export default async function HomePage() {
               <br />
              upcoming exhibitions and stories from our artists.
             </p>
-            <form className="mt-4 flex max-w-sm">
-              <label htmlFor="subscribe" className="sr-only">
-                Email address
-              </label>
-              <input
-                id="subscribe"
-                type="email"
-                required
-                placeholder="Enter your email"
-                className="min-w-0 flex-1 border border-line bg-card px-3.5 py-3 text-[13px] outline-none focus:border-ink"
-              />
-              <button type="submit" className="btn-accent shrink-0 px-6 py-3 text-[13px]">
-                Subscribe
-              </button>
-            </form>
+            <NewsletterForm />
           </div>
         </div>
       </section>
