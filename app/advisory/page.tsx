@@ -92,11 +92,16 @@ export default function AdvisoryPage() {
   };
 
   const submit = async () => {
-    setError(null);
-    if (!form.name.trim()) return setError("Please enter your name.");
-    if (!form.email.trim() && !form.mobile.trim()) {
-      return setError("Please leave an email address or a phone number.");
+    // Re-check every step: someone can go back, clear a field and return.
+    for (let i = 0; i < STEPS.length; i++) {
+      const problem = stepError(i);
+      if (problem) {
+        setStep(i);
+        setError(problem);
+        return;
+      }
     }
+    setError(null);
 
     setSending(true);
     try {
@@ -122,6 +127,41 @@ export default function AdvisoryPage() {
     } finally {
       setSending(false);
     }
+  };
+
+  /**
+   * Each step must be complete before moving on. Without this a visitor could
+   * click through to the end and send a brief with nothing in it, which wastes
+   * the curator's time and the visitor's.
+   */
+  const stepError = (n: number): string | null => {
+    if (n === 0) {
+      if (!room) return "Please choose which room this is for.";
+      if (!wall) return "Please choose roughly how big the wall is.";
+    }
+    if (n === 1) {
+      if (!budget) return "Please pick a budget range so we can suggest works in range.";
+    }
+    if (n === 2) {
+      if (!form.name.trim()) return "Please enter your name.";
+      if (!form.email.trim() && !form.mobile.trim()) {
+        return "Please leave an email address or a phone number.";
+      }
+      if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+        return "That email address does not look right.";
+      }
+    }
+    return null;
+  };
+
+  const next = () => {
+    const problem = stepError(step);
+    if (problem) {
+      setError(problem);
+      return;
+    }
+    setError(null);
+    setStep(step + 1);
   };
 
   const chip = (active: boolean) =>
@@ -255,7 +295,7 @@ export default function AdvisoryPage() {
                   <button
                     key={r}
                     type="button"
-                    onClick={() => setRoom(room === r ? "" : r)}
+                    onClick={() => { setRoom(room === r ? "" : r); setError(null); }}
                     className={chip(room === r)}
                   >
                     {r}
@@ -271,7 +311,7 @@ export default function AdvisoryPage() {
                   <button
                     key={w.label}
                     type="button"
-                    onClick={() => setWall(wall === w.label ? "" : w.label)}
+                    onClick={() => { setWall(wall === w.label ? "" : w.label); setError(null); }}
                     className={chip(wall === w.label)}
                   >
                     {w.label}
@@ -311,7 +351,7 @@ export default function AdvisoryPage() {
                   <button
                     key={b}
                     type="button"
-                    onClick={() => setBudget(budget === b ? "" : b)}
+                    onClick={() => { setBudget(budget === b ? "" : b); setError(null); }}
                     className={chip(budget === b)}
                   >
                     {b}
@@ -412,8 +452,14 @@ export default function AdvisoryPage() {
           {step < STEPS.length - 1 ? (
             <button
               type="button"
-              onClick={() => setStep(step + 1)}
-              className="flex items-center gap-2 bg-signal px-8 py-3.5 text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-signal-dark"
+              onClick={next}
+              // Not disabled: a greyed-out button gives no reason. The click
+              // says what is missing instead.
+              className={`flex items-center gap-2 px-8 py-3.5 text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors ${
+                stepError(step)
+                  ? "bg-signal/45 hover:bg-signal/60"
+                  : "bg-signal hover:bg-signal-dark"
+              }`}
             >
               Continue <ArrowRight size={15} />
             </button>
