@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import Reveal from "@/components/Reveal";
 import { getArtists } from "@/lib/cms";
+import AlphabetNav from "@/components/AlphabetNav";
 
 export const metadata: Metadata = {
   title: "Artists",
@@ -74,30 +75,27 @@ export default async function ArtistsPage() {
         </>
       )}
 
-      <div className="mb-6 flex flex-wrap items-baseline justify-between gap-4">
-        <h2 className="text-[11px] uppercase tracking-[0.2em] text-muted">
-          All artists A–Z
-        </h2>
-        <nav className="flex flex-wrap gap-x-2 gap-y-1" aria-label="Jump to letter">
-          {letters.map((l) => (
-            <a
-              key={l}
-              href={`#letter-${l}`}
-              className="text-xs text-muted transition-colors hover:text-signal"
-            >
-              {l}
-            </a>
-          ))}
-        </nav>
-      </div>
+      <h2 className="mb-4 text-[11px] uppercase tracking-[0.2em] text-muted">
+        All artists A–Z
+        <span className="ml-2 normal-case tracking-normal text-faint">
+          ({rest.length})
+        </span>
+      </h2>
+
+      {/* Sticky, so you can jump between letters from anywhere in a list of
+          257 rather than scrolling back to the top each time. */}
+      <AlphabetNav letters={letters} />
 
       {letters.map((letter) => {
         const group = rest.filter(
           (a) => a.name.charAt(0).toUpperCase() === letter
         );
         return (
-          <div key={letter} id={`letter-${letter}`} className="mb-12 scroll-mt-24">
-            <h3 className="mb-4 font-display text-2xl text-muted">{letter}</h3>
+          <div key={letter} id={`letter-${letter}`} className="mb-12 scroll-mt-32 pt-6">
+            <h3 className="mb-4 font-display text-2xl text-muted">
+              {letter}
+              <span className="ml-2 text-sm text-faint">{group.length}</span>
+            </h3>
             {grid(group)}
           </div>
         );
