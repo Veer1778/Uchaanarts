@@ -138,11 +138,12 @@ export default function Navbar() {
             Enquire
           </Link>
 
+          {/* Artists land in the portal rather than the buyer account view. */}
           <Link
-            href={user ? "/account" : "/login"}
+            href={user ? (user.isArtist ? "/artist" : "/account") : "/login"}
             className="btn-accent hidden px-6 py-2.5 text-[13.5px] sm:block"
           >
-            {user ? "Account" : "Sign in"}
+            {user ? (user.isArtist ? "My Work" : "Account") : "Sign in"}
           </Link>
 
           <button
