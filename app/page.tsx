@@ -182,8 +182,15 @@ export default async function HomePage() {
               </div>
             </div>
 
+            {/* On mobile the plate belongs here, directly under the buttons,
+                as in the reference. On lg it moves to its own column and this
+                copy is hidden. */}
+            <div className="mt-8 lg:hidden">
+              <HeroPlate works={heroWorks} names={names} />
+            </div>
+
             {/* Trust strip sits at the foot of the copy column */}
-            <ul className="mt-12 flex flex-wrap gap-x-8 gap-y-3 text-[12.5px] text-muted">
+            <ul className="mt-8 flex flex-col gap-y-3 text-[12.5px] text-muted sm:flex-row sm:flex-wrap sm:gap-x-8 lg:mt-12">
               {[
                 { Icon: Clock, label: "15+ Years of Curatorial Experience" },
                 { Icon: MapPin, label: "Delhi & Gurugram" },
@@ -199,8 +206,9 @@ export default async function HomePage() {
             </ul>
           </div>
 
-          {/* Plate — flush to the header, inset from the right edge */}
-          <div className="pb-6 pr-5 sm:pr-8 lg:pr-10">
+          {/* Plate — flush to the header, inset from the right edge.
+              Hidden below lg, where it renders inside the copy column instead. */}
+          <div className="hidden pb-6 lg:block lg:pr-10">
             <HeroPlate works={heroWorks} names={names} />
           </div>
         </div>
@@ -216,9 +224,9 @@ export default async function HomePage() {
   Recent works selected by our curatorial team, from familiar names and
   compelling new voices.
 </p>
-          <div className="flex gap-5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] lg:gap-6 [&::-webkit-scrollbar]:hidden">
+          <div className="-mx-5 flex snap-x snap-mandatory gap-5 overflow-x-auto px-5 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:-mx-8 sm:px-8 lg:mx-0 lg:gap-6 lg:px-0 [&::-webkit-scrollbar]:hidden">
             {noteworthy.map((w) => (
-              <Link key={w.slug} href={`/art/${w.slug}`} className="group block shrink-0">
+              <Link key={w.slug} href={`/art/${w.slug}`} className="group block shrink-0 snap-start">
                 {/* Plain img: fixed height, automatic width preserves aspect. */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -309,7 +317,7 @@ export default async function HomePage() {
 
               {/* Capped on mobile: a full-width 3:4 plate filled the whole
                   phone screen. */}
-              <div className="relative aspect-[4/3] max-h-[220px] overflow-hidden bg-wash sm:aspect-[3/4] sm:max-h-none">
+              <div className="relative h-[160px] overflow-hidden bg-wash sm:aspect-[3/4] sm:h-auto">
                 {focusArtist?.image && (
                   <Image
                     src={focusArtist.image}
@@ -396,9 +404,9 @@ export default async function HomePage() {
   workplaces and public environments.
 </p>
 
-<div className="flex gap-3.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:grid sm:grid-cols-4 [&::-webkit-scrollbar]:hidden">
+<div className="-mx-5 flex snap-x snap-mandatory gap-3.5 overflow-x-auto px-5 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-4 sm:px-0 [&::-webkit-scrollbar]:hidden">
   {realSpaces.map((s) => (
-    <div key={s.label} className="w-[44vw] shrink-0 sm:w-auto">
+    <div key={s.label} className="w-[44vw] shrink-0 snap-start sm:w-auto">
       <div className="relative aspect-[4/3] overflow-hidden bg-wash">
                     <Image
                       src={s.image}
