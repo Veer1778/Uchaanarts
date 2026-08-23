@@ -6,7 +6,17 @@ import { useCart } from "@/context/CartContext";
 import { formatINR } from "@/lib/data";
 
 export default function CartDrawer() {
-  const { items, isOpen, close, remove, setQuantity, total, checkout, checkingOut } =
+  const {
+    items,
+    isOpen,
+    close,
+    remove,
+    total,
+    totals,
+    quoteError,
+    checkout,
+    checkingOut,
+  } =
     useCart();
 
   return (
@@ -63,23 +73,9 @@ export default function CartDrawer() {
                         <p className="font-display text-base leading-tight">{item.title}</p>
                         <p className="text-xs text-muted">by {item.artistName}</p>
                         <div className="mt-auto flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-sm">
-                            <button
-                              onClick={() => setQuantity(item.slug, item.quantity - 1)}
-                              className="grid h-6 w-6 place-items-center border border-line"
-                              aria-label={`Decrease quantity of ${item.title}`}
-                            >
-                              −
-                            </button>
-                            <span aria-live="polite">{item.quantity}</span>
-                            <button
-                              onClick={() => setQuantity(item.slug, item.quantity + 1)}
-                              className="grid h-6 w-6 place-items-center border border-line"
-                              aria-label={`Increase quantity of ${item.title}`}
-                            >
-                              +
-                            </button>
-                          </div>
+                          {/* No quantity stepper: every work is a unique
+                              original, so the only quantity is one. */}
+                          <p className="text-xs text-muted">Original, 1 of 1</p>
                           <p className="text-sm font-medium">{formatINR(item.price)}</p>
                         </div>
                       </div>
@@ -98,10 +94,37 @@ export default function CartDrawer() {
 
             {items.length > 0 && (
               <div className="border-t border-line px-6 py-5">
-                <div className="mb-4 flex items-center justify-between">
-                  <span className="text-sm text-muted">Subtotal</span>
-                  <span className="font-display text-xl">{formatINR(total)}</span>
-                </div>
+                {/* Totals come from the server so tax and delivery are shown
+                    before the buyer commits. `total` is only a fallback while
+                    the quote is in flight. */}
+                <dl className="mb-4 space-y-1.5 text-sm">
+                  <div className="flex justify-between">
+                    <dt className="text-muted">Subtotal</dt>
+                    <dd>{formatINR(totals?.subtotal ?? total)}</dd>
+                  </div>
+                  {totals && (
+                    <>
+                      <div className="flex justify-between">
+                        <dt className="text-muted">GST</dt>
+                        <dd>{formatINR(totals.gst)}</dd>
+                      </div>
+                      <div className="flex justify-between">
+                        <dt className="text-muted">Delivery</dt>
+                        <dd>
+                          {totals.shipping === 0 ? "Free" : formatINR(totals.shipping)}
+                        </dd>
+                      </div>
+                      <div className="flex justify-between border-t border-line pt-2">
+                        <dt>Total</dt>
+                        <dd className="font-display text-xl">{formatINR(totals.net)}</dd>
+                      </div>
+                    </>
+                  )}
+                </dl>
+
+                {quoteError && (
+                  <p className="mb-3 text-xs text-signal">{quoteError}</p>
+                )}
                 <button
                   onClick={checkout}
                   disabled={checkingOut}
@@ -110,7 +133,7 @@ export default function CartDrawer() {
                   {checkingOut ? "Preparing checkout…" : "Checkout"}
                 </button>
                 <p className="mt-3 text-center text-[11px] text-muted">
-                  Secure checkout via WooCommerce · Razorpay, UPI &amp; cards accepted
+                  Secure checkout · Razorpay, UPI &amp; cards accepted
                 </p>
               </div>
             )}
