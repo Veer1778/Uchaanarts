@@ -158,7 +158,72 @@ export default async function HomePage() {
     <>
       {/* ───────── Hero ───────── */}
       <section className="border-b border-line">
-        <div className="mx-auto grid max-w-[1400px] lg:grid-cols-[0.86fr_1.14fr]">
+        {/* Mobile: the artwork is the backdrop and the copy sits on it, as in
+            the reference. Stacking copy above a separate image read as two
+            unrelated blocks. Desktop keeps the two-column layout below. */}
+        <div className="relative lg:hidden">
+          <div className="absolute inset-0">
+            {heroWorks[0]?.image && (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={heroWorks[0].image}
+                alt={heroWorks[0].title}
+                className="h-full w-full object-cover object-right"
+              />
+            )}
+            {/* Scrim: opaque behind the text, clearing towards the right so
+                the artwork still reads. Without it the type is unreadable on
+                a busy painting. */}
+            <div className="absolute inset-0 bg-gradient-to-r from-paper via-paper/92 to-paper/35" />
+            <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-paper to-transparent" />
+          </div>
+
+          <div className="relative px-5 pb-10 pt-12">
+            <h1 className="font-display text-[2.1rem] leading-[1.18]">
+              Contemporary
+              <br />
+              Indian art,
+              <br />
+              <em className="italic">thoughtfully curated.</em>
+            </h1>
+            <p className="mt-5 max-w-[19rem] text-[14px] leading-relaxed text-muted">
+              Original works by emerging and established artists, selected for
+              homes, collections and meaningful spaces.
+            </p>
+            <div className="mt-7 flex flex-col gap-3">
+              <Link
+                href="/art-gallery"
+                className="btn-accent w-fit px-8 py-3.5 text-[14px]"
+              >
+                Explore Art
+              </Link>
+              <Link
+                href="/advisory"
+                className="btn-outline w-fit bg-paper px-8 py-3.5 text-[14px]"
+              >
+                Speak to a Curator
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Trust strip: its own band under the hero on mobile. */}
+        <ul className="flex flex-col gap-y-3 border-t border-line px-5 py-6 text-[12.5px] text-muted lg:hidden">
+          {[
+            { Icon: Clock, label: "15+ Years of Curatorial Experience" },
+            { Icon: MapPin, label: "Delhi & Gurugram" },
+            { Icon: Globe, label: "Secure Delivery Pan India & Worldwide" },
+          ].map(({ Icon, label }) => (
+            <li key={label} className="flex items-center gap-2.5">
+              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-line">
+                <Icon size={12} strokeWidth={1.4} />
+              </span>
+              {label}
+            </li>
+          ))}
+        </ul>
+
+        <div className="mx-auto hidden max-w-[1400px] lg:grid lg:grid-cols-[0.86fr_1.14fr]">
           {/* Copy + trust strip */}
           <div className="flex flex-col justify-between px-5 pb-8 pt-10 sm:px-8 lg:py-12 lg:pl-10 lg:pr-8">
             <div>
@@ -180,13 +245,6 @@ export default async function HomePage() {
                   Speak to a Curator
                 </Link>
               </div>
-            </div>
-
-            {/* On mobile the plate belongs here, directly under the buttons,
-                as in the reference. On lg it moves to its own column and this
-                copy is hidden. */}
-            <div className="mt-8 lg:hidden">
-              <HeroPlate works={heroWorks} names={names} />
             </div>
 
             {/* Trust strip sits at the foot of the copy column */}
@@ -224,7 +282,8 @@ export default async function HomePage() {
   Recent works selected by our curatorial team, from familiar names and
   compelling new voices.
 </p>
-          <div className="-mx-5 flex snap-x snap-mandatory gap-5 overflow-x-auto px-5 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:-mx-8 sm:px-8 lg:mx-0 lg:gap-6 lg:px-0 [&::-webkit-scrollbar]:hidden">
+          <div style={{ touchAction: "pan-x" }}
+            className="-mx-5 flex snap-x snap-mandatory gap-5 overflow-x-auto px-5 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:-mx-8 sm:px-8 lg:mx-0 lg:gap-6 lg:px-0 [&::-webkit-scrollbar]:hidden">
             {noteworthy.map((w) => (
               <Link key={w.slug} href={`/art/${w.slug}`} className="group block shrink-0 snap-start">
                 {/* Plain img: fixed height, automatic width preserves aspect. */}
@@ -317,7 +376,7 @@ export default async function HomePage() {
 
               {/* Capped on mobile: a full-width 3:4 plate filled the whole
                   phone screen. */}
-              <div className="relative h-[160px] overflow-hidden bg-wash sm:aspect-[3/4] sm:h-auto">
+              <div className="relative h-[150px] w-full overflow-hidden bg-wash sm:aspect-[3/4] sm:h-auto">
                 {focusArtist?.image && (
                   <Image
                     src={focusArtist.image}
@@ -404,7 +463,8 @@ export default async function HomePage() {
   workplaces and public environments.
 </p>
 
-<div className="-mx-5 flex snap-x snap-mandatory gap-3.5 overflow-x-auto px-5 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-4 sm:px-0 [&::-webkit-scrollbar]:hidden">
+<div style={{ touchAction: "pan-x" }}
+              className="-mx-5 flex snap-x snap-mandatory gap-3.5 overflow-x-auto px-5 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-4 sm:px-0 [&::-webkit-scrollbar]:hidden">
   {realSpaces.map((s) => (
     <div key={s.label} className="w-[44vw] shrink-0 snap-start sm:w-auto">
       <div className="relative aspect-[4/3] overflow-hidden bg-wash">
