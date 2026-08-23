@@ -52,6 +52,27 @@ const assuranceIcons = {
 };
 const stepIcons = [UserRound, ClipboardCheck, PackageCheck];
 
+/**
+ * Exhibition dates for display.
+ *
+ * The CMS returns ISO dates, and printing them raw produced "2026-03-06 –
+ * 2026-03-09" on the homepage. Falls back to the CMS's free-text field, which
+ * is all many rows have.
+ */
+function showDates(e: { start?: string; end?: string; dateText?: string }): string {
+  const ok = (d?: string) => {
+    if (!d) return false;
+    const t = new Date(d);
+    return !Number.isNaN(t.getTime()) && t.getFullYear() > 1971;
+  };
+  const fmt = (d: string) =>
+    new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+
+  if (ok(e.start) && ok(e.end)) return `${fmt(e.start!)} – ${fmt(e.end!)}`;
+  if (ok(e.start)) return fmt(e.start!);
+  return e.dateText?.trim() ?? "";
+}
+
 /** Trim to a word boundary so excerpts never cut mid-word. */
 function excerpt(text: string | undefined, max: number, fallback: string) {
   if (!text) return fallback;
@@ -111,8 +132,26 @@ export default async function HomePage() {
   const noteworthy = artworks.slice(0, 5);
   const focusArtist = artists.find((a) => a.featured) ?? artists[0];
   const focusWorks = artworks.filter((w) => w.artist === focusArtist?.slug).slice(0, 2);
-  const current = exhibitions[0];
-  const others = exhibitions.slice(1, 3);
+  // Exhibitions carry their own status from the CMS. Taking exhibitions[0]
+  // labelled a finished show "Current Exhibition", which is what the homepage
+  // was doing.
+  const currentShows = exhibitions.filter((e) => e.status === "current");
+  const upcomingShows = exhibitions.filter((e) => e.status === "upcoming");
+  const pastShows = exhibitions.filter((e) => e.status === "past");
+
+  // Lead with a running show, then anything upcoming, then the most recent
+  // past one so the block is never empty.
+  const current = currentShows[0] ?? upcomingShows[0] ?? pastShows[0];
+  const currentLabel = currentShows[0]
+    ? "Current Exhibition"
+    : upcomingShows[0]
+      ? "Next Exhibition"
+      : "Most Recent";
+
+  const others = [
+    ...upcomingShows.filter((e) => e.slug !== current?.slug).map((e) => ({ e, label: "Upcoming" })),
+    ...pastShows.filter((e) => e.slug !== current?.slug).map((e) => ({ e, label: "Past" })),
+  ].slice(0, 2);
   const journal = posts.slice(0, 3);
 
   return (
@@ -268,7 +307,9 @@ export default async function HomePage() {
                 </Link>
               </div>
 
-              <div className="relative aspect-[3/4] overflow-hidden bg-wash">
+              {/* Capped on mobile: a full-width 3:4 plate filled the whole
+                  phone screen. */}
+              <div className="relative aspect-[4/3] max-h-[220px] overflow-hidden bg-wash sm:aspect-[3/4] sm:max-h-none">
                 {focusArtist?.image && (
                   <Image
                     src={focusArtist.image}
@@ -394,7 +435,7 @@ export default async function HomePage() {
 
               {/* Details */}
               <div className="self-center">
-                <p className="text-[12px] text-muted">Current Exhibition</p>
+                <p className="text-[12px] text-muted">{currentLabel}</p>
                 <p className="mt-1 font-display text-[1.25rem] italic leading-tight">
                   {current?.title}
                 </p>
@@ -406,7 +447,7 @@ export default async function HomePage() {
                   )}
                 </p>
                 <p className="mt-3 text-[12px] leading-snug text-muted">
-                  {current?.end ? `Until ${current.end}` : ""}
+                  {current ? showDates(current) : ""}
                   {current?.venue ? (
                     <>
                       <br />
@@ -424,7 +465,7 @@ export default async function HomePage() {
 
               {/* Upcoming / past, as bordered cards */}
               <div className="flex flex-col gap-4">
-                {others.map((e, i) => (
+                {others.map(({ e, label }) => (
                   <Link
                     key={e.slug}
                     href="/exhibitions"
@@ -436,12 +477,11 @@ export default async function HomePage() {
                       )}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[11px] text-muted">{i === 0 ? "Upcoming" : "Past"}</p>
-                      <p className="truncate font-display text-[14px] leading-tight">{e.title}</p>
-                      <p className="mt-0.5 text-[11px] text-muted">
-                        {e.start}
-                        {e.end ? ` – ${e.end}` : ""}
+                      <p className="text-[11px] text-muted">{label}</p>
+                      <p className="truncate font-display text-[14px] leading-tight">
+                        {e.title.trim()}
                       </p>
+                      <p className="mt-0.5 text-[11px] text-muted">{showDates(e)}</p>
                     </div>
                   </Link>
                 ))}
