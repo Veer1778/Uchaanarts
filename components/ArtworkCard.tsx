@@ -2,24 +2,26 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Heart, ShoppingCart, Mail, ArrowUpRight } from "lucide-react";
+import { Heart, ShoppingCart, Mail } from "lucide-react";
 import type { Artwork } from "@/lib/data";
 import { formatArtworkPrice, isPurchasable, artistBySlug } from "@/lib/data";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 
 /**
- * Artwork card.
+ * Artwork card, following the gallery's reference:
  *
- * Caption follows the gallery's reference exactly:
+ *   Series Winged Jewels
+ *   By nin taneja
  *
- *   "Octhopuses"  Painting
- *   Josep Moncada, Spain
- *   Oil on Canvas • 110 × 110 in
+ *   Painting
+ *   Watercolour On Paper
+ *   15 X 11 In              ₹ 31,500
+ *   [ heart ] [ cart ]
  *
- * Title leads, in quotes, with the category beside it. Artist and country
- * next. Material and dimensions last, separated by a bullet. Any part the CMS
- * has not filled in is dropped rather than leaving stray punctuation.
+ * Title leads, artist credited beneath in the accent colour, then category,
+ * medium, and size with the price aligned right. Anything the CMS has not
+ * filled in collapses rather than leaving an empty line.
  */
 export default function ArtworkCard({
   artwork,
@@ -44,13 +46,6 @@ export default function ArtworkCard({
   const href = `/art/${artwork.slug}`;
   const buyable = isPurchasable(artwork);
 
-  // Line 2: "Josep Moncada, Spain" — or just the name when no country is set.
-  const credit = [name, artwork.artistCountry].filter(Boolean).join(", ");
-
-  // Line 3: "Oil on Canvas • 110 × 110 in". `medium` is the CMS's free-text
-  // description of the support, which is what the reference shows here.
-  const detail = [artwork.medium, artwork.size].filter(Boolean).join(" • ");
-
   const stop = (fn: () => void) => (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -66,7 +61,7 @@ export default function ArtworkCard({
       onKeyDown={(e) => {
         if (e.key === "Enter") router.push(href);
       }}
-      className="group flex cursor-pointer flex-col border border-line bg-paper transition-shadow duration-300 hover:shadow-[0_18px_50px_-20px_rgba(0,0,0,0.28)]"
+      className="group flex cursor-pointer flex-col overflow-hidden rounded-md border border-line bg-paper transition-shadow duration-300 hover:shadow-[0_18px_50px_-20px_rgba(0,0,0,0.25)]"
     >
       <div className="overflow-hidden bg-wash">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -78,50 +73,38 @@ export default function ArtworkCard({
         />
       </div>
 
-      <div className="flex flex-1 flex-col p-3 sm:p-4">
-        {/* Line 1: title in quotes, category alongside, open-link icon right */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h3 className="font-display text-base leading-snug text-ink group-hover:text-signal sm:text-lg">
-              &ldquo;{artwork.title}&rdquo;
-              {artwork.category && (
-                <span className="ml-2 align-middle text-[11px] uppercase tracking-[0.12em] text-muted sm:text-xs">
-                  {artwork.category}
-                </span>
-              )}
-            </h3>
-          </div>
+      <div className="flex flex-1 flex-col p-4">
+        <h3 className="text-[15px] font-semibold leading-snug text-ink group-hover:text-signal">
+          {artwork.title}
+        </h3>
 
-          <ArrowUpRight
-            size={16}
-            aria-hidden
-            className="mt-1 shrink-0 text-muted transition-colors group-hover:text-signal"
-          />
-        </div>
-
-        {/* Line 2: artist, country */}
         <Link
           href={`/artists/${artwork.artist}`}
           onClick={(e) => e.stopPropagation()}
-          className="mt-1.5 w-fit text-xs text-ink hover:text-signal sm:text-[13px]"
+          className="mt-1 w-fit text-[13px] text-signal hover:underline"
         >
-          {credit}
+          By {name}
         </Link>
 
-        {/* Line 3: material and dimensions */}
-        {detail && (
-          <p className="mt-1 text-[11px] text-muted sm:text-xs">{detail}</p>
-        )}
+        <div className="mt-4 space-y-1 text-[13px] text-muted">
+          {artwork.category && <p>{artwork.category}</p>}
+          {artwork.medium && <p>{artwork.medium}</p>}
+        </div>
 
-        <p
-          className={`mt-3 text-xs font-semibold sm:text-sm ${
-            buyable ? "text-signal" : "text-muted"
-          }`}
-        >
-          {formatArtworkPrice(artwork)}
-        </p>
+        <div className="mt-2 flex items-baseline justify-between gap-3">
+          {/* Size can be empty when the CMS has no dimensions; the price still
+              sits right rather than jumping left. */}
+          <p className="text-[13px] text-muted">{artwork.size ?? ""}</p>
+          <p
+            className={`whitespace-nowrap text-[15px] font-semibold ${
+              buyable ? "text-signal" : "text-muted"
+            }`}
+          >
+            {formatArtworkPrice(artwork)}
+          </p>
+        </div>
 
-        <div className="mt-3 flex gap-2 sm:mt-4">
+        <div className="mt-4 flex gap-3">
           <button
             onClick={stop(() =>
               toggle({
@@ -138,10 +121,10 @@ export default function ArtworkCard({
             )}
             aria-pressed={wished}
             aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
-            className={`flex flex-1 items-center justify-center border py-2 transition-colors sm:py-2.5 ${
+            className={`flex flex-1 items-center justify-center rounded border py-2.5 transition-colors ${
               wished
                 ? "border-signal bg-signal/5 text-signal"
-                : "border-line text-muted hover:border-signal hover:text-signal"
+                : "border-line text-ink hover:border-signal hover:text-signal"
             }`}
           >
             <Heart size={16} fill={wished ? "currentColor" : "none"} />
@@ -160,7 +143,7 @@ export default function ArtworkCard({
                 })
               )}
               aria-label={`Add ${artwork.title} to cart`}
-              className="flex flex-1 items-center justify-center border border-line py-2.5 text-muted transition-colors hover:border-signal hover:bg-signal hover:text-white"
+              className="flex flex-1 items-center justify-center rounded border border-line py-2.5 text-ink transition-colors hover:border-signal hover:bg-signal hover:text-white"
             >
               <ShoppingCart size={16} />
             </button>
@@ -170,7 +153,7 @@ export default function ArtworkCard({
             <button
               onClick={stop(() => router.push(href))}
               aria-label={`Enquire about ${artwork.title}`}
-              className="flex flex-1 items-center justify-center border border-line py-2.5 text-muted transition-colors hover:border-signal hover:bg-signal hover:text-white"
+              className="flex flex-1 items-center justify-center rounded border border-line py-2.5 text-ink transition-colors hover:border-signal hover:bg-signal hover:text-white"
             >
               <Mail size={16} />
             </button>
