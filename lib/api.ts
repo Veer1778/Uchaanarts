@@ -57,6 +57,8 @@ export interface Artwork {
   artist_name: string | null;
   /** Matches the slug /api/artists returns, so links resolve without a lookup. */
   artist_slug: string | null;
+  /** Artist's country, for the "Name, Country" line on artwork captions. */
+  artist_country: string | null;
   /** First style label from tbl_artwork_style, for client-side filtering. */
   style: string | null;
   /** First theme label from tbl_artwork_theme. */
