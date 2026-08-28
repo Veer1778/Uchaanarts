@@ -99,6 +99,7 @@ function toArtwork(w: ApiArtwork, cats: Map<number, string>): Artwork {
     mediumTerm: w.medium_label ?? undefined,
     material: w.material_label ?? undefined,
     artistName: w.artist_name ?? undefined,
+    artistCountry: w.artist_country ?? undefined,
     description: stripHtml(w.description ?? w.short_description ?? ""),
     itemId: w.id,
   };
