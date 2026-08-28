@@ -12,16 +12,19 @@ import type { Artwork } from "@/lib/data";
 export default function HeroPlate({
   works,
   names,
+  intervalMs = 6000,
 }: {
   works: Artwork[];
   names: Record<string, string>;
+  /** How long each work is shown. Set by the gallery in CMS Settings. */
+  intervalMs?: number;
 }) {
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     if (paused || works.length < 2) return;
-    const t = setInterval(() => setI((v) => (v + 1) % works.length), 6000);
+    const t = setInterval(() => setI((v) => (v + 1) % works.length), intervalMs);
     return () => clearInterval(t);
   }, [paused, works.length]);
 
