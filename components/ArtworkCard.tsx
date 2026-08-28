@@ -2,12 +2,25 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Heart, ShoppingCart, Mail } from "lucide-react";
+import { Heart, ShoppingCart, Mail, ArrowUpRight } from "lucide-react";
 import type { Artwork } from "@/lib/data";
 import { formatArtworkPrice, isPurchasable, artistBySlug } from "@/lib/data";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 
+/**
+ * Artwork card.
+ *
+ * Caption follows the gallery's reference exactly:
+ *
+ *   "Octhopuses"  Painting
+ *   Josep Moncada, Spain
+ *   Oil on Canvas • 110 × 110 in
+ *
+ * Title leads, in quotes, with the category beside it. Artist and country
+ * next. Material and dimensions last, separated by a bullet. Any part the CMS
+ * has not filled in is dropped rather than leaving stray punctuation.
+ */
 export default function ArtworkCard({
   artwork,
   artistName,
@@ -31,6 +44,13 @@ export default function ArtworkCard({
   const href = `/art/${artwork.slug}`;
   const buyable = isPurchasable(artwork);
 
+  // Line 2: "Josep Moncada, Spain" — or just the name when no country is set.
+  const credit = [name, artwork.artistCountry].filter(Boolean).join(", ");
+
+  // Line 3: "Oil on Canvas • 110 × 110 in". `medium` is the CMS's free-text
+  // description of the support, which is what the reference shows here.
+  const detail = [artwork.medium, artwork.size].filter(Boolean).join(" • ");
+
   const stop = (fn: () => void) => (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -46,7 +66,7 @@ export default function ArtworkCard({
       onKeyDown={(e) => {
         if (e.key === "Enter") router.push(href);
       }}
-      className="group flex cursor-pointer flex-col border border-line bg-paper transition-shadow duration-300 hover:shadow-[0_18px_50px_-20px_rgba(235,0,0,0.28)]"
+      className="group flex cursor-pointer flex-col border border-line bg-paper transition-shadow duration-300 hover:shadow-[0_18px_50px_-20px_rgba(0,0,0,0.28)]"
     >
       <div className="overflow-hidden bg-wash">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -59,36 +79,47 @@ export default function ArtworkCard({
       </div>
 
       <div className="flex flex-1 flex-col p-3 sm:p-4">
-        <h3 className="font-display text-base font-medium leading-snug text-ink group-hover:text-signal sm:text-lg">
-          {artwork.title}
-        </h3>
+        {/* Line 1: title in quotes, category alongside, open-link icon right */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="font-display text-base leading-snug text-ink group-hover:text-signal sm:text-lg">
+              &ldquo;{artwork.title}&rdquo;
+              {artwork.category && (
+                <span className="ml-2 align-middle text-[11px] uppercase tracking-[0.12em] text-muted sm:text-xs">
+                  {artwork.category}
+                </span>
+              )}
+            </h3>
+          </div>
+
+          <ArrowUpRight
+            size={16}
+            aria-hidden
+            className="mt-1 shrink-0 text-muted transition-colors group-hover:text-signal"
+          />
+        </div>
+
+        {/* Line 2: artist, country */}
         <Link
           href={`/artists/${artwork.artist}`}
           onClick={(e) => e.stopPropagation()}
-          className="w-fit text-xs text-muted hover:text-signal"
+          className="mt-1.5 w-fit text-xs text-ink hover:text-signal sm:text-[13px]"
         >
-          By {name}
+          {credit}
         </Link>
 
-        <div className="mt-3 space-y-0.5 text-[11px] text-muted sm:mt-4 sm:text-xs">
-          <p className="text-ink">{artwork.category}</p>
-          <p>{artwork.medium}</p>
-        </div>
+        {/* Line 3: material and dimensions */}
+        {detail && (
+          <p className="mt-1 text-[11px] text-muted sm:text-xs">{detail}</p>
+        )}
 
-        <div className="mt-2 flex items-end justify-between gap-2">
-          {/* Size can be empty when the CMS has no dimensions, so the row
-              collapses rather than leaving a stray gap before the price. */}
-          {artwork.size && (
-            <p className="text-[11px] text-muted sm:text-xs">{artwork.size}</p>
-          )}
-          <p
-            className={`ml-auto whitespace-nowrap text-xs font-semibold sm:text-sm ${
-              buyable ? "text-signal" : "text-muted"
-            }`}
-          >
-            {formatArtworkPrice(artwork)}
-          </p>
-        </div>
+        <p
+          className={`mt-3 text-xs font-semibold sm:text-sm ${
+            buyable ? "text-signal" : "text-muted"
+          }`}
+        >
+          {formatArtworkPrice(artwork)}
+        </p>
 
         <div className="mt-3 flex gap-2 sm:mt-4">
           <button
@@ -102,6 +133,7 @@ export default function ArtworkCard({
                 medium: artwork.medium,
                 category: artwork.category,
                 size: artwork.size,
+                itemId: artwork.itemId,
               })
             )}
             aria-pressed={wished}
@@ -114,6 +146,7 @@ export default function ArtworkCard({
           >
             <Heart size={16} fill={wished ? "currentColor" : "none"} />
           </button>
+
           {buyable ? (
             <button
               onClick={stop(() =>
@@ -123,9 +156,6 @@ export default function ArtworkCard({
                   artistName: name,
                   image: artwork.image,
                   price: artwork.price,
-                  // tbl_item.item_id. Checkout sends this to the server, which
-                  // then prices the order itself — the price above is display
-                  // only and is never trusted.
                   itemId: artwork.itemId,
                 })
               )}
