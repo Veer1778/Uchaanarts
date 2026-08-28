@@ -17,6 +17,7 @@ import {
   ClipboardCheck,
   PackageCheck,
 } from "lucide-react";
+import ArtworkCard from "@/components/ArtworkCard";
 import HeroPlate from "@/components/HeroPlate";
 import NewsletterForm from "@/components/NewsletterForm";
 import Testimonials from "@/components/Testimonials";
@@ -28,7 +29,6 @@ import {
   getTestimonials,
 } from "@/lib/cms";
 import { curatedPaths, advisorySteps, realSpaces, assurances } from "@/lib/site";
-import { formatINR } from "@/lib/data";
 
 /**
  * Home — matched to the client's desktop reference.
@@ -286,26 +286,11 @@ export default async function HomePage() {
           <div style={{ touchAction: "pan-x" }}
             className="-mx-5 flex snap-x snap-mandatory gap-5 overflow-x-auto px-5 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:-mx-8 sm:px-8 lg:mx-0 lg:gap-6 lg:px-0 [&::-webkit-scrollbar]:hidden">
             {noteworthy.map((w) => (
-              <Link key={w.slug} href={`/art/${w.slug}`} className="group block shrink-0 snap-start">
-                {/* Plain img: fixed height, automatic width preserves aspect. */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={w.image}
-                  alt={w.title}
-                  className="h-[190px] w-auto max-w-none bg-wash object-cover transition-opacity duration-300 group-hover:opacity-90 sm:h-[230px] lg:h-[265px]"
-                />
-                <div className="mt-3.5 max-w-[230px]">
-                  <p className="text-[14px] leading-tight">{names[w.artist] ?? ""}</p>
-                  <p className="mt-1 text-[14px] italic leading-tight text-muted">
-                    {w.title}
-                  </p>
-                  <p className="mt-2.5 text-[12.5px] leading-snug text-muted">{w.medium}</p>
-                  <p className="text-[12.5px] leading-snug text-muted">{w.size}</p>
-                  <p className="mt-2.5 text-[14px]">
-                    {w.price > 0 ? formatINR(w.price) : "Price on request"}
-                  </p>
-                </div>
-              </Link>
+              // Same card as the gallery, so a work looks identical wherever
+              // it appears. The fixed width keeps the filmstrip rhythm.
+              <div key={w.slug} className="w-[260px] shrink-0 snap-start sm:w-[280px]">
+                <ArtworkCard artwork={w} artistName={names[w.artist]} />
+              </div>
             ))}
           </div>
         </div>
