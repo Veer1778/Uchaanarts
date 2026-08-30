@@ -26,9 +26,17 @@ import { useWishlist } from "@/context/WishlistContext";
 export default function ArtworkCard({
   artwork,
   artistName,
+  uniform = false,
 }: {
   artwork: Artwork;
   artistName?: string;
+  /**
+   * Gives every card the same height by reserving a fixed image area and
+   * fitting the artwork inside it. The work is never cropped: a tall painting
+   * simply leaves margin either side. Leave off in the masonry gallery, where
+   * varied heights are the point.
+   */
+  uniform?: boolean;
 }) {
   // Prefer the explicit prop, then the name the API resolved, then the demo
   // lookup. Without the middle case, live artworks fall back to showing the
@@ -61,15 +69,28 @@ export default function ArtworkCard({
       onKeyDown={(e) => {
         if (e.key === "Enter") router.push(href);
       }}
-      className="group flex cursor-pointer flex-col overflow-hidden rounded-md border border-line bg-paper transition-shadow duration-300 hover:shadow-[0_18px_50px_-20px_rgba(0,0,0,0.25)]"
+      className={`group flex cursor-pointer flex-col overflow-hidden rounded-md border border-line bg-paper transition-shadow duration-300 hover:shadow-[0_18px_50px_-20px_rgba(0,0,0,0.25)] ${
+        uniform ? "h-full" : ""
+      }`}
     >
-      <div className="overflow-hidden bg-wash">
+      <div
+        className={`overflow-hidden bg-wash ${
+          uniform ? "flex aspect-[4/5] items-center justify-center p-2" : ""
+        }`}
+      >
+        {/* object-contain, not cover: the whole work has to be visible.
+            Cropping a painting to fill a box is the one thing a gallery
+            cannot do. Uneven proportions leave margin instead. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={artwork.image}
           alt={`${artwork.title} by ${name}`}
           loading="lazy"
-          className="h-auto w-full transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+          className={`transition-transform duration-700 ease-out group-hover:scale-[1.03] ${
+            uniform
+              ? "max-h-full max-w-full object-contain"
+              : "h-auto w-full"
+          }`}
         />
       </div>
 
@@ -104,7 +125,9 @@ export default function ArtworkCard({
           </p>
         </div>
 
-        <div className="mt-4 flex gap-3">
+        {/* mt-auto pins the actions to the bottom, so cards of differing
+            caption length still line their buttons up. */}
+        <div className="mt-auto flex gap-3 pt-4">
           <button
             onClick={stop(() =>
               toggle({
