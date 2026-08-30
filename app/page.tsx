@@ -267,8 +267,10 @@ export default async function HomePage() {
 
           {/* Plate — flush to the header, inset from the right edge.
               Hidden below lg, where it renders inside the copy column instead. */}
-          <div className="hidden pb-6 lg:block lg:pr-10">
-            <HeroPlate works={heroWorks} names={names} />
+          <div className="hidden lg:flex lg:items-center lg:py-8 lg:pr-10">
+            <div className="w-full">
+              <HeroPlate works={heroWorks} names={names} />
+            </div>
           </div>
         </div>
       </section>
@@ -284,12 +286,12 @@ export default async function HomePage() {
   compelling new voices.
 </p>
           <div style={{ touchAction: "pan-x" }}
-            className="-mx-5 flex snap-x snap-mandatory gap-5 overflow-x-auto px-5 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:-mx-8 sm:px-8 lg:mx-0 lg:gap-6 lg:px-0 [&::-webkit-scrollbar]:hidden">
+            className="-mx-5 flex snap-x snap-mandatory items-stretch gap-5 overflow-x-auto px-5 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:-mx-8 sm:px-8 lg:mx-0 lg:gap-6 lg:px-0 [&::-webkit-scrollbar]:hidden">
             {noteworthy.map((w) => (
               // Same card as the gallery, so a work looks identical wherever
               // it appears. The fixed width keeps the filmstrip rhythm.
-              <div key={w.slug} className="w-[260px] shrink-0 snap-start sm:w-[280px]">
-                <ArtworkCard artwork={w} artistName={names[w.artist]} />
+              <div key={w.slug} className="h-full w-[260px] shrink-0 snap-start sm:w-[280px]">
+                <ArtworkCard artwork={w} artistName={names[w.artist]} uniform />
               </div>
             ))}
           </div>
