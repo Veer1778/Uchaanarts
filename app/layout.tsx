@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Cormorant_Garamond, Inter } from "next/font/google";
+import { Montserrat } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ToastProvider } from "@/components/ui/Toast";
@@ -10,18 +10,16 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CartDrawer from "@/components/CartDrawer";
 
-const cormorant = Cormorant_Garamond({
+/**
+ * One family, several weights, per the client's brief: Montserrat SemiBold and
+ * Bold for titles, regular and light for body copy. Both CSS variables point
+ * at it so nothing downstream has to change.
+ */
+const montserrat = Montserrat({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
+  weight: ["300", "400", "500", "600", "700"],
   style: ["normal", "italic"],
-  variable: "--font-cormorant",
-  display: "swap",
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
-  variable: "--font-inter",
+  variable: "--font-montserrat",
   display: "swap",
 });
 
@@ -31,11 +29,11 @@ export const metadata: Metadata = {
     template: "%s · Uchaan Arts",
   },
   description:
-    "Uchaan Arts, with galleries in Delhi and Gurgaon, has been a platform for contemporary art for over 15 years. Original paintings, sculpture and more by India's finest artists.",
+    "Uchaan Arts, with galleries in Delhi and Gurgaon, has been a platform for contemporary art since 2014. Original paintings, sculpture and more by India's finest artists.",
   openGraph: {
     title: "Uchaan Art Gallery",
     description:
-      "Contemporary Indian art — original paintings, sculpture and serigraphs, curated for over 15 years.",
+      "Contemporary Indian art — original paintings, sculpture and serigraphs, curated since 2014.",
     type: "website",
   },
 };
@@ -44,7 +42,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${cormorant.variable} ${inter.variable}`}>
+    <html lang="en" className={montserrat.variable}>
       <body className="antialiased">
         <ToastProvider>
         <AuthProvider>
