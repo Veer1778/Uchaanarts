@@ -17,14 +17,15 @@ import SearchOverlay from "./SearchOverlay";
  */
 
 const links = [
-  { href: "/art-gallery", label: "Art" },
+  // The client's requested menu. Art Advisory and Visit are reachable from the
+  // homepage and footer rather than the top bar, which was carrying eight
+  // items and wrapping on smaller laptops.
+  { href: "/art-gallery", label: "Artworks" },
   { href: "/artists", label: "Artists" },
   { href: "/exhibitions", label: "Exhibitions" },
-  { href: "/advisory", label: "Art Advisory" },
-  { href: "/trade", label: "Corporate & Hospitality" },
-  { href: "/blog", label: "Journal" },
+  { href: "/projects", label: "Projects" },
+  { href: "/blog", label: "Blog" },
   { href: "/about", label: "About" },
-  { href: "/visit", label: "Visit" },
 ];
 
 export default function Navbar() {
@@ -98,7 +99,7 @@ export default function Navbar() {
             aria-label="Search artworks"
             className="text-ink transition-colors hover:text-signal"
           >
-            <Search size={18} strokeWidth={1.5} />
+            <Search size={21} strokeWidth={1.6} />
           </button>
 
           <Link
