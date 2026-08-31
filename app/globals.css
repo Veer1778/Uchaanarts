@@ -18,8 +18,10 @@
   --color-wash: #f1ebe0; /* beige band */
   --color-line: #e4ded1; /* hairline */
 
-  --font-display: var(--font-cormorant), "Cormorant Garamond", Garamond, Georgia, serif;
-  --font-body: var(--font-inter), "Inter", system-ui, sans-serif;
+  /* One family throughout, per the brief. Both variables resolve to
+     Montserrat; weight carries the distinction between titles and body. */
+  --font-display: var(--font-montserrat), "Montserrat", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-body: var(--font-montserrat), "Montserrat", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 /* Decorative .aura blobs are positioned with negative offsets (e.g. -right-40),
@@ -48,6 +50,19 @@ h2,
 h3,
 .font-display {
   font-family: var(--font-display);
+  /* Weight now carries what a second family used to. Cormorant was a serif at
+     400; Montserrat needs 600 and tighter tracking to read as a title. */
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+/* Italic display type was Cormorant's italic, which had real character.
+   Montserrat's is a slant, so the emphasis comes from weight instead. */
+h1 em,
+h2 em,
+.font-display em {
+  font-style: normal;
+  font-weight: 300;
 }
 
 
