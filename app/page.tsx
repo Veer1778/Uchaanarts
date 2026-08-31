@@ -211,7 +211,7 @@ export default async function HomePage() {
         {/* Trust strip: its own band under the hero on mobile. */}
         <ul className="flex flex-col gap-y-3 border-t border-line px-5 py-6 text-[12.5px] text-muted lg:hidden">
           {[
-            { Icon: Clock, label: "15+ Years of Curatorial Experience" },
+            { Icon: Clock, label: "Curating art since 2014" },
             { Icon: MapPin, label: "Delhi & Gurugram" },
             { Icon: Globe, label: "Secure Delivery Pan India & Worldwide" },
           ].map(({ Icon, label }) => (
@@ -251,7 +251,7 @@ export default async function HomePage() {
             {/* Trust strip sits at the foot of the copy column */}
             <ul className="mt-8 flex flex-col gap-y-3 text-[12.5px] text-muted sm:flex-row sm:flex-wrap sm:gap-x-8 lg:mt-12">
               {[
-                { Icon: Clock, label: "15+ Years of Curatorial Experience" },
+                { Icon: Clock, label: "Curating art since 2014" },
                 { Icon: MapPin, label: "Delhi & Gurugram" },
                 { Icon: Globe, label: "Secure Delivery Pan India & Worldwide" },
               ].map(({ Icon, label }) => (
@@ -280,7 +280,7 @@ export default async function HomePage() {
           proportions — a filmstrip rather than a grid of equal boxes. */}
       <section className="border-b border-line">
         <div className="mx-auto min-w-0 max-w-[1400px] px-5 py-10 sm:px-8 lg:px-10 lg:py-12">
-          <Head title="Fresh from the Studios" href="/art-gallery" cta="View all artworks" />
+          <Head title="New from Uchaan Arts" href="/art-gallery" cta="View all artworks" />
           <p className="mt-4 mb-6 max-w-md text-[13px] leading-relaxed text-muted">
   Recent works selected by our curatorial team, from familiar names and
   compelling new voices.
